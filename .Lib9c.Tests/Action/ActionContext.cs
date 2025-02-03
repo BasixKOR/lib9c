@@ -1,16 +1,24 @@
 namespace Lib9c.Tests.Action
 {
+    using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Security.Cryptography;
-    using Libplanet;
     using Libplanet.Action;
-    using Libplanet.Assets;
-    using Libplanet.Blocks;
-    using Libplanet.State;
-    using Libplanet.Tx;
+    using Libplanet.Action.State;
+    using Libplanet.Common;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Assets;
+    using Libplanet.Types.Blocks;
+    using Libplanet.Types.Evidence;
+    using Libplanet.Types.Tx;
 
     public class ActionContext : IActionContext
     {
-        private long _gasUsed;
+        private IRandom _random = null;
+
+        private IReadOnlyList<ITransaction> _txs = null;
+
+        private IReadOnlyList<EvidenceBase> _evs = null;
 
         public BlockHash? GenesisHash { get; set; }
 
@@ -24,46 +32,38 @@ namespace Lib9c.Tests.Action
 
         public long BlockIndex { get; set; }
 
-        public bool Rehearsal { get; set; }
+        public int BlockProtocolVersion { get; set; } = BlockMetadata.CurrentProtocolVersion;
 
-        public IAccountStateDelta PreviousStates { get; set; }
+        public BlockCommit LastCommit { get; set; }
 
-        public IRandom Random { get; set; }
+        public IWorld PreviousState { get; set; }
+
+        public int RandomSeed { get; set; }
 
         public HashDigest<SHA256>? PreviousStateRootHash { get; set; }
 
-        public bool BlockAction { get; }
+        public bool IsPolicyAction { get; set; }
 
-        public bool IsNativeToken(Currency currency) => false;
+        public FungibleAssetValue? MaxGasPrice { get; set; }
 
-        public void UseGas(long gas)
+        public IReadOnlyList<ITransaction> Txs
         {
-            _gasUsed += gas;
+            get => _txs ?? ImmutableList<ITransaction>.Empty;
+            set => _txs = value;
         }
 
-        public IActionContext GetUnconsumedContext()
+        public IReadOnlyList<EvidenceBase> Evidence
         {
-            // Unable to determine if Random has ever been consumed...
-            return new ActionContext
-            {
-                Signer = Signer,
-                TxId = TxId,
-                Miner = Miner,
-                BlockHash = BlockHash,
-                BlockIndex = BlockIndex,
-                Rehearsal = Rehearsal,
-                PreviousStates = PreviousStates,
-                Random = Random,
-                PreviousStateRootHash = PreviousStateRootHash,
-            };
+            get => _evs ?? ImmutableList<EvidenceBase>.Empty;
+            set => _evs = value;
         }
 
-        public long GasUsed() => _gasUsed;
+        public IRandom GetRandom() => _random ?? new TestRandom(RandomSeed);
 
-        public long GasLimit() => 0;
-
-        public void PutLog(string log)
+        // FIXME: Temporary measure to allow inheriting already mutated IRandom.
+        public void SetRandom(IRandom random)
         {
+            _random = random;
         }
     }
 }

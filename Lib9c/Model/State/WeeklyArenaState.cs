@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using Bencodex;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.TableData;
 using LazyArenaInfo =
@@ -70,7 +70,7 @@ namespace Nekoyume.Model.State
         {
         }
 
-        public override IValue Serialize() => ((Dictionary)base.Serialize())
+        public override IValue Serialize() => ((Dictionary)base.SerializeBase())
             .Add("resetIndex", ResetIndex.Serialize())
             .Add("ended", Ended.Serialize())
 #pragma warning disable LAA1002

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Nekoyume.TableData;
 
@@ -79,14 +79,12 @@ namespace Nekoyume.Model.State
         }
 
         public override IValue Serialize() =>
+            ((Dictionary) base.SerializeBase())
 #pragma warning disable LAA1002
-            new Dictionary(new Dictionary<IKey, IValue>
-            {
-                [(Text) "map"] = new Dictionary(_map.Select(kv => new KeyValuePair<IKey, IValue>(
-                    kv.Key,
-                    kv.Value.Serialize()
-                )))
-            }.Union((Dictionary) base.Serialize()));
+            .Add("map", new Dictionary(_map.Select(kv => new KeyValuePair<IKey, IValue>(
+                kv.Key,
+                kv.Value.Serialize()
+            ))));
 #pragma warning restore LAA1002
 
         public int Redeem(string code, Address userAddress)
@@ -106,7 +104,7 @@ namespace Nekoyume.Model.State
             }
 
             result.UserAddress = userAddress;
-            _map[publicKey.Format(true)] = result;
+            _map[new Binary(publicKey.Format(true))] = result;
             return result.RewardId;
         }
 
@@ -116,7 +114,7 @@ namespace Nekoyume.Model.State
             {
                 if (!Map.ContainsKey(row.PublicKey))
                 {
-                    _map[row.PublicKey.Format(true)] = new Reward(row.RewardId);
+                    _map[new Binary(row.PublicKey.Format(true))] = new Reward(row.RewardId);
                 }
                 else
                 {
@@ -177,12 +175,12 @@ namespace Nekoyume.Model.State
         public int Count => _map.Count;
 
         public bool ContainsKey(PublicKey key) =>
-            _map.ContainsKey(key.Format(true)) ||
-            _map.ContainsKey(key.Format(false));
+            _map.ContainsKey(new Binary(key.Format(true))) ||
+            _map.ContainsKey(new Binary(key.Format(false)));
 
         public bool TryGetValue(PublicKey key, out RedeemCodeState.Reward value) =>
-            _map.TryGetValue(key.Format(true), out value) ||
-            _map.TryGetValue(key.Format(false), out value);
+            _map.TryGetValue(new Binary(key.Format(true)), out value) ||
+            _map.TryGetValue(new Binary(key.Format(false)), out value);
 
         public RedeemCodeState.Reward this[PublicKey key]
         {
@@ -190,11 +188,11 @@ namespace Nekoyume.Model.State
             {
                 try
                 {
-                    return _map[key.Format(true)];
+                    return _map[new Binary(key.Format(true))];
                 }
                 catch (KeyNotFoundException)
                 {
-                    return _map[key.Format(false)];
+                    return _map[new Binary(key.Format(false))];
                 }
             }
         }

@@ -2,9 +2,8 @@ namespace Lib9c.Tests.Model.State
 {
     using System;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Assets;
     using Libplanet.Crypto;
+    using Libplanet.Types.Assets;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
@@ -16,14 +15,15 @@ namespace Lib9c.Tests.Model.State
         public void Serialization()
         {
             var shopState = new ShopState();
-            var agentAddress = new PrivateKey().ToAddress();
-            var avatarAddress = new PrivateKey().ToAddress();
+            var agentAddress = new PrivateKey().Address;
+            var avatarAddress = new PrivateKey().Address;
             var productId = Guid.NewGuid();
             var weaponRow = new EquipmentItemSheet.Row();
-            weaponRow.Set(new[]
-            {
-                "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
-            });
+            weaponRow.Set(
+                new[]
+                {
+                    "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
+                });
             var itemUsable = new Weapon(
                 weaponRow,
                 Guid.NewGuid(),
@@ -52,14 +52,15 @@ namespace Lib9c.Tests.Model.State
         public void Register()
         {
             var shopState = new ShopState();
-            var agentAddress = new PrivateKey().ToAddress();
-            var avatarAddress = new PrivateKey().ToAddress();
+            var agentAddress = new PrivateKey().Address;
+            var avatarAddress = new PrivateKey().Address;
             var productId = Guid.NewGuid();
             var weaponRow = new EquipmentItemSheet.Row();
-            weaponRow.Set(new[]
-            {
-                "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
-            });
+            weaponRow.Set(
+                new[]
+                {
+                    "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
+                });
             var itemUsable = new Weapon(
                 weaponRow,
                 Guid.NewGuid(),
@@ -86,14 +87,15 @@ namespace Lib9c.Tests.Model.State
         public void RegisterThrowShopStateAlreadyContainsException()
         {
             var shopState = new ShopState();
-            var agentAddress = new PrivateKey().ToAddress();
-            var avatarAddress = new PrivateKey().ToAddress();
+            var agentAddress = new PrivateKey().Address;
+            var avatarAddress = new PrivateKey().Address;
             var productId = Guid.NewGuid();
             var weaponRow = new EquipmentItemSheet.Row();
-            weaponRow.Set(new[]
-            {
-                "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
-            });
+            weaponRow.Set(
+                new[]
+                {
+                    "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
+                });
             var itemUsable = new Weapon(
                 weaponRow,
                 Guid.NewGuid(),
@@ -118,14 +120,15 @@ namespace Lib9c.Tests.Model.State
         public void Unregister()
         {
             var shopState = new ShopState();
-            var agentAddress = new PrivateKey().ToAddress();
-            var avatarAddress = new PrivateKey().ToAddress();
+            var agentAddress = new PrivateKey().Address;
+            var avatarAddress = new PrivateKey().Address;
             var productId = Guid.NewGuid();
             var weaponRow = new EquipmentItemSheet.Row();
-            weaponRow.Set(new[]
-            {
-                "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
-            });
+            weaponRow.Set(
+                new[]
+                {
+                    "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
+                });
             var itemUsable = new Weapon(
                 weaponRow,
                 Guid.NewGuid(),
@@ -146,22 +149,24 @@ namespace Lib9c.Tests.Model.State
 
             Assert.Equal(0, shopState.Products.Count);
 
-            Assert.Throws<FailedToUnregisterInShopStateException>(() =>
-                shopState.Unregister(shopItem));
+            Assert.Throws<FailedToUnregisterInShopStateException>(
+                () =>
+                    shopState.Unregister(shopItem));
         }
 
         [Fact]
         public void TryUnregister()
         {
             var shopState = new ShopState();
-            var agentAddress = new PrivateKey().ToAddress();
-            var avatarAddress = new PrivateKey().ToAddress();
+            var agentAddress = new PrivateKey().Address;
+            var avatarAddress = new PrivateKey().Address;
             var productId = Guid.NewGuid();
             var weaponRow = new EquipmentItemSheet.Row();
-            weaponRow.Set(new[]
-            {
-                "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
-            });
+            weaponRow.Set(
+                new[]
+                {
+                    "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
+                });
             var itemUsable = new Weapon(
                 weaponRow,
                 Guid.NewGuid(),
@@ -179,29 +184,32 @@ namespace Lib9c.Tests.Model.State
 
             shopState.Register(shopItem);
 
-            Assert.True(shopState.TryUnregister(
-                shopItem.ProductId,
-                out var unregisteredItem));
+            Assert.True(
+                shopState.TryUnregister(
+                    shopItem.ProductId,
+                    out var unregisteredItem));
             Assert.Equal(shopItem, unregisteredItem);
 
             Assert.Equal(0, shopState.Products.Count);
 
-            Assert.Throws<FailedToUnregisterInShopStateException>(() =>
-                shopState.Unregister(shopItem));
+            Assert.Throws<FailedToUnregisterInShopStateException>(
+                () =>
+                    shopState.Unregister(shopItem));
         }
 
         [Fact]
         public void TryGet()
         {
             var shopState = new ShopState();
-            var agentAddress = new PrivateKey().ToAddress();
-            var avatarAddress = new PrivateKey().ToAddress();
+            var agentAddress = new PrivateKey().Address;
+            var avatarAddress = new PrivateKey().Address;
             var productId = Guid.NewGuid();
             var weaponRow = new EquipmentItemSheet.Row();
-            weaponRow.Set(new[]
-            {
-                "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
-            });
+            weaponRow.Set(
+                new[]
+                {
+                    "10100000", "Weapon", "0", "Normal", "0", "ATK", "1", "2", "10100000",
+                });
             var itemUsable = new Weapon(
                 weaponRow,
                 Guid.NewGuid(),

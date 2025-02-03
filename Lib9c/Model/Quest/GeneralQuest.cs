@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using Bencodex.Types;
 using Nekoyume.TableData;
 
@@ -21,6 +19,11 @@ namespace Nekoyume.Model.Quest
         public GeneralQuest(Dictionary serialized) : base(serialized)
         {
             Event = (QuestEventType)(int)((Integer)serialized["event"]).Value;
+        }
+
+        public GeneralQuest(List serialized) : base(serialized)
+        {
+            Event = (QuestEventType)(int)(Integer)serialized[7];
         }
 
         public override QuestType QuestType
@@ -74,12 +77,9 @@ namespace Nekoyume.Model.Quest
         }
 
         public override IValue Serialize() =>
-#pragma warning disable LAA1002
-            new Dictionary(new Dictionary<IKey, IValue>
-            {
-                [(Text)"event"] = (Integer)(int)Event,
-            }.Union((Dictionary)base.Serialize()));
-#pragma warning restore LAA1002
+            ((Dictionary) base.Serialize())
+            .Add("event", (int) Event);
 
+        public override IValue SerializeList() => ((List)base.SerializeList()).Add((int)Event);
     }
 }

@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Libplanet;
+using Libplanet.Crypto;
 using Libplanet.Action;
-using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.Item;
@@ -40,21 +39,18 @@ namespace Lib9c.DevExtensions
             GameConfigState gameConfigState,
             Address rankingMapAddress)
         {
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 avatarAddress,
                 agentAddress,
                 blockIndex,
                 avatarSheets,
-                gameConfigState,
                 rankingMapAddress,
                 name != string.Empty ? name : "testId"
-            )
-            {
-                worldInformation = new WorldInformation(
-                    0,
-                    worldSheet,
-                    GameConfig.RequireClearedStageLevel.ActionsInShop),
-            };
+            );
+            avatarState.worldInformation = new WorldInformation(
+                0,
+                worldSheet,
+                0);
 
             return avatarState;
         }
@@ -78,7 +74,7 @@ namespace Lib9c.DevExtensions
                 case ItemSubType.EyeCostume:
                 case ItemSubType.TailCostume:
                 case ItemSubType.Title:
-                    if (costumeItemSheet.TryGetValue(item.ID, out var costumeRow))
+                    if (costumeItemSheet.TryGetValue(item.Id, out var costumeRow))
                     {
                         var costume =
                             ItemFactory.CreateCostume(costumeRow, addedItemInfo.TradableId);
@@ -92,7 +88,7 @@ namespace Lib9c.DevExtensions
                 case ItemSubType.Belt:
                 case ItemSubType.Necklace:
                 case ItemSubType.Ring:
-                    if (equipmentItemSheet.TryGetValue(item.ID, out var equipmentRow))
+                    if (equipmentItemSheet.TryGetValue(item.Id, out var equipmentRow))
                     {
                         var equipment = (Equipment)ItemFactory.CreateItemUsable(equipmentRow,
                             addedItemInfo.TradableId,
@@ -122,7 +118,7 @@ namespace Lib9c.DevExtensions
 
                 case ItemSubType.Hourglass:
                 case ItemSubType.ApStone:
-                    if (materialItemSheet.TryGetValue(item.ID, out var materialRow))
+                    if (materialItemSheet.TryGetValue(item.Id, out var materialRow))
                     {
                         var material = ItemFactory.CreateTradableMaterial(materialRow);
                         avatarState.inventory.AddItem(material, item.Count);
@@ -132,7 +128,7 @@ namespace Lib9c.DevExtensions
                     break;
 
                 case ItemSubType.Food:
-                    if (consumableItemSheet.TryGetValue(item.ID, out var consumableRow))
+                    if (consumableItemSheet.TryGetValue(item.Id, out var consumableRow))
                     {
                         var consumable = (Consumable)ItemFactory.CreateItemUsable(consumableRow,
                             addedItemInfo.TradableId,
@@ -179,7 +175,7 @@ namespace Lib9c.DevExtensions
 #if UNITY_ANDROID
         private static TestbedCreateAvatar buffer = null;
         public static TestbedCreateAvatar LoadTestbedCreateAvatarForQA()
-        {           
+        {
             if (buffer is not null)
             {
                 return buffer;
@@ -241,8 +237,5 @@ namespace Lib9c.DevExtensions
             return result;
 #endif
         }
-
-
-
     }
 }

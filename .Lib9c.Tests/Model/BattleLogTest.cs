@@ -3,10 +3,12 @@ namespace Lib9c.Tests.Model
     using System;
     using System.Collections.Generic;
     using Lib9c.Tests.Action;
-    using Libplanet;
     using Libplanet.Action;
+    using Libplanet.Crypto;
     using Nekoyume.Battle;
     using Nekoyume.Model.BattleStatus;
+    using Nekoyume.Model.EnumType;
+    using Nekoyume.Model.Stat;
     using Nekoyume.Model.State;
     using Xunit;
 
@@ -25,19 +27,19 @@ namespace Lib9c.Tests.Model
         public void IsClearBeforeSimulate()
         {
             var agentState = new AgentState(default(Address));
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 default,
                 agentState.address,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
                 default
             );
             var simulator = new StageSimulator(
                 _random,
                 avatarState,
                 new List<Guid>(),
-                null,
+                new AllRuneState(),
+                new RuneSlotState(BattleType.Adventure),
                 new List<Nekoyume.Model.Skill.Skill>(),
                 1,
                 1,
@@ -51,8 +53,11 @@ namespace Lib9c.Tests.Model
                 StageSimulator.GetWaveRewards(
                     _random,
                     _tableSheets.StageSheet[1],
-                    _tableSheets.MaterialItemSheet)
-                );
+                    _tableSheets.MaterialItemSheet),
+                new List<StatModifier>(),
+                _tableSheets.BuffLimitSheet,
+                _tableSheets.BuffLinkSheet
+            );
             Assert.False(simulator.Log.IsClear);
         }
 

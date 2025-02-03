@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Bencodex.Types;
 using Nekoyume.Model.Elemental;
 using Nekoyume.Model.Skill;
-using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using static Nekoyume.TableData.TableExtensions;
 
@@ -24,6 +23,7 @@ namespace Nekoyume.TableData
             public int HitCount { get; private set; }
             public int Cooldown { get; private set; }
 
+            public bool Combo { get; private set; }
             public Row() {}
 
             public Row(Bencodex.Types.Dictionary serialized)
@@ -36,6 +36,10 @@ namespace Nekoyume.TableData
                 SkillTargetType = (SkillTargetType) Enum.Parse(typeof(SkillTargetType), (Bencodex.Types.Text) serialized["skill_target_type"]);
                 HitCount = (Bencodex.Types.Integer) serialized["hit_count"];
                 Cooldown = (Bencodex.Types.Integer) serialized["cooldown"];
+                if (serialized.ContainsKey("combo"))
+                {
+                    Combo = serialized["combo"] is not null && (Bencodex.Types.Boolean)serialized["combo"];
+                }
             }
 
             public override void Set(IReadOnlyList<string> fields)
@@ -47,6 +51,7 @@ namespace Nekoyume.TableData
                 SkillTargetType = (SkillTargetType) Enum.Parse(typeof(SkillTargetType), fields[4]);
                 HitCount = ParseInt(fields[5]);
                 Cooldown = ParseInt(fields[6]);
+                Combo = fields.Count > 7 && ParseBool(fields[7], false);
             }
 
             public IValue Serialize()
@@ -58,7 +63,9 @@ namespace Nekoyume.TableData
                     .Add("skill_category", SkillCategory.ToString())
                     .Add("skill_target_type", SkillTargetType.ToString())
                     .Add("hit_count", HitCount)
-                    .Add("cooldown", Cooldown);
+                    .Add("cooldown", Cooldown)
+                    .Add("combo", Combo)
+                    ;
                 return dict;
             }
 

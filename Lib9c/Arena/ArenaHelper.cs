@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Action;
 using Nekoyume.Battle;
 using Nekoyume.Helper;
@@ -54,30 +54,22 @@ namespace Nekoyume.Arena
                 { ArenaType.Championship, (200, -100) }
             };
 
-        public static int GetMedalItemId(int championshipId, int round) =>
-            700_000 + (championshipId * 100) + round;
-
-        public static Material GetMedal(
-            int championshipId,
-            int round,
-            MaterialItemSheet materialItemSheet)
-        {
-            var itemId = GetMedalItemId(championshipId, round);
-            var medal = ItemFactory.CreateMaterial(materialItemSheet, itemId);
-            return medal;
-        }
-
         public static int GetMedalTotalCount(ArenaSheet.Row row, AvatarState avatarState)
         {
             var count = 0;
             foreach (var data in row.Round)
             {
+                var itemId = data.MedalId;
+                if (data.MedalId == 0)
+                {
+                    continue;
+                }
+
                 if (!data.ArenaType.Equals(ArenaType.Season))
                 {
                     continue;
                 }
 
-                var itemId = GetMedalItemId(data.ChampionshipId, data.Round);
                 if (avatarState.inventory.TryGetItem(itemId, out var item))
                 {
                     count += item.count;
@@ -157,26 +149,27 @@ namespace Nekoyume.Arena
             return interval > 0 ? (int)(blockDiff / interval) : 0;
         }
 
-        public static (int, int, int) GetScores(int myScore, int enemyScore)
+        public static (int myWinScore, int myDefeatScore, int enemyDefeatScore) GetScores(int myScore, int enemyScore)
         {
-            var (myWinScore, enemyWinScore) = ArenaScoreHelper.GetScore(
+            var (myWinScore, enemyDefeatScore) = ArenaScoreHelper.GetScore(
                 myScore, enemyScore, BattleLog.Result.Win);
 
             var (myDefeatScore, _) = ArenaScoreHelper.GetScore(
                 myScore, enemyScore, BattleLog.Result.Lose);
 
-            return (myWinScore, myDefeatScore, enemyWinScore);
+            return (myWinScore, myDefeatScore, enemyDefeatScore);
         }
 
-        public static (int, int, int) GetScoresV1(int myScore, int enemyScore)
+        [Obsolete("Use `GetScores()` instead.")]
+        public static (int myWinScore, int myDefeatScore, int enemyDefeatScore) GetScoresV1(int myScore, int enemyScore)
         {
-            var (myWinScore, enemyWinScore) = ArenaScoreHelper.GetScoreV4(
+            var (myWinScore, enemyDefeatScore) = ArenaScoreHelper.GetScoreV4(
                 myScore, enemyScore, BattleLog.Result.Win);
 
             var (myDefeatScore, _) = ArenaScoreHelper.GetScoreV4(
                 myScore, enemyScore, BattleLog.Result.Lose);
 
-            return (myWinScore, myDefeatScore, enemyWinScore);
+            return (myWinScore, myDefeatScore, enemyDefeatScore);
         }
 
         public static int GetRewardCount(int score)

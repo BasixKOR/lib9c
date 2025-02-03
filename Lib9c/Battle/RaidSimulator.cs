@@ -1,5 +1,5 @@
 using Libplanet.Action;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.BattleStatus;
@@ -10,37 +10,63 @@ using Priority_Queue;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Nekoyume.Action;
+using Nekoyume.Model.Stat;
+using NormalAttack = Nekoyume.Model.BattleStatus.NormalAttack;
 
 namespace Nekoyume.Battle
 {
     public class RaidSimulator : Simulator
     {
         public int BossId { get; private set; }
-        public int DamageDealt { get; private set; }
+        public long DamageDealt { get; private set; }
         public List<FungibleAssetValue> AssetReward { get; private set; } = new List<FungibleAssetValue>();
-        public override IEnumerable<ItemBase> Reward => new List<ItemBase>();
+        public override IEnumerable<ItemBase> Reward => _reward;
         private readonly List<RaidBoss> _waves;
+        private List<ItemBase> _reward;
 
         private WorldBossBattleRewardSheet _worldBossBattleRewardSheet;
         private RuneWeightSheet _runeWeightSheet;
         private RuneSheet _runeSheet;
+        private MaterialItemSheet _materialItemSheet;
         private WorldBossCharacterSheet.Row _currentBossRow;
 
-        public RaidSimulator(
-            int bossId,
+        public RaidSimulator(int bossId,
             IRandom random,
             AvatarState avatarState,
             List<Guid> foods,
-            List<RuneState> runeStates,
+            AllRuneState runeStates,
+            RuneSlotState runeSlotState,
             RaidSimulatorSheets simulatorSheets,
-            CostumeStatSheet costumeStatSheet) : base(random, avatarState, foods, simulatorSheets)
+            CostumeStatSheet costumeStatSheet,
+            List<StatModifier> collectionModifiers,
+            BuffLimitSheet buffLimitSheet,
+            BuffLinkSheet buffLinkSheet,
+            long shatterStrikeMaxDamage = 400_000) : base(random, avatarState, foods, simulatorSheets,
+            shatterStrikeMaxDamage: shatterStrikeMaxDamage)
         {
-            Player.SetCostumeStat(costumeStatSheet);
-            if (runeStates != null)
+            BuffLimitSheet = buffLimitSheet;
+            BuffLinkSheet = buffLinkSheet;
+            var runeOptionSheet = simulatorSheets.RuneOptionSheet;
+            var skillSheet = simulatorSheets.SkillSheet;
+            var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(
+                runeStates, simulatorSheets.RuneListSheet, simulatorSheets.RuneLevelBonusSheet
+            );
+            var equippedRune = new List<RuneState>();
+            foreach (var runeInfo in runeSlotState.GetEquippedRuneSlotInfos())
             {
-                Player.SetRune(runeStates, simulatorSheets.RuneOptionSheet, simulatorSheets.SkillSheet);
+                if (runeStates.TryGetRuneState(runeInfo.RuneId, out var runeState))
+                {
+                    equippedRune.Add(runeState);
+                }
             }
+
+            Player.ConfigureStats(costumeStatSheet,
+                equippedRune, runeOptionSheet, runeLevelBonus,
+                skillSheet, collectionModifiers
+            );
+
+            // call SetRuneSkills last. because rune skills affect from total calculated stats
+            Player.SetRuneSkills(equippedRune, runeOptionSheet, skillSheet);
 
             BossId = bossId;
             _waves = new List<RaidBoss>();
@@ -54,6 +80,7 @@ namespace Nekoyume.Battle
             _worldBossBattleRewardSheet = simulatorSheets.WorldBossBattleRewardSheet;
             _runeWeightSheet = simulatorSheets.RuneWeightSheet;
             _runeSheet = simulatorSheets.RuneSheet;
+            _materialItemSheet = simulatorSheets.MaterialItemSheet;
 
             SetEnemies(_currentBossRow, patternRow);
         }
@@ -160,8 +187,14 @@ namespace Nekoyume.Battle
 
                     foreach (var other in Characters)
                     {
+                        var spdMultiplier = 0.6m;
                         var current = Characters.GetPriority(other);
-                        var speed = current * 0.6m;
+                        if (other == Player && other.usedSkill is not null && other.usedSkill is not NormalAttack)
+                        {
+                            spdMultiplier = 0.9m;
+                        }
+
+                        var speed = current * spdMultiplier;
                         Characters.UpdatePriority(other, speed);
                     }
 
@@ -180,13 +213,28 @@ namespace Nekoyume.Battle
             }
 
             var rank =  WorldBossHelper.CalculateRank(_currentBossRow, DamageDealt);
-            AssetReward = RuneHelper.CalculateReward(
+            var rewards = WorldBossHelper.CalculateReward(
                 rank,
                 BossId,
                 _runeWeightSheet,
                 _worldBossBattleRewardSheet,
                 _runeSheet,
+                _materialItemSheet,
                 Random);
+            AssetReward = rewards.assets;
+
+            var materialReward = new List<ItemBase>();
+#pragma warning disable LAA1002
+            foreach (var reward in rewards.materials)
+#pragma warning restore LAA1002
+            {
+                for (var i = 0; i < reward.Value; i++)
+                {
+                    materialReward.Add(reward.Key);
+                }
+            }
+
+            _reward = materialReward;
 
             Log.result = Result;
             return Log;

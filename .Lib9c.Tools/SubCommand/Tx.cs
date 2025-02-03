@@ -2,11 +2,12 @@ using Bencodex;
 using Bencodex.Types;
 using Cocona;
 using CsvHelper;
-using Libplanet;
-using Libplanet.Assets;
-using Libplanet.Blocks;
+using Libplanet.Action;
+using Libplanet.Common;
 using Libplanet.Crypto;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -16,7 +17,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Libplanet.Action;
 using Nekoyume.TableData;
 
 namespace Lib9c.Tools.SubCommand
@@ -88,9 +88,7 @@ namespace Lib9c.Tools.SubCommand
                         nameof(TransferAsset) => new TransferAsset(),
                         nameof(PatchTableSheet) => new PatchTableSheet(),
                         nameof(AddRedeemCode) => new AddRedeemCode(),
-                        nameof(Nekoyume.Action.MigrationLegacyShop) => new MigrationLegacyShop(),
                         nameof(Nekoyume.Action.MigrationActivatedAccountsState) => new MigrationActivatedAccountsState(),
-                        nameof(Nekoyume.Action.MigrationAvatarState) => new MigrationAvatarState(),
                         nameof(Nekoyume.Action.CreatePendingActivations) => new CreatePendingActivations(),
                         nameof(Nekoyume.Action.RenewAdminState) => new RenewAdminState(),
                         nameof(Nekoyume.Action.PrepareRewardAssets) => new PrepareRewardAssets(),
@@ -110,7 +108,7 @@ namespace Lib9c.Tools.SubCommand
                 privateKey: new PrivateKey(ByteUtil.ParseHex(privateKey)),
                 genesisHash: (genesisHash is null) ? default : BlockHash.FromString(genesisHash),
                 timestamp: (timestamp is null) ? default : DateTimeOffset.Parse(timestamp),
-                actions: parsedActions
+                actions: parsedActions.ToPlainValues()
             );
             byte[] raw = tx.Serialize();
 
@@ -168,21 +166,6 @@ namespace Lib9c.Tools.SubCommand
             Console.WriteLine(ByteUtil.Hex(raw));
         }
 
-        [Obsolete("This function is deprecated. Please use `NineChronicles.Headless.Executable tx migration-legacy-shop` command instead.")]
-        [Command(Description = "Create MigrationLegacyShop action and dump it.")]
-        public void MigrationLegacyShop()
-        {
-            var action = new MigrationLegacyShop();
-
-            var bencoded = new List(
-                (Text)nameof(Nekoyume.Action.MigrationLegacyShop),
-                action.PlainValue
-            );
-
-            byte[] raw = _codec.Encode(bencoded);
-            Console.WriteLine(ByteUtil.Hex(raw));
-        }
-
         [Obsolete("This function is deprecated. Please use `NineChronicles.Headless.Executable tx migration-activated-accounts-state` command instead.")]
         [Command(Description = "Create MigrationActivatedAccountsState action and dump it.")]
         public void MigrationActivatedAccountsState()
@@ -195,33 +178,6 @@ namespace Lib9c.Tools.SubCommand
 
             byte[] raw = _codec.Encode(bencoded);
             Console.WriteLine(ByteUtil.Hex(raw));
-        }
-
-        [Obsolete("This function is deprecated. Please use `NineChronicles.Headless.Executable tx migration-avatar-state` command instead.")]
-        [Command(Description = "Create MigrationAvatarState action and dump it.")]
-        public void MigrationAvatarState(
-        [Argument("directory-path", Description = "path of the directory contained hex-encoded avatar states.")] string directoryPath,
-        [Argument("output-path", Description = "path of the output file dumped action.")] string outputPath
-        )
-        {
-            var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
-            var avatarStates = files.Select(a =>
-            {
-                var raw = File.ReadAllText(a);
-                return (Dictionary)_codec.Decode(ByteUtil.ParseHex(raw));
-            }).ToList();
-            var action = new MigrationAvatarState()
-            {
-                avatarStates = avatarStates
-            };
-
-            var encoded = new List(
-                (Text)nameof(Nekoyume.Action.MigrationAvatarState),
-                action.PlainValue
-            );
-
-            byte[] raw = _codec.Encode(encoded);
-            File.WriteAllText(outputPath, ByteUtil.Hex(raw));
         }
 
         [Obsolete("This function is deprecated. Please use `NineChronicles.Headless.Executable tx add-redeem-code` command instead.")]

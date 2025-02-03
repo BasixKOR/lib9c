@@ -4,13 +4,13 @@ using System.Collections.Immutable;
 using System.Text;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Serilog;
-using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.Action
 {
@@ -24,82 +24,65 @@ namespace Nekoyume.Action
     {
         public Address avatarAddress;
         public const string AvatarAddressKey = "a";
+        public const long DailyRewardInterval = 2550L;
+        public const int DailyRuneRewardAmount = 1;
+        public const int ActionPointMax = 120;
 
         Address IDailyRewardV1.AvatarAddress => avatarAddress;
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states
-                    .SetState(avatarAddress, MarkChanged)
-                    .MarkBalanceChanged(GoldCurrencyMock, avatarAddress);
-            }
-
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var addressesHex = GetSignerAndOtherAddressesHex(context, avatarAddress);
             var started = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}DailyReward exec started", addressesHex);
-            if (!states.TryGetState(avatarAddress, out Dictionary serializedAvatar))
-            {
-                throw new FailedLoadStateException(
-                    $"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
-            }
 
-            Address? agentAddress = null;
-            bool useLegacyKey = false;
-            if (serializedAvatar.ContainsKey(AgentAddressKey))
+            var agentAddress = context.Signer;
+            var avatarContains = false;
+            for (int i = 0; i < GameConfig.SlotCount; i++)
             {
-                agentAddress = serializedAvatar[AgentAddressKey].ToAddress();
-            }
-            else if (serializedAvatar.ContainsKey(LegacyAgentAddressKey))
-            {
+                var address = Addresses.GetAvatarAddress(agentAddress, i);
+                if (address.Equals(avatarAddress))
                 {
-                    agentAddress = serializedAvatar[LegacyAgentAddressKey].ToAddress();
-                    useLegacyKey = true;
+                    avatarContains = true;
+                    break;
                 }
             }
 
-            if (agentAddress is null || agentAddress != context.Signer)
+            if (!avatarContains)
             {
-                throw new FailedLoadStateException(
-                    $"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
+                throw new InvalidAddressException();
             }
 
-            var gameConfigState = states.GetGameConfigState();
-            if (gameConfigState is null)
-            {
-                throw new FailedLoadStateException($"{addressesHex}Aborted as the game config was failed to load.");
-            }
+            states.TryGetDailyRewardReceivedBlockIndex(avatarAddress,
+                out var receivedBlockIndex);
 
-            var indexKey = useLegacyKey ? LegacyDailyRewardReceivedIndexKey : DailyRewardReceivedIndexKey;
-            var dailyRewardReceivedIndex = (long)(Integer)serializedAvatar[indexKey];
-            if (context.BlockIndex < dailyRewardReceivedIndex + gameConfigState.DailyRewardInterval)
+            if (context.BlockIndex < receivedBlockIndex + DailyRewardInterval)
             {
                 var sb = new StringBuilder()
                     .Append($"{addressesHex}Not enough block index to receive daily rewards.")
                     .Append(
-                        $" Expected: Equals or greater than ({dailyRewardReceivedIndex + gameConfigState.DailyRewardInterval}).")
+                        $" Expected: Equals or greater than ({receivedBlockIndex + DailyRewardInterval}).")
                     .Append($" Actual: ({context.BlockIndex})");
                 throw new RequiredBlockIndexException(sb.ToString());
             }
 
-            var apKey = useLegacyKey ? LegacyActionPointKey : ActionPointKey;
-            serializedAvatar = serializedAvatar
-                .SetItem(indexKey, context.BlockIndex)
-                .SetItem(apKey, gameConfigState.ActionPointMax);
+            receivedBlockIndex = context.BlockIndex;
 
-            if (gameConfigState.DailyRuneRewardAmount > 0)
+            if (DailyRuneRewardAmount > 0)
             {
                 states = states.MintAsset(
+                    context,
                     avatarAddress,
-                    RuneHelper.DailyRewardRune * gameConfigState.DailyRuneRewardAmount);
+                    RuneHelper.DailyRewardRune * DailyRuneRewardAmount);
             }
 
             var ended = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}DailyReward Total Executed Time: {Elapsed}", addressesHex, ended - started);
-            return states.SetState(avatarAddress, serializedAvatar);
+            return states
+                .SetDailyRewardReceivedBlockIndex(avatarAddress, receivedBlockIndex)
+                .SetActionPoint(avatarAddress, ActionPointMax);
         }
 
         protected override IImmutableDictionary<string, IValue> PlainValueInternal => new Dictionary<string, IValue>

@@ -1,7 +1,7 @@
 using Nekoyume.Model.State;
 using System;
 using System.Runtime.Serialization;
-using Libplanet.Serialization;
+using Libplanet.Common.Serialization;
 
 namespace Nekoyume.Action
 {
@@ -10,10 +10,13 @@ namespace Nekoyume.Action
     {
         public long BlockIndex { get; }
 
-        public PolicyExpiredException(AdminState policy, long blockIndex)
-            : base(policy)
+        public PolicyExpiredException(AdminState policy, long blockIndex) : base(policy)
         {
             BlockIndex = blockIndex;
+        }
+
+        public PolicyExpiredException(string message) : base(message)
+        {
         }
 
         public PolicyExpiredException(SerializationInfo info, StreamingContext context) : base(info, context)

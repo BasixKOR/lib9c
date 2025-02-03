@@ -4,15 +4,17 @@ using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Nekoyume.Action.Guild.Migration.LegacyModels;
 using Nekoyume.Arena;
 using Nekoyume.Extensions;
 using Nekoyume.Helper;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Serilog;
 
@@ -60,14 +62,10 @@ namespace Nekoyume.Action
             equipments = ((List)plainValue["equipments"]).Select(e => e.ToGuid()).ToList();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states;
-            }
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
 
             if (championshipId > 2)
             {
@@ -80,11 +78,15 @@ namespace Nekoyume.Action
             var started = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}JoinArena exec started", addressesHex);
 
-            if (!states.TryGetAgentAvatarStatesV2(context.Signer, avatarAddress,
-                    out var agentState, out var avatarState, out _))
+            var agentState = states.GetAgentState(context.Signer);
+            if (agentState is null)
             {
-                throw new FailedLoadStateException(
-                    $"[{nameof(JoinArena1)}] Aborted as the avatar state of the signer failed to load.");
+                throw new FailedLoadStateException($"[{nameof(JoinArena1)}] Aborted as the agent state of the signer was failed to load.");
+            }
+
+            if (!states.TryGetAvatarState(context.Signer, avatarAddress, out var avatarState))
+            {
+                throw new FailedLoadStateException($"[{nameof(JoinArena1)}] Aborted as the avatar state of the signer was failed to load.");
             }
 
             if (!avatarState.worldInformation.TryGetUnlockedWorldByStageClearedBlockIndex(
@@ -144,8 +146,9 @@ namespace Nekoyume.Action
                         $"required {fee}, but balance is {crystalBalance}");
                 }
 
-                var arenaAdr = ArenaHelper.DeriveArenaAddress(roundData.ChampionshipId, roundData.Round);
-                states = states.TransferAsset(context.Signer, arenaAdr, fee);
+var feeAddress = states.GetFeeAddress(context.BlockIndex);
+
+                states = states.TransferAsset(context, context.Signer, feeAddress, fee);
             }
 
             // check medal
@@ -162,7 +165,7 @@ namespace Nekoyume.Action
             // create ArenaScore
             var arenaScoreAdr =
                 ArenaScore.DeriveAddress(avatarAddress, roundData.ChampionshipId, roundData.Round);
-            if (states.TryGetState(arenaScoreAdr, out List _))
+            if (states.TryGetLegacyState(arenaScoreAdr, out List _))
             {
                 throw new ArenaScoreAlreadyContainsException(
                     $"[{nameof(JoinArena1)}] id({roundData.ChampionshipId}) / round({roundData.Round})");
@@ -173,7 +176,7 @@ namespace Nekoyume.Action
             // create ArenaInformation
             var arenaInformationAdr =
                 ArenaInformation.DeriveAddress(avatarAddress, roundData.ChampionshipId, roundData.Round);
-            if (states.TryGetState(arenaInformationAdr, out List _))
+            if (states.TryGetLegacyState(arenaInformationAdr, out List _))
             {
                 throw new ArenaInformationAlreadyContainsException(
                     $"[{nameof(JoinArena1)}] id({roundData.ChampionshipId}) / round({roundData.Round})");
@@ -196,11 +199,11 @@ namespace Nekoyume.Action
             var ended = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}JoinArena Total Executed Time: {Elapsed}", addressesHex, ended - started);
             return states
-                .SetState(arenaScoreAdr, arenaScore.Serialize())
-                .SetState(arenaInformationAdr, arenaInformation.Serialize())
-                .SetState(arenaParticipantsAdr, arenaParticipants.Serialize())
-                .SetState(arenaAvatarStateAdr, arenaAvatarState.Serialize())
-                .SetState(context.Signer, agentState.Serialize());
+                .SetLegacyState(arenaScoreAdr, arenaScore.Serialize())
+                .SetLegacyState(arenaInformationAdr, arenaInformation.Serialize())
+                .SetLegacyState(arenaParticipantsAdr, arenaParticipants.Serialize())
+                .SetLegacyState(arenaAvatarStateAdr, arenaAvatarState.Serialize())
+                .SetAgentState(context.Signer, agentState);
         }
     }
 }

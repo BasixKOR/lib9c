@@ -28,19 +28,37 @@ namespace Nekoyume.Battle
         public readonly CharacterSheet CharacterSheet;
         public readonly CharacterLevelSheet CharacterLevelSheet;
         public readonly EquipmentItemSetEffectSheet EquipmentItemSetEffectSheet;
+        public BuffLimitSheet BuffLimitSheet { get; protected set; }
+        public BuffLinkSheet BuffLinkSheet { get; set; }
+
+        public long ShatterStrikeMaxDamage { get; private set; }
+
         protected const int MaxTurn = 200;
         public int TurnNumber;
         public int WaveNumber { get; protected set; }
         public int WaveTurn { get; set; }
         public abstract IEnumerable<ItemBase> Reward { get; }
+        public bool LogEvent { get; protected set; }
 
-        protected Simulator(
-            IRandom random,
+        protected Simulator(IRandom random,
             AvatarState avatarState,
             List<Guid> foods,
-            SimulatorSheetsV1 simulatorSheets
-        ) : this(random, new Player(avatarState, simulatorSheets), foods, simulatorSheets)
+            SimulatorSheetsV1 simulatorSheets, bool logEvent = true) : this(random, new Player(avatarState, simulatorSheets), foods, simulatorSheets)
         {
+            LogEvent = logEvent;
+        }
+
+        protected Simulator(IRandom random,
+            AvatarState avatarState,
+            List<Guid> foods,
+            SimulatorSheets simulatorSheets,
+            bool logEvent = true,
+            long shatterStrikeMaxDamage = 400_000  //  400k is initial limit of ShatterStrike. Use this as default
+            )
+            : this(random, new Player(avatarState, simulatorSheets), foods, simulatorSheets)
+        {
+            LogEvent = logEvent;
+            ShatterStrikeMaxDamage = shatterStrikeMaxDamage;
         }
 
         protected Simulator(
@@ -48,6 +66,30 @@ namespace Nekoyume.Battle
             Player player,
             List<Guid> foods,
             SimulatorSheetsV1 simulatorSheets
+        )
+        {
+            Random = random;
+            MaterialItemSheet = simulatorSheets.MaterialItemSheet;
+            SkillSheet = simulatorSheets.SkillSheet;
+            SkillBuffSheet = simulatorSheets.SkillBuffSheet;
+            StatBuffSheet = simulatorSheets.StatBuffSheet;
+            SkillActionBuffSheet = simulatorSheets.SkillActionBuffSheet;
+            ActionBuffSheet = simulatorSheets.ActionBuffSheet;
+            CharacterSheet = simulatorSheets.CharacterSheet;
+            CharacterLevelSheet = simulatorSheets.CharacterLevelSheet;
+            EquipmentItemSetEffectSheet = simulatorSheets.EquipmentItemSetEffectSheet;
+            Log = new BattleLog();
+            player.Simulator = this;
+            Player = player;
+            Player.Use(foods);
+            Player.ResetCurrentHP();
+        }
+
+        protected Simulator(
+            IRandom random,
+            Player player,
+            List<Guid> foods,
+            SimulatorSheets simulatorSheets
         )
         {
             Random = random;
@@ -122,15 +164,17 @@ namespace Nekoyume.Battle
                 try
                 {
                     var data = itemSelector.Select(1).First();
-                    if (materialItemSheet.TryGetValue(data.ItemId, out var itemData))
+                    if (materialItemSheet.TryGetValue(data.ItemId, out var materialRow))
                     {
                         var count = random.Next(data.Min, data.Max + 1);
                         for (var i = 0; i < count; i++)
                         {
-                            var item = ItemFactory.CreateMaterial(itemData);
+                            var material = materialRow.ItemSubType is ItemSubType.Circle
+                                ? ItemFactory.CreateTradableMaterial(materialRow)
+                                : ItemFactory.CreateMaterial(materialRow);
                             if (reward.Count < maxCount)
                             {
-                                reward.Add(item);
+                                reward.Add(material);
                             }
                             else
                             {

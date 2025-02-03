@@ -4,10 +4,12 @@ using System.Collections.Immutable;
 using Bencodex.Types;
 using Lib9c.DevExtensions.Action.Interface;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 
 namespace Lib9c.DevExtensions.Action
 {
@@ -15,23 +17,18 @@ namespace Lib9c.DevExtensions.Action
     [ActionType("faucet_currency")]
     public class FaucetCurrency : GameAction, IFaucetCurrency
     {
-        public Libplanet.Address AgentAddress { get; set; }
+        public Address AgentAddress { get; set; }
         public int FaucetNcg { get; set; }
         public int FaucetCrystal { get; set; }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            if (context.Rehearsal)
-            {
-                return context.PreviousStates;
-            }
-
-            var states = context.PreviousStates;
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             if (FaucetNcg > 0)
             {
                 var ncg = states.GetGoldCurrency();
-                states = states.TransferAsset(GoldCurrencyState.Address, AgentAddress, ncg * FaucetNcg);
+                states = states.TransferAsset(context, GoldCurrencyState.Address, AgentAddress, ncg * FaucetNcg);
             }
 
             if (FaucetCrystal > 0)
@@ -39,7 +36,7 @@ namespace Lib9c.DevExtensions.Action
 #pragma warning disable CS0618
                 var crystal = Currency.Legacy("CRYSTAL", 18, null);
 #pragma warning restore CS0618
-                states = states.MintAsset(AgentAddress, crystal * FaucetCrystal);
+                states = states.MintAsset(context, AgentAddress, crystal * FaucetCrystal);
             }
 
             return states;
@@ -50,7 +47,7 @@ namespace Lib9c.DevExtensions.Action
             {
                 ["agentAddress"] = AgentAddress.Serialize(),
                 ["faucetNcg"] = FaucetNcg.Serialize(),
-                ["faucetCrystal"] = FaucetCrystal.Serialize()
+                ["faucetCrystal"] = FaucetCrystal.Serialize(),
             }.ToImmutableDictionary();
 
         protected override void LoadPlainValueInternal(

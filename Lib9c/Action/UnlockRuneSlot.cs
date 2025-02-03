@@ -3,14 +3,19 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
+using Lib9c;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
+using Nekoyume.Action.Guild.Migration.LegacyModels;
+using Nekoyume.Arena;
 using Nekoyume.Extensions;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Rune;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 
 namespace Nekoyume.Action
@@ -39,15 +44,10 @@ namespace Nekoyume.Action
             SlotIndex = plainValue["s"].ToInteger();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states;
-            }
-
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var sheets = states.GetSheets(
                 sheetTypes: new[]
                 {
@@ -55,18 +55,18 @@ namespace Nekoyume.Action
                 });
 
             var adventureSlotStateAddress = RuneSlotState.DeriveAddress(AvatarAddress, BattleType.Adventure);
-            var adventureSlotState = states.TryGetState(adventureSlotStateAddress, out List rawAdventureSlotState)
+            var adventureSlotState = states.TryGetLegacyState(adventureSlotStateAddress, out List rawAdventureSlotState)
                 ? new RuneSlotState(rawAdventureSlotState)
                 : new RuneSlotState(BattleType.Adventure);
 
 
             var arenaSlotStateAddress = RuneSlotState.DeriveAddress(AvatarAddress, BattleType.Arena);
-            var arenaSlotState = states.TryGetState(arenaSlotStateAddress, out List rawArenaSlotState)
+            var arenaSlotState = states.TryGetLegacyState(arenaSlotStateAddress, out List rawArenaSlotState)
                 ? new RuneSlotState(rawArenaSlotState)
                 : new RuneSlotState(BattleType.Arena);
 
             var raidSlotStateAddress = RuneSlotState.DeriveAddress(AvatarAddress, BattleType.Raid);
-            var raidSlotState = states.TryGetState(raidSlotStateAddress, out List rawRaidSlotState)
+            var raidSlotState = states.TryGetLegacyState(raidSlotStateAddress, out List rawRaidSlotState)
                 ? new RuneSlotState(rawRaidSlotState)
                 : new RuneSlotState(BattleType.Raid);
 
@@ -78,31 +78,39 @@ namespace Nekoyume.Action
                     $"[{nameof(UnlockRuneSlot)}] Index : {SlotIndex}");
             }
 
-            // note : You will need to modify it later when applying staking unlock.
-            if (slot.RuneSlotType != RuneSlotType.Ncg)
-            {
-                throw new MismatchRuneSlotTypeException(
-                    $"[{nameof(UnlockRuneSlot)}] RuneSlotType : {slot.RuneSlotType}");
-            }
-
             var gameConfigState = states.GetGameConfigState();
-            var cost = slot.RuneType == RuneType.Stat
-                ? gameConfigState.RuneStatSlotUnlockCost
-                : gameConfigState.RuneSkillSlotUnlockCost;
-            var ncgCurrency = states.GetGoldCurrency();
-            var arenaSheet = sheets.GetSheet<ArenaSheet>();
-            var arenaData = arenaSheet.GetRoundByBlockIndex(context.BlockIndex);
-            var feeStoreAddress = Addresses.GetBlacksmithFeeAddress(arenaData.ChampionshipId, arenaData.Round);
+            int cost;
+            Currency currency;
+            switch (slot.RuneSlotType)
+            {
+                case RuneSlotType.Ncg:
+                    cost = slot.RuneType == RuneType.Stat
+                        ? gameConfigState.RuneStatSlotUnlockCost
+                        : gameConfigState.RuneSkillSlotUnlockCost;
+                    currency = states.GetGoldCurrency();
+                    break;
+                case RuneSlotType.Crystal:
+                    cost = slot.RuneType == RuneType.Stat
+                        ? gameConfigState.RuneStatSlotCrystalUnlockCost
+                        : gameConfigState.RuneSkillSlotCrystalUnlockCost;
+                    currency = Currencies.Crystal;
+                    break;
+                default:
+                    throw new MismatchRuneSlotTypeException(
+                        $"[{nameof(UnlockRuneSlot)}] RuneSlotType : {slot.RuneSlotType}");
+            }
 
             adventureSlotState.Unlock(SlotIndex);
             arenaSlotState.Unlock(SlotIndex);
             raidSlotState.Unlock(SlotIndex);
 
+            var feeAddress = states.GetFeeAddress(context.BlockIndex);
+
             return states
-                .TransferAsset(context.Signer, feeStoreAddress, cost * ncgCurrency)
-                .SetState(adventureSlotStateAddress, adventureSlotState.Serialize())
-                .SetState(arenaSlotStateAddress, arenaSlotState.Serialize())
-                .SetState(raidSlotStateAddress, raidSlotState.Serialize());
+                .TransferAsset(context, context.Signer, feeAddress, cost * currency)
+                .SetLegacyState(adventureSlotStateAddress, adventureSlotState.Serialize())
+                .SetLegacyState(arenaSlotStateAddress, arenaSlotState.Serialize())
+                .SetLegacyState(raidSlotStateAddress, raidSlotState.Serialize());
         }
     }
 }

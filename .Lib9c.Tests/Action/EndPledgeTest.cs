@@ -2,12 +2,12 @@ namespace Lib9c.Tests.Action
 {
     using System;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Action;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
     using Nekoyume.Action;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Xunit;
 
     public class EndPledgeTest
@@ -17,26 +17,28 @@ namespace Lib9c.Tests.Action
         [InlineData(4)]
         public void Execute(int balance)
         {
-            var patron = new PrivateKey().ToAddress();
-            var agent = new PrivateKey().ToAddress();
-            IAccountStateDelta states = new State()
-                .SetState(agent.GetPledgeAddress(), List.Empty.Add(patron.Serialize()).Add(true.Serialize()));
+            var patron = new PrivateKey().Address;
+            var agent = new PrivateKey().Address;
+            var context = new ActionContext();
+            var states = new World(MockUtil.MockModernWorldState)
+                .SetLegacyState(agent.GetPledgeAddress(), List.Empty.Add(patron.Serialize()).Add(true.Serialize()));
             var mead = Currencies.Mead;
             if (balance > 0)
             {
-                states = states.MintAsset(agent, mead * balance);
+                states = states.MintAsset(context, agent, mead * balance);
             }
 
             var action = new EndPledge
             {
                 AgentAddress = agent,
             };
-            var nextState = action.Execute(new ActionContext
-            {
-                Signer = patron,
-                PreviousStates = states,
-            });
-            Assert.Equal(Null.Value, nextState.GetState(agent.GetPledgeAddress()));
+            var nextState = action.Execute(
+                new ActionContext
+                {
+                    Signer = patron,
+                    PreviousState = states,
+                });
+            Assert.Null(nextState.GetLegacyState(agent.GetPledgeAddress()));
             Assert.Equal(mead * 0, nextState.GetBalance(agent, mead));
             if (balance > 0)
             {
@@ -49,21 +51,24 @@ namespace Lib9c.Tests.Action
         [InlineData(false, true, typeof(FailedLoadStateException))]
         public void Execute_Throw_Exception(bool invalidSigner, bool invalidAgent, Type exc)
         {
-            Address patron = new PrivateKey().ToAddress();
-            Address agent = new PrivateKey().ToAddress();
-            List contract = List.Empty.Add(patron.Serialize()).Add(true.Serialize());
-            IAccountStateDelta states = new State().SetState(agent.GetPledgeAddress(), contract);
+            var patron = new PrivateKey().Address;
+            var agent = new PrivateKey().Address;
+            var contract = List.Empty.Add(patron.Serialize()).Add(true.Serialize());
+            var states = new World(MockUtil.MockModernWorldState).SetLegacyState(agent.GetPledgeAddress(), contract);
 
             var action = new EndPledge
             {
-                AgentAddress = invalidAgent ? new PrivateKey().ToAddress() : agent,
+                AgentAddress = invalidAgent ? new PrivateKey().Address : agent,
             };
 
-            Assert.Throws(exc, () => action.Execute(new ActionContext
-            {
-                Signer = invalidSigner ? new PrivateKey().ToAddress() : patron,
-                PreviousStates = states,
-            }));
+            Assert.Throws(
+                exc,
+                () => action.Execute(
+                    new ActionContext
+                    {
+                        Signer = invalidSigner ? new PrivateKey().Address : patron,
+                        PreviousState = states,
+                    }));
         }
     }
 }

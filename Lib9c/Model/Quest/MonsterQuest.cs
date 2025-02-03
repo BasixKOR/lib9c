@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using Bencodex.Types;
 using Nekoyume.TableData;
 
@@ -12,7 +10,7 @@ namespace Nekoyume.Model.Quest
     {
         public readonly int MonsterId;
 
-        public MonsterQuest(MonsterQuestSheet.Row data, QuestReward reward) 
+        public MonsterQuest(MonsterQuestSheet.Row data, QuestReward reward)
             : base(data, reward)
         {
             MonsterId = data.MonsterId;
@@ -21,6 +19,11 @@ namespace Nekoyume.Model.Quest
         public MonsterQuest(Dictionary serialized) : base(serialized)
         {
             MonsterId = (int)((Integer)serialized["monsterId"]).Value;
+        }
+
+        public MonsterQuest(List serialized) : base(serialized)
+        {
+            MonsterId = (Integer)serialized[7];
         }
 
         public override QuestType QuestType => QuestType.Adventure;
@@ -54,11 +57,9 @@ namespace Nekoyume.Model.Quest
         }
 
         public override IValue Serialize() =>
-#pragma warning disable LAA1002
-            new Dictionary(new Dictionary<IKey, IValue>
-            {
-                [(Text)"monsterId"] = (Integer)MonsterId,
-            }.Union((Dictionary)base.Serialize()));
-#pragma warning restore LAA1002
+            ((Dictionary) base.Serialize())
+            .Add("monsterId", MonsterId);
+
+        public override IValue SerializeList() => ((List) base.SerializeList()).Add(MonsterId);
     }
 }

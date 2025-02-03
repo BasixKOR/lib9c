@@ -64,10 +64,27 @@ namespace Nekoyume
 
         public const long V100310ExecutedBlockIndex = 5_217_577L;
 
-        // Current: 6_974_550 at 2023-06-14 16:10:00 KST
-        // Release plan: About 7_102_350 at 2023-06-29 12:00:00 KST
-        // Seconds per block: 10
         public const long V200030ObsoleteIndex = 7_200_000;
+
+        public const long V200031ObsoleteIndex = 7_206_000;
+
+        public const long V200040ObsoleteIndex = 7_330_000L;
+
+        public const long V200060ObsoleteIndex = 7_649_999L;
+
+        public const long V200061ObsoleteIndex = 7_660_000L;
+
+        public const long V200063ObsoleteIndex = 7_700_000L;
+
+        public const long V200070ObsoleteIndex = 7_716_400L;
+
+        public const long V200071ObsoleteIndex = 7_718_878L;
+
+        public const long V200080ObsoleteIndex = 7_983_895L;
+
+        public const long V200090ObsoleteIndex = 8_070_865L;
+
+        public const long V200092ObsoleteIndex = 8_324_909L;
 
         // While v200020, the action obsolete wasn't work well.
         // So other previous `V*ObsoletedIndex`s lost its meaning and

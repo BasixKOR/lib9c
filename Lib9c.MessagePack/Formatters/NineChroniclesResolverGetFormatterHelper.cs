@@ -1,15 +1,16 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Assets;
 using Libplanet.Crypto;
-using Libplanet.State;
+using Libplanet.Types.Assets;
 using MessagePack.Formatters;
 using Nekoyume.Action;
+using Nekoyume.Model.State;
 
 namespace Lib9c.Formatters
 {
+
     public static class NineChroniclesResolverGetFormatterHelper
     {
         // If type is concrete type, use type-formatter map
@@ -18,11 +19,11 @@ namespace Lib9c.Formatters
             {typeof(Address), new AddressFormatter()},
             {typeof(Exception), new ExceptionFormatter<Exception>()},
             {typeof(FungibleAssetValue), new FungibleAssetValueFormatter()},
-            {typeof(IAccountStateDelta), new AccountStateDeltaFormatter()},
             {typeof(PublicKey), new PublicKeyFormatter()},
             {typeof(Dictionary), new BencodexFormatter<Dictionary>()},
             {typeof(IValue), new BencodexFormatter<IValue>()},
-            {typeof(ActionBase), new NCActionFormatter()}
+            {typeof(ActionBase), new NCActionFormatter()},
+            {typeof(Currency), new CurrencyFormatter()},
             // add more your own custom serializers.
         };
 
@@ -42,5 +43,12 @@ namespace Lib9c.Formatters
             // If type can not get, must return null for fallback mechanism.
             return null;
         }
+        
+        public static System.Reflection.Assembly[] GetAssemblies() => _assemblies ??= FormatterMap.Keys
+            .Select(t => t.Assembly)
+            .Distinct()
+            .ToArray();
+        
+        private static System.Reflection.Assembly[]? _assemblies = null;
     }
 }

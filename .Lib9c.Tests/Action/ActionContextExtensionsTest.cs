@@ -1,13 +1,15 @@
 namespace Lib9c.Tests.Action
 {
     using System.Collections.Generic;
-    using Libplanet;
     using Libplanet.Action;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Xunit;
 
     public class ActionContextExtensionsTest
@@ -39,7 +41,7 @@ namespace Lib9c.Tests.Action
                 new GoldCurrencyState(
 #pragma warning disable CS0618
                     // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                    Currency.Legacy("NCG", 2, new PrivateKey().ToAddress())),
+                    Currency.Legacy("NCG", 2, new PrivateKey().Address)),
 #pragma warning restore CS0618
                 false,
             };
@@ -72,7 +74,7 @@ namespace Lib9c.Tests.Action
                     Currency.Legacy("BTC", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"))),
                 false,
             };
-            #pragma warning restore CS0618
+#pragma warning restore CS0618
         }
 
         public static IEnumerable<object[]> IsPreviewNetTestcases()
@@ -102,7 +104,7 @@ namespace Lib9c.Tests.Action
                 new GoldCurrencyState(
 #pragma warning disable CS0618
                     // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                    Currency.Legacy("NCG", 2, new PrivateKey().ToAddress())),
+                    Currency.Legacy("NCG", 2, new PrivateKey().Address)),
 #pragma warning restore CS0618
                 false,
             };
@@ -142,10 +144,10 @@ namespace Lib9c.Tests.Action
         [MemberData(nameof(IsMainNetTestcases))]
         public void IsMainNet(GoldCurrencyState goldCurrencyState, bool expected)
         {
-            var state = new State().SetState(Addresses.GoldCurrency, goldCurrencyState.Serialize());
+            var state = new World(MockUtil.MockModernWorldState).SetLegacyState(Addresses.GoldCurrency, goldCurrencyState.Serialize());
             IActionContext context = new ActionContext
             {
-                PreviousStates = state,
+                PreviousState = state,
             };
 
             Assert.Equal(expected, context.IsMainNet());
@@ -154,20 +156,23 @@ namespace Lib9c.Tests.Action
         [Fact]
         public void Since()
         {
-            Assert.True(new ActionContext
-            {
-                BlockIndex = 1001,
-            }.Since(1000));
+            Assert.True(
+                new ActionContext
+                {
+                    BlockIndex = 1001,
+                }.Since(1000));
 
-            Assert.True(new ActionContext
-            {
-                BlockIndex = 0,
-            }.Since(0));
+            Assert.True(
+                new ActionContext
+                {
+                    BlockIndex = 0,
+                }.Since(0));
 
-            Assert.False(new ActionContext
-            {
-                BlockIndex = 0,
-            }.Since(1));
+            Assert.False(
+                new ActionContext
+                {
+                    BlockIndex = 0,
+                }.Since(1));
         }
     }
 }

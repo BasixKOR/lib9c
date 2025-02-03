@@ -10,7 +10,7 @@ namespace Nekoyume.Model.Skill.Arena
     {
         public ArenaBuffSkill(
             SkillSheet.Row skillRow,
-            int power,
+            long power,
             int chance,
             int statPowerRatio,
             StatType referencedStatType) : base(skillRow, power, chance, statPowerRatio, referencedStatType)
@@ -26,20 +26,7 @@ namespace Nekoyume.Model.Skill.Arena
             var clone = (ArenaCharacter)caster.Clone();
             var buff = ProcessBuff(caster, target, turn, buffs);
 
-            return new BattleStatus.Arena.ArenaBuff(clone, buff);
-        }
-
-        [Obsolete("Use Use")]
-        public override BattleStatus.Arena.ArenaSkill UseV1(
-            ArenaCharacter caster,
-            ArenaCharacter target,
-            int turn,
-            IEnumerable<Buff.Buff> buffs)
-        {
-            var clone = (ArenaCharacter)caster.Clone();
-            var buff = ProcessBuffV1(caster, target, turn, buffs);
-
-            return new BattleStatus.Arena.ArenaBuff(clone, buff);
+            return new BattleStatus.Arena.ArenaBuff(SkillRow.Id, clone, buff);
         }
     }
 }

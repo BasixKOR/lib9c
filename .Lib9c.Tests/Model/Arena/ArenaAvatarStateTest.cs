@@ -1,7 +1,6 @@
 namespace Lib9c.Tests.Model.Arena
 {
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Model.State;
     using Xunit;
@@ -19,8 +18,8 @@ namespace Lib9c.Tests.Model.Arena
         [Fact]
         public void Serialize()
         {
-            var avatarAddress = new PrivateKey().ToAddress();
-            var agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             var state = new ArenaAvatarState(avatarState);
 
@@ -34,12 +33,11 @@ namespace Lib9c.Tests.Model.Arena
         private AvatarState GetNewAvatarState(Address avatarAddress, Address agentAddress)
         {
             var rankingState = new RankingState1();
-            return new AvatarState(
+            return AvatarState.Create(
                 avatarAddress,
                 agentAddress,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
                 rankingState.UpdateRankingMap(avatarAddress));
         }
     }

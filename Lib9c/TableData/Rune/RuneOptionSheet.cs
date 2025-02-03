@@ -1,4 +1,3 @@
-using Bencodex.Types;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Stat;
 using System;
@@ -154,6 +153,13 @@ namespace Nekoyume.TableData
 
             var pair = value.LevelOptionMap.OrderBy(x => x.Key).First();
             row.LevelOptionMap[pair.Key] = pair.Value;
+        }
+
+        public bool TryGetOptionInfo(int runeId, int level, out Row.RuneOptionInfo optionInfo)
+        {
+            optionInfo = null;
+            return TryGetValue(runeId, out var row) &&
+                   row.LevelOptionMap.TryGetValue(level, out optionInfo);
         }
     }
 }

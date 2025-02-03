@@ -4,70 +4,70 @@ namespace Lib9c.Tests.Action.Scenario
     using System.Collections.Generic;
     using System.Linq;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Helper;
     using Nekoyume.Model.EnumType;
+    using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Xunit;
-    using static Lib9c.SerializeKeys;
 
     public class RuneScenarioTest
     {
         [Fact]
-        public void Craft_And_Equip()
+        public void Craft_And_Unlock_And_Equip()
         {
-            var agentAddress = new PrivateKey().ToAddress();
+            var agentAddress = new PrivateKey().Address;
             var agentState = new AgentState(agentAddress);
-            var avatarAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
             var rankingMapAddress = avatarAddress.Derive("ranking_map");
             var sheets = TableSheetsImporter.ImportSheets();
             var tableSheets = new TableSheets(sheets);
             agentState.avatarAddresses.Add(0, avatarAddress);
             var gameConfigState = new GameConfigState(sheets[nameof(GameConfigSheet)]);
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 avatarAddress,
                 agentAddress,
                 0,
                 tableSheets.GetAvatarSheets(),
-                gameConfigState,
                 rankingMapAddress
             );
 
-            IAccountStateDelta initialState = new Tests.Action.State()
-                .SetState(agentAddress, agentState.Serialize())
-                .SetState(avatarAddress, avatarState.SerializeV2())
-                .SetState(
-                    avatarAddress.Derive(LegacyInventoryKey),
-                    avatarState.inventory.Serialize())
-                .SetState(
-                    avatarAddress.Derive(LegacyWorldInformationKey),
-                    avatarState.worldInformation.Serialize())
-                .SetState(
-                    avatarAddress.Derive(LegacyQuestListKey),
-                    avatarState.questList.Serialize())
-                .SetState(
+            var context = new ActionContext();
+            var initialState = new World(MockUtil.MockModernWorldState)
+                .SetAgentState(agentAddress, agentState)
+                .SetAvatarState(avatarAddress, avatarState)
+                .SetLegacyState(
                     Addresses.GoldCurrency,
-                    new GoldCurrencyState(Currency.Legacy("NCG", 2, minters: null)).Serialize())
-                .SetState(gameConfigState.address, gameConfigState.Serialize());
+                    new GoldCurrencyState(Currency.Legacy("NCG", 2, null)).Serialize())
+                .SetLegacyState(gameConfigState.address, gameConfigState.Serialize())
+                .SetActionPoint(avatarAddress, DailyReward.ActionPointMax);
             foreach (var (key, value) in sheets)
             {
                 initialState = initialState
-                    .SetState(Addresses.TableSheet.Derive(key), value.Serialize());
+                    .SetLegacyState(Addresses.TableSheet.Derive(key), value.Serialize());
             }
 
             var runeId = 30001;
             var runeRow = tableSheets.RuneSheet[runeId];
             var rune = RuneHelper.ToCurrency(runeRow);
-            initialState = initialState.MintAsset(avatarAddress, rune * 1);
+            initialState = initialState.MintAsset(context, avatarAddress, rune * 1);
 
-            var runeAddress = RuneState.DeriveAddress(avatarAddress, runeId);
-            Assert.Null(initialState.GetState(runeAddress));
+            var allRuneState = initialState.GetRuneState(avatarAddress, out _);
+            Assert.False(allRuneState.TryGetRuneState(runeId, out var rs));
+            Assert.Null(rs);
+
+            initialState = initialState.MintAsset(
+                new ActionContext(),
+                agentAddress,
+                gameConfigState.RuneSkillSlotCrystalUnlockCost * Currencies.Crystal
+            );
 
             var craftAction = new RuneEnhancement
             {
@@ -75,21 +75,43 @@ namespace Lib9c.Tests.Action.Scenario
                 RuneId = runeId,
             };
 
-            var state = craftAction.Execute(new ActionContext
-            {
-                BlockIndex = 1,
-                PreviousStates = initialState,
-                Random = new TestRandom(),
-                Signer = agentAddress,
-            });
+            var prevState = craftAction.Execute(
+                new ActionContext
+                {
+                    BlockIndex = 1,
+                    PreviousState = initialState,
+                    RandomSeed = 0,
+                    Signer = agentAddress,
+                });
 
-            var rawRuneState = Assert.IsType<List>(state.GetState(runeAddress));
-            var runeState = new RuneState(rawRuneState);
+            allRuneState =
+                Assert.IsType<AllRuneState>(prevState.GetRuneState(avatarAddress, out _));
+            var runeState = allRuneState.GetRuneState(runeId);
+
             Assert.Equal(1, runeState.Level);
             Assert.Equal(runeId, runeState.RuneId);
 
             var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
-            Assert.Null(state.GetState(runeSlotStateAddress));
+            Assert.Null(prevState.GetLegacyState(runeSlotStateAddress));
+
+            var unlockAction = new UnlockRuneSlot
+            {
+                AvatarAddress = avatarAddress,
+                SlotIndex = 6,
+            };
+
+            var state = unlockAction.Execute(
+                new ActionContext
+                {
+                    BlockIndex = 1,
+                    PreviousState = prevState,
+                    RandomSeed = 0,
+                    Signer = agentAddress,
+                });
+
+            var runeSlotState = new RuneSlotState((List)state.GetLegacyState(runeSlotStateAddress));
+            Assert.Single(runeSlotState.GetRuneSlot().Where(r => r.RuneSlotType == RuneSlotType.Crystal && !r.IsLock));
+            Assert.Single(runeSlotState.GetRuneSlot().Where(r => r.RuneSlotType == RuneSlotType.Crystal && r.IsLock));
 
             var has = new HackAndSlash
             {
@@ -101,26 +123,113 @@ namespace Lib9c.Tests.Action.Scenario
                 WorldId = 1,
                 RuneInfos = new List<RuneSlotInfo>
                 {
-                    new RuneSlotInfo(0, runeId),
+                    new (6, runeId),
                 },
             };
 
-            var nextState = has.Execute(new ActionContext
-            {
-                BlockIndex = 2,
-                PreviousStates = state,
-                Random = new TestRandom(),
-                Signer = agentAddress,
-            });
+            var nextState = has.Execute(
+                new ActionContext
+                {
+                    BlockIndex = 2,
+                    PreviousState = state,
+                    RandomSeed = 0,
+                    Signer = agentAddress,
+                });
 
-            var nextAvatarState = nextState.GetAvatarStateV2(avatarAddress);
+            var nextAvatarState = nextState.GetAvatarState(avatarAddress);
             Assert.True(nextAvatarState.worldInformation.IsStageCleared(1));
-            var rawRuneSlot = Assert.IsType<List>(nextState.GetState(runeSlotStateAddress));
+            var rawRuneSlot = Assert.IsType<List>(nextState.GetLegacyState(runeSlotStateAddress));
             var runeSlot = new RuneSlotState(rawRuneSlot);
             var runeSlotInfo = runeSlot.GetEquippedRuneSlotInfos().Single();
 
             Assert.Equal(runeId, runeSlotInfo.RuneId);
-            Assert.Equal(0, runeSlotInfo.SlotIndex);
+            Assert.Equal(6, runeSlotInfo.SlotIndex);
+        }
+
+        [Fact]
+        public void MigrateToRuneStateModule()
+        {
+            var agentAddress = new PrivateKey().Address;
+            var agentState = new AgentState(agentAddress);
+            var avatarAddress = new PrivateKey().Address;
+            var rankingMapAddress = avatarAddress.Derive("ranking_map");
+            var sheets = TableSheetsImporter.ImportSheets();
+            var tableSheets = new TableSheets(sheets);
+            agentState.avatarAddresses.Add(0, avatarAddress);
+            var gameConfigState = new GameConfigState(sheets[nameof(GameConfigSheet)]);
+            var avatarState = AvatarState.Create(
+                avatarAddress,
+                agentAddress,
+                0,
+                tableSheets.GetAvatarSheets(),
+                rankingMapAddress
+            );
+
+            var context = new ActionContext();
+            var initialState = new World(MockUtil.MockModernWorldState)
+                .SetAgentState(agentAddress, agentState)
+                .SetAvatarState(avatarAddress, avatarState)
+                .SetLegacyState(
+                    Addresses.GoldCurrency,
+                    new GoldCurrencyState(Currency.Legacy("NCG", 2, null)).Serialize())
+                .SetLegacyState(gameConfigState.address, gameConfigState.Serialize())
+                .SetActionPoint(avatarAddress, DailyReward.ActionPointMax);
+            foreach (var (key, value) in sheets)
+            {
+                initialState = initialState
+                    .SetLegacyState(Addresses.TableSheet.Derive(key), value.Serialize());
+            }
+
+            var testRuneId = 30001;
+            var testRuneLevel = new Random().Next(1, 100);
+            var runeState = new RuneState(testRuneId);
+            runeState.LevelUp(testRuneLevel);
+            initialState = initialState.SetLegacyState(
+                RuneState.DeriveAddress(avatarAddress, testRuneId),
+                runeState.Serialize()
+            );
+
+            var costumes = new List<Guid>();
+            var equipments = Doomfist.GetAllParts(tableSheets, avatarState.level);
+            foreach (var equipment in equipments)
+            {
+                var iLock = equipment.ItemSubType == ItemSubType.Weapon
+                    ? new OrderLock(Guid.NewGuid())
+                    : (ILock)null;
+                avatarState.inventory.AddItem(equipment, iLock: iLock);
+            }
+
+            foreach (var equipment in equipments)
+            {
+                avatarState.inventory.AddItem(equipment, iLock: null);
+            }
+
+            initialState = initialState.SetAvatarState(avatarAddress, avatarState);
+
+            var action = new HackAndSlash
+            {
+                Costumes = costumes,
+                Equipments = equipments.Select(e => e.NonFungibleId).ToList(),
+                Foods = new List<Guid>(),
+                RuneInfos = new List<RuneSlotInfo>(),
+                WorldId = 1,
+                StageId = 1,
+                AvatarAddress = avatarAddress,
+            };
+            var state = action.Execute(
+                new ActionContext
+                {
+                    PreviousState = initialState,
+                    Signer = agentAddress,
+                    RandomSeed = 0,
+                    BlockIndex = ActionObsoleteConfig.V100301ExecutedBlockIndex,
+                });
+            var runeStates = state.GetRuneState(avatarAddress, out var migrateRequired);
+            Assert.False(migrateRequired);
+            var runeStateExist = runeStates.TryGetRuneState(testRuneId, out var nextRuneState);
+            Assert.True(runeStateExist);
+            Assert.Equal(testRuneId, nextRuneState.RuneId);
+            Assert.Equal(testRuneLevel, nextRuneState.Level);
         }
     }
 }

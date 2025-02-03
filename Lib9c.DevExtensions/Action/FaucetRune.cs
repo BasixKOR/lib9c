@@ -5,11 +5,13 @@ using System.Linq;
 using Bencodex.Types;
 using Lib9c.DevExtensions.Action.Interface;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.Faucet;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 
 namespace Lib9c.DevExtensions.Action
@@ -18,26 +20,21 @@ namespace Lib9c.DevExtensions.Action
     [ActionType("faucet_rune")]
     public class FaucetRune : GameAction, IFaucetRune
     {
-        public Libplanet.Address AvatarAddress { get; set; }
+        public Address AvatarAddress { get; set; }
         public List<FaucetRuneInfo> FaucetRuneInfos { get; set; }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            if (context.Rehearsal)
-            {
-                return context.PreviousStates;
-            }
-
-            var states = context.PreviousStates;
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             if (!(FaucetRuneInfos is null))
             {
-                RuneSheet runeSheet = states.GetSheet<RuneSheet>();
+                var runeSheet = states.GetSheet<RuneSheet>();
                 if (runeSheet.OrderedList != null)
                 {
                     foreach (var rune in FaucetRuneInfos)
                     {
-                        states = states.MintAsset(AvatarAddress, RuneHelper.ToFungibleAssetValue(
+                        states = states.MintAsset(context, AvatarAddress, RuneHelper.ToFungibleAssetValue(
                             runeSheet.OrderedList.First(r => r.Id == rune.RuneId),
                             rune.Amount
                         ));
@@ -56,7 +53,7 @@ namespace Lib9c.DevExtensions.Action
                     .OrderBy(x => x.RuneId)
                     .ThenBy(x => x.Amount)
                     .Select(x => x.Serialize())
-                    .Serialize()
+                    .Serialize(),
             }.ToImmutableDictionary();
 
         protected override void LoadPlainValueInternal(

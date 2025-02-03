@@ -4,18 +4,16 @@ using System.Linq;
 using System.Security.Cryptography;
 using Bencodex.Types;
 using Lib9c.Model.Order;
-using Libplanet;
+using Libplanet.Common;
+using Libplanet.Crypto;
 using Nekoyume.Action;
-using Nekoyume.Battle;
-using Nekoyume.Extensions;
 using Nekoyume.Model.State;
-using Nekoyume.TableData;
 using Serilog;
 
 namespace Nekoyume.Model.Item
 {
     [Serializable]
-    public class Inventory : IState
+    public class Inventory : IState, ICloneable
     {
         // ToDo. Item 클래스를 FungibleItem과 NonFungibleItem으로 분리하기.
         [Serializable]
@@ -168,10 +166,50 @@ namespace Nekoyume.Model.Item
             return (_items != null ? _items.GetHashCode() : 0);
         }
 
+        public object Clone()
+        {
+            return new Inventory((List)Serialize());
+        }
+
         #region Add
 
         public KeyValuePair<int, int> AddItem(ItemBase itemBase, int count = 1, ILock iLock = null)
         {
+            if(count == 0)
+            {
+                throw new InvalidItemCountException();
+            }
+
+#if LIB9C_DEV_EXTENSIONS || UNITY_EDITOR
+            foreach (var item in _items)
+            {
+                Guid? inventoryItemGuid;
+                Guid? createItemGuid;
+                {
+                    inventoryItemGuid = item.item switch
+                    {
+                        ItemUsable itemUsable => itemUsable.ItemId,
+                        Costume costume => costume.ItemId,
+                        _ => null,
+                    };
+                }
+                {
+                    createItemGuid = itemBase switch
+                    {
+                        ItemUsable itemUsable => itemUsable.ItemId,
+                        Costume costume => costume.ItemId,
+                        _ => null,
+                    };
+                }
+                if (inventoryItemGuid.HasValue && createItemGuid.HasValue && inventoryItemGuid.Value == createItemGuid.Value)
+                {
+                    throw new ArgumentException(
+                        $"Aborted because {nameof(itemBase)} is already in the inventory."
+                    );
+                }
+            }
+#endif
+
             switch (itemBase.ItemType)
             {
                 case ItemType.Consumable:
@@ -189,29 +227,9 @@ namespace Nekoyume.Model.Item
             return new KeyValuePair<int, int>(itemBase.Id, count);
         }
 
-        [Obsolete("Use AddItem")]
-        public KeyValuePair<int, int> AddItem2(ItemBase itemBase, int count = 1, ILock iLock = null)
-        {
-            switch (itemBase.ItemType)
-            {
-                case ItemType.Consumable:
-                case ItemType.Equipment:
-                case ItemType.Costume:
-                    AddNonFungibleItem(itemBase, iLock);
-                    break;
-                case ItemType.Material:
-                    AddFungibleItem2(itemBase, count, iLock);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            _items.Sort();
-            return new KeyValuePair<int, int>(itemBase.Id, count);
-        }
-
         public Item AddFungibleItem(ItemBase itemBase, int count = 1, ILock iLock = null)
         {
-            if (!(itemBase is IFungibleItem fungibleItem))
+            if (itemBase is not IFungibleItem fungibleItem)
             {
                 throw new ArgumentException(
                     $"Aborted because {nameof(itemBase)} cannot cast to {nameof(IFungibleItem)}");
@@ -228,35 +246,7 @@ namespace Nekoyume.Model.Item
                 item.count += count;
             }
 
-            if (!(iLock is null))
-            {
-                item.LockUp(iLock);
-            }
-
-            return item;
-        }
-
-        [Obsolete("Use AddFungibleItem")]
-        public Item AddFungibleItem2(ItemBase itemBase, int count = 1, ILock iLock = null)
-        {
-            if (!(itemBase is IFungibleItem fungibleItem))
-            {
-                throw new ArgumentException(
-                    $"Aborted because {nameof(itemBase)} cannot cast to {nameof(IFungibleItem)}");
-            }
-
-            var item = _items.FirstOrDefault(e => e.item.Equals(fungibleItem));
-            if (item is null)
-            {
-                item = new Item(itemBase, count);
-                _items.Add(item);
-            }
-            else
-            {
-                item.count += count;
-            }
-
-            if (!(iLock is null))
+            if (iLock is not null)
             {
                 item.LockUp(iLock);
             }
@@ -273,6 +263,49 @@ namespace Nekoyume.Model.Item
             }
             _items.Add(nonFungibleItem);
             return nonFungibleItem;
+        }
+
+        /// <summary>
+        /// Add tradable fungible item.
+        /// If there is same item which is not locked, add count to it.
+        /// The same item is item which has same item sheet id, fungible id, tradable id and
+        /// same required block index.
+        /// If there is no same item, add new item.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        /// <exception cref="ArgumentOutOfRangeException" />
+        public Item AddTradableFungibleItem(
+            ITradableFungibleItem tradableFungibleItem,
+            int count)
+        {
+            if (tradableFungibleItem is null)
+            {
+                throw new ArgumentNullException(nameof(tradableFungibleItem));
+            }
+
+            Item item;
+            if (!TryGetTradableFungibleItems(
+                    tradableFungibleItem.FungibleId,
+                    tradableFungibleItem.RequiredBlockIndex,
+                    null,
+                    out var outItems))
+            {
+                item = new Item((ItemBase)tradableFungibleItem, count);
+                _items.Add(item);
+                return item;
+            }
+
+            item = outItems.First();
+            if (item.count > int.MaxValue - count)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(count),
+                    count,
+                    $"Aborted because {nameof(item.count)} is overflow");
+            }
+
+            item.count += count;
+            return item;
         }
 
         #endregion
@@ -314,19 +347,20 @@ namespace Nekoyume.Model.Item
             {
                 foreach (var item in _items)
                 {
-                    if (item.item is ITradableItem tradableItem)
+                    switch (item.item)
                     {
-                        if (tradableItem.TradableId.Equals(TradableMaterial.DeriveTradableId(fungibleId)) &&
-                            tradableItem.RequiredBlockIndex <= blockIndex)
+                        case ITradableItem tradableItem:
                         {
-                            targetItems.Add(item);
+                            if (tradableItem.TradableId.Equals(TradableMaterial.DeriveTradableId(fungibleId)) &&
+                                tradableItem.RequiredBlockIndex <= blockIndex)
+                            {
+                                targetItems.Add(item);
+                            }
+                            continue;
                         }
-                        continue;
-                    }
-
-                    if (item.item is IFungibleItem fungibleItem && fungibleItem.FungibleId.Equals(fungibleId))
-                    {
-                        targetItems.Add(item);
+                        case IFungibleItem fungibleItem when fungibleItem.FungibleId.Equals(fungibleId):
+                            targetItems.Add(item);
+                            break;
                     }
                 }
 
@@ -361,6 +395,132 @@ namespace Nekoyume.Model.Item
                 count -= item.count;
                 item.count = 0;
                 _items.Remove(item);
+            }
+
+            return true;
+        }
+
+
+        /// <summary>
+        /// Checks if the given item is material and can be removed from the inventory.
+        /// </summary>
+        /// <param name="item">The item to check for removal.</param>
+        /// <param name="id">The ID of the material to remove.</param>
+        /// <param name="blockIndex">The block index.</param>
+        /// <returns>Returns a boolean indicating whether the item is removable.</returns>
+        public static bool IsMaterialRemovable(Item item, int id, long blockIndex)
+        {
+            if (item.Locked)
+            {
+                return false;
+            }
+
+            if (item.item is not Material material || material.Id != id)
+            {
+                return false;
+            }
+
+            return material is not TradableMaterial tradableMaterial ||
+                tradableMaterial.RequiredBlockIndex <= blockIndex;
+        }
+
+        /// <summary>
+        /// Checks if the given item is non-tradable material and can be removed from the inventory.
+        /// </summary>
+        /// <param name="item">The item to check for removal.</param>
+        /// <param name="id">The ID of the material to remove.</param>
+        /// <returns>Returns a boolean indicating whether the item is removable.</returns>
+        public static bool IsMaterialRemovable(Item item, int id)
+        {
+            if (item.Locked)
+            {
+                return false;
+            }
+
+            if (item.item is not Material material || material.Id != id)
+            {
+                return false;
+            }
+
+            return material is not TradableMaterial;
+        }
+
+        /// <summary>
+        /// Remove a material from the inventory. contains tradable materials.
+        /// </summary>
+        /// <param name="id">The ID of the material item to remove.</param>
+        /// <param name="blockIndex">The block index.</param>
+        /// <param name="count">The number of materials to remove. Default value is 1.</param>
+        /// <returns>True if the material is successfully removed, false otherwise.</returns>
+        public bool RemoveMaterial(int id, long blockIndex, int count = 1)
+        {
+            if (count <= 0)
+            {
+                return false;
+            }
+
+            var targetItems = _items.Where(item => IsMaterialRemovable(item, id, blockIndex)).ToList();
+
+            targetItems = targetItems
+                .OrderBy(e => e.item is ITradableItem)
+                .ThenBy(e => e.count)
+                .ToList();
+
+            if (!targetItems.Any())
+            {
+                return false;
+            }
+
+            var totalCount = targetItems.Sum(e => e.count);
+            if (totalCount < count)
+            {
+                return false;
+            }
+
+            foreach (var item in targetItems)
+            {
+                if (item.count > count)
+                {
+                    item.count -= count;
+                    break;
+                }
+
+                count -= item.count;
+                item.count = 0;
+                _items.Remove(item);
+            }
+
+            return true;
+        }
+
+        public List<Consumable> FilterConsumables(int id, long blockIndex)
+        {
+            var consumables = Items.Where(i => !i.Locked && i.item.Id == id)
+                .Select(i => i.item)
+                .OfType<Consumable>();
+            return consumables
+                .Where(consumable => consumable.RequiredBlockIndex <= blockIndex)
+                .OrderBy(c => c.RequiredBlockIndex)
+                .ThenBy(c => c.NonFungibleId)
+                .ToList();
+        }
+
+        public bool RemoveConsumable(int id, long blockIndex, int count = 1)
+        {
+            var consumableItems = FilterConsumables(id, blockIndex);
+
+            var isSufficientItems = consumableItems.Count >= count;
+            if (!isSufficientItems)
+            {
+                return false;
+            }
+
+            foreach (var consumable in consumableItems.Take(count))
+            {
+                if (!RemoveNonFungibleItem(consumable))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -496,6 +656,143 @@ namespace Nekoyume.Model.Item
             return true;
         }
 
+        /// <summary>
+        /// Remove a tradable material from the inventory.
+        /// </summary>
+        /// <param name="materialId">The ID of the material item to remove.</param>
+        /// <param name="blockIndex">The block index.</param>
+        /// <param name="count">The number of materials to remove. Default value is 1.</param>
+        /// <returns>True if the material is successfully removed, false otherwise.</returns>
+        public bool RemoveTradableMaterial(int materialId, long blockIndex, int count = 1)
+        {
+            if (count <= 0)
+            {
+                throw new InvalidItemCountException("cout must be greater than 0");
+            }
+            var items = _items
+                .Where(i =>
+                    !i.Locked &&
+                    i.item is TradableMaterial tradableMaterial &&
+                    tradableMaterial.Id == materialId &&
+                    tradableMaterial.RequiredBlockIndex <= blockIndex
+                )
+                .OrderBy(i => ((ITradableItem)i.item).RequiredBlockIndex)
+                .ThenBy(i => i.count)
+                .ToList();
+
+            if (items.Sum(i => i.count) < count)
+            {
+                return false;
+            }
+
+            foreach (var item in items)
+            {
+                if (item.count > count)
+                {
+                    item.count -= count;
+                    break;
+                }
+
+                count -= item.count;
+                item.count = 0;
+                _items.Remove(item);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Remove a non-tradable material from the inventory.
+        /// </summary>
+        /// <param name="id">The ID of the material item to remove.</param>
+        /// <param name="count">The number of materials to remove. Default value is 1.</param>
+        /// <returns>True if the material is successfully removed, false otherwise.</returns>
+        public bool RemoveNonTradableMaterial(int id, int count = 1)
+        {
+            if (count <= 0)
+            {
+                return false;
+            }
+
+            List<Item> targetItems = _items.Where(item => IsMaterialRemovable(item, id)).ToList();
+
+            targetItems = targetItems
+                .OrderBy(e => e.count)
+                .ToList();
+
+            if (!targetItems.Any())
+            {
+                return false;
+            }
+
+            var totalCount = targetItems.Sum(e => e.count);
+            if (totalCount < count)
+            {
+                return false;
+            }
+
+            foreach (var item in targetItems)
+            {
+                if (item.count > count)
+                {
+                    item.count -= count;
+                    break;
+                }
+
+                count -= item.count;
+                item.count = 0;
+                _items.Remove(item);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Remove tradable item from inventory.
+        /// Use the requiredBlockIndex when you want to remove the item that
+        /// has same requiredBlockIndex.
+        /// Use the blockIndex when you want to remove the item that has requiredBlockIndex
+        /// less than or equal to blockIndex.
+        /// Do not use both requiredBlockIndex and blockIndex at the same time.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        public bool RemoveTradableFungibleItem(
+            HashDigest<SHA256> fungibleId,
+            long? requiredBlockIndex,
+            long? blockIndex,
+            int count)
+        {
+            if (!TryGetTradableFungibleItems(
+                    fungibleId,
+                    requiredBlockIndex,
+                    blockIndex,
+                    out var outItems))
+            {
+                return false;
+            }
+
+            var itemArray = outItems as Item[] ?? outItems.ToArray();
+            if (itemArray.Sum(item => item.count) < count)
+            {
+                return false;
+            }
+
+            foreach (var item in itemArray)
+            {
+                if (item.count > count)
+                {
+                    item.count -= count;
+                    break;
+                }
+
+                count -= item.count;
+                item.count = 0;
+                _items.Remove(item);
+            }
+
+            return true;
+        }
+
         #endregion
 
         #region Try Get
@@ -564,14 +861,24 @@ namespace Nekoyume.Model.Item
             where T : INonFungibleItem =>
             TryGetNonFungibleItem(nonFungibleItem.NonFungibleId, out outNonFungibleItem);
 
-        public bool TryGetNonFungibleItem<T>(Guid itemId, out T outNonFungibleItem)
+        /// <summary>
+        /// Tries to get a non-fungible item from the inventory with the specified item ID.
+        /// </summary>
+        /// <typeparam name="T">The type of non-fungible item to retrieve.</typeparam>
+        /// <param name="itemId">The ID of the non-fungible item to retrieve.</param>
+        /// <param name="outNonFungibleItem">When this method returns, contains the non-fungible item with the specified ID, if found; otherwise, the default value for the type.</param>
+        /// <param name="blockIndex">The block index for the non-fungible item to be considered valid. Defaults to <see cref="long.MaxValue"/>.</param>
+        /// <returns><c>true</c> if a non-fungible item with the specified ID is found in the inventory; otherwise, <c>false</c>.</returns>
+        public bool TryGetNonFungibleItem<T>(Guid itemId, out T outNonFungibleItem,
+            long blockIndex = long.MaxValue)
             where T : INonFungibleItem
         {
             foreach (var item in _items)
             {
                 if (item.Locked ||
                     !(item.item is T nonFungibleItem) ||
-                    !nonFungibleItem.NonFungibleId.Equals(itemId))
+                    !nonFungibleItem.NonFungibleId.Equals(itemId) ||
+                    nonFungibleItem.RequiredBlockIndex > blockIndex)
                 {
                     continue;
                 }
@@ -624,6 +931,38 @@ namespace Nekoyume.Model.Item
                 i.count >= count
             );
             return !(outItem is null);
+        }
+
+        /// <summary>
+        /// Get ITradableFungibleItem from the inventory.
+        /// This method check the item is not locked,
+        /// and the item's required block index is less than or equal to the given block index.
+        /// Do not use both requiredBlockIndex and blockIndex at the same time.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        public bool TryGetTradableFungibleItems(
+            HashDigest<SHA256> fungibleId,
+            long? requiredBlockIndex,
+            long? blockIndex,
+            out IEnumerable<Item> outItems)
+        {
+            if (requiredBlockIndex is null && blockIndex is null)
+            {
+                throw new ArgumentNullException(
+                    $"{nameof(requiredBlockIndex)} and {nameof(blockIndex)} cannot be null " +
+                    "at the same time");
+            }
+
+            var tradableId = TradableMaterial.DeriveTradableId(fungibleId);
+            outItems = _items
+                .Where(e =>
+                    !e.Locked &&
+                    e.item is ITradableFungibleItem tradableFungibleItem &&
+                    tradableFungibleItem.FungibleId.Equals(fungibleId) &&
+                    tradableFungibleItem.TradableId.Equals(tradableId) &&
+                    (requiredBlockIndex is null || tradableFungibleItem.RequiredBlockIndex == requiredBlockIndex) &&
+                    (blockIndex is null || tradableFungibleItem.RequiredBlockIndex <= blockIndex));
+            return outItems.Any();
         }
 
         public bool TryGetLockedItem(ILock iLock, out Item outItem)
@@ -681,60 +1020,33 @@ namespace Nekoyume.Model.Item
                 tradableItem.RequiredBlockIndex <= blockIndex)
             .Sum(i => i.count) >= count;
 
-        #endregion
-
-        public bool HasNotification(
-            int level,
-            long blockIndex,
-            ItemRequirementSheet requirementSheet,
-            EquipmentItemRecipeSheet recipeSheet,
-            EquipmentItemSubRecipeSheetV2 subRecipeSheet,
-            EquipmentItemOptionSheet itemOptionSheet)
+        public bool HasTradableFungibleItem(
+            HashDigest<SHA256> fungibleId,
+            long? requiredBlockIndex,
+            long? blockIndex,
+            int count)
         {
-            var availableSlots = UnlockHelper.GetAvailableEquipmentSlots(level);
-
-            foreach (var (type, slotCount) in availableSlots)
+            if (requiredBlockIndex is null && blockIndex is null)
             {
-                var equipments = Equipments
-                    .Where(e =>
-                        e.ItemSubType == type &&
-                        e.RequiredBlockIndex <= blockIndex)
-                    .ToList();
-                var current = equipments.Where(e => e.equipped).ToList();
-                // When an equipment slot is empty.
-                if (current.Count < Math.Min(equipments.Count, slotCount))
-                {
-                    return true;
-                }
-
-                // When any other equipments are stronger than current one.
-                foreach (var equipment in equipments)
-                {
-                    if (equipment.equipped)
-                    {
-                        continue;
-                    }
-
-                    var cp = CPHelper.GetCP(equipment);
-                    foreach (var i in current)
-                    {
-                        var requirementLevel = i.GetRequirementLevel(
-                            requirementSheet,
-                            recipeSheet,
-                            subRecipeSheet,
-                            itemOptionSheet);
-
-
-                        if (level >= requirementLevel && CPHelper.GetCP(i) < cp)
-                        {
-                            return true;
-                        }
-                    }
-                }
+                throw new ArgumentNullException(
+                    $"{nameof(requiredBlockIndex)} and {nameof(blockIndex)} cannot be null " +
+                    "at the same time");
             }
 
-            return false;
+            var tradableId = TradableMaterial.DeriveTradableId(fungibleId);
+            return _items
+                .Where(e =>
+                    !e.Locked &&
+                    e.item is ITradableFungibleItem tradableFungibleItem &&
+                    tradableFungibleItem.FungibleId.Equals(fungibleId) &&
+                    tradableFungibleItem.TradableId.Equals(tradableId) &&
+                    (requiredBlockIndex is null ||
+                     tradableFungibleItem.RequiredBlockIndex == requiredBlockIndex) &&
+                    (blockIndex is null || tradableFungibleItem.RequiredBlockIndex <= blockIndex))
+                .Sum(e => e.count) >= count;
         }
+
+        #endregion
 
         public ITradableItem SellItem(Guid tradableId, long blockIndex, int count)
         {
@@ -797,13 +1109,13 @@ namespace Nekoyume.Model.Item
                 {
                     RequiredBlockIndex = requiredBlockIndex
                 };
-                AddItem2(material, count);
+                AddItem(material, count);
                 return material;
             }
 
             // NonFungibleItem case.
             tradableItem.RequiredBlockIndex = requiredBlockIndex;
-            AddItem2((ItemBase) tradableItem, count);
+            AddItem((ItemBase) tradableItem, count);
             return tradableItem;
         }
 

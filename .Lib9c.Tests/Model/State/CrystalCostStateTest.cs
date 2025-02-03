@@ -1,7 +1,6 @@
 namespace Lib9c.Tests.Model.State
 {
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Helper;
     using Nekoyume.Model.State;
@@ -13,7 +12,7 @@ namespace Lib9c.Tests.Model.State
         public void Serialize()
         {
             var crystal = 100 * CrystalCalculator.CRYSTAL;
-            var address = new PrivateKey().ToAddress();
+            var address = new PrivateKey().Address;
             var state = new CrystalCostState(address, crystal);
             state.Count++;
             var serialized = state.Serialize();

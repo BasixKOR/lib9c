@@ -8,17 +8,14 @@ namespace Lib9c.Tests.Action.Scenario.Pet
     using System.Linq;
     using Bencodex.Types;
     using Lib9c.Tests.Util;
-    using Libplanet;
-    using Libplanet.State;
-    using Nekoyume;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
     using Nekoyume.Action;
-    using Nekoyume.Model.Item;
     using Nekoyume.Model.Pet;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Xunit;
-    using Xunit.Abstractions;
-    using static Lib9c.SerializeKeys;
 
     public class ReduceRequiredBlockTest
     {
@@ -28,31 +25,24 @@ namespace Lib9c.Tests.Action.Scenario.Pet
         private readonly TableSheets _tableSheets;
         private readonly Address _agentAddr;
         private readonly Address _avatarAddr;
-        private readonly IAccountStateDelta _initialStateV1;
-        private readonly IAccountStateDelta _initialStateV2;
-        private readonly Address _inventoryAddr;
-        private readonly Address _worldInfoAddr;
+        private readonly IWorld _initialStateV2;
         private readonly Address _recipeAddr;
         private int? _petId;
 
         public ReduceRequiredBlockTest()
         {
-            (_tableSheets, _agentAddr, _avatarAddr, _initialStateV1, _initialStateV2)
+            (_tableSheets, _agentAddr, _avatarAddr, _initialStateV2)
                 = InitializeUtil.InitializeStates();
-            _inventoryAddr = _avatarAddr.Derive(LegacyInventoryKey);
-            _worldInfoAddr = _avatarAddr.Derive(LegacyWorldInformationKey);
             _recipeAddr = _avatarAddr.Derive("recipe_ids");
         }
 
         [Theory]
-        [InlineData(10114000, null)] // No Pet
-        [InlineData(10114000, 1)] // Lv.1 reduces 5.5%
-        [InlineData(10114000, 30)] // Lv.30 reduces 20%
-        public void CombinationEquipmentTest(
-            int targetItemId,
-            int? petLevel
-        )
+        [InlineData(null)] // No Pet
+        [InlineData(1)] // Lv.1 reduces 5.5%
+        [InlineData(30)] // Lv.30 reduces 20%
+        public void CombinationEquipmentTest(int? petLevel)
         {
+            var targetItemId = 10114000;
             var random = new TestRandom();
 
             // Get Recipe
@@ -62,7 +52,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             var expectedBlock = recipe.RequiredBlockIndex;
 
             // Get Materials and stages
-            List<EquipmentItemSubRecipeSheet.MaterialInfo> materialList =
+            var materialList =
                 recipe.GetAllMaterials(_tableSheets.EquipmentItemSubRecipeSheetV2).ToList();
             var stageList = List.Empty;
             for (var i = 1; i < recipe.UnlockStage + 1; i++)
@@ -70,7 +60,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 stageList = stageList.Add(i.Serialize());
             }
 
-            var stateV2 = _initialStateV2.SetState(_recipeAddr, stageList);
+            var stateV2 = _initialStateV2.SetLegacyState(_recipeAddr, stageList);
 
             // Get pet
             if (!(petLevel is null))
@@ -80,7 +70,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 );
 
                 _petId = petRow.PetId;
-                stateV2 = stateV2.SetState(
+                stateV2 = stateV2.SetLegacyState(
                     PetState.DeriveAddress(_avatarAddr, (int)_petId),
                     new List(_petId!.Serialize(), petLevel.Serialize(), 0L.Serialize())
                 );
@@ -90,7 +80,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             }
 
             // Prepare
-            stateV2 = CraftUtil.PrepareCombinationSlot(stateV2, _avatarAddr, 0);
+            stateV2 = CraftUtil.PrepareCombinationSlot(stateV2, _avatarAddr);
             stateV2 = CraftUtil.AddMaterialsToInventory(
                 stateV2,
                 _tableSheets,
@@ -101,7 +91,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             stateV2 = CraftUtil.UnlockStage(
                 stateV2,
                 _tableSheets,
-                _worldInfoAddr,
+                _avatarAddr,
                 recipe.UnlockStage
             );
 
@@ -111,19 +101,21 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 avatarAddress = _avatarAddr,
                 slotIndex = 0,
                 recipeId = recipe.Id,
-                subRecipeId = recipe.SubRecipeIds?[0],
+                subRecipeId = null,
                 petId = _petId,
             };
 
-            stateV2 = action.Execute(new ActionContext
-            {
-                PreviousStates = stateV2,
-                Signer = _agentAddr,
-                BlockIndex = 0L,
-                Random = random,
-            });
+            stateV2 = action.Execute(
+                new ActionContext
+                {
+                    PreviousState = stateV2,
+                    Signer = _agentAddr,
+                    BlockIndex = 0L,
+                    RandomSeed = random.Seed,
+                });
 
-            var slotState = stateV2.GetCombinationSlotState(_avatarAddr, 0);
+            var allSlotState = stateV2.GetAllCombinationSlotState(_avatarAddr);
+            var slotState = allSlotState.GetSlot(0);
             // TEST: RequiredBlockIndex
             Assert.Equal(expectedBlock, slotState.RequiredBlockIndex);
         }

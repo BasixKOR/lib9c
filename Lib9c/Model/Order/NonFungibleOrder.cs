@@ -1,7 +1,7 @@
 using System;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Action;
 using Nekoyume.Battle;
 using Nekoyume.Model.Item;
@@ -79,7 +79,7 @@ namespace Lib9c.Model.Order
                     equippableItem.Unequip();
                 }
 
-                return nonFungibleItem;
+                return (ITradableItem)nonFungibleItem;
             }
 
             throw new ItemDoesNotExistException(
@@ -97,7 +97,7 @@ namespace Lib9c.Model.Order
                     equippableItem.Unequip();
                 }
 
-                return nonFungibleItem;
+                return (ITradableItem)nonFungibleItem;
             }
 
             throw new ItemDoesNotExistException(
@@ -152,7 +152,7 @@ namespace Lib9c.Model.Order
 
                     if (nonFungibleItem is Costume costume)
                     {
-                        buyer.UpdateFromAddCostume(costume, false);
+                        buyer.UpdateFromAddCostume(costume);
                     }
                     else
                     {
@@ -176,11 +176,11 @@ namespace Lib9c.Model.Order
                 nonFungibleItem.RequiredBlockIndex = blockIndex;
                 if (nonFungibleItem is Costume costume)
                 {
-                    buyer.UpdateFromAddCostume(costume, false);
+                    buyer.UpdateFromAddCostume(costume);
                 }
                 else
                 {
-                    buyer.UpdateFromAddItem2((ItemUsable) nonFungibleItem, false);
+                    buyer.UpdateFromAddItem((ItemUsable) nonFungibleItem, false);
                 }
 
                 return new OrderReceipt(OrderId, buyer.agentAddress, buyer.address, blockIndex);
@@ -202,11 +202,11 @@ namespace Lib9c.Model.Order
 
                     if (nonFungibleItem is Costume costume)
                     {
-                        buyer.UpdateFromAddCostume(costume, false);
+                        buyer.UpdateFromAddCostume(costume);
                     }
                     else
                     {
-                        buyer.UpdateFromAddItem2((ItemUsable)nonFungibleItem, false);
+                        buyer.UpdateFromAddItem((ItemUsable)nonFungibleItem, false);
                     }
                 }
 
@@ -313,7 +313,7 @@ namespace Lib9c.Model.Order
             if (avatarState.inventory.TryGetNonFungibleItem(TradableId, out INonFungibleItem nonFungibleItem))
             {
                 nonFungibleItem.RequiredBlockIndex = blockIndex;
-                return nonFungibleItem;
+                return (ITradableItem)nonFungibleItem;
             }
             throw new ItemDoesNotExistException(
                 $"Aborted because the tradable item({TradableId}) was failed to load from avatar's inventory.");

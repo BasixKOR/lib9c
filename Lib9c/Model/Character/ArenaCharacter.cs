@@ -2,21 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Bencodex.Types;
 using BTAI;
-using Nekoyume.Action;
 using Nekoyume.Arena;
 using Nekoyume.Battle;
-using Nekoyume.Model.BattleStatus;
+using Nekoyume.Helper;
 using Nekoyume.Model.BattleStatus.Arena;
 using Nekoyume.Model.Buff;
 using Nekoyume.Model.Character;
 using Nekoyume.Model.Elemental;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Skill;
+using Nekoyume.Model.Skill.Arena;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using ArenaSkill = Nekoyume.Model.BattleStatus.Arena.ArenaSkill;
 
 namespace Nekoyume.Model
 {
@@ -29,16 +29,18 @@ namespace Nekoyume.Model
         private readonly StatBuffSheet _statBuffSheet;
         private readonly SkillActionBuffSheet _skillActionBuffSheet;
         private readonly ActionBuffSheet _actionBuffSheet;
-        private readonly IArenaSimulator _simulator;
+        private readonly BuffLinkSheet _buffLinkSheet;
         private readonly ArenaSkills _skills;
 
+        public readonly IArenaSimulator Simulator;
         public readonly ArenaSkills _runeSkills = new ArenaSkills();
         public readonly Dictionary<int, int> RuneSkillCooldownMap = new Dictionary<int, int>();
 
         private readonly int _attackCountMax;
 
         private ArenaCharacter _target;
-        private int _attackCount;
+        public int AttackCount { get; private set; }
+        public ArenaSkill usedSkill;
 
         public Guid Id { get; } = Guid.NewGuid();
         public BattleStatus.Arena.ArenaSkill SkillLog { get; private set; }
@@ -51,9 +53,11 @@ namespace Nekoyume.Model
         public int CharacterId { get; }
         public bool IsEnemy { get; }
 
-        private int _currentHP;
+        private bool _setExtraValueBuffBeforeGetBuffs = false;
 
-        public int CurrentHP
+        private long _currentHP;
+
+        public long CurrentHP
         {
             get => _currentHP;
             set => _currentHP = Math.Min(Math.Max(0, value), HP);
@@ -65,18 +69,18 @@ namespace Nekoyume.Model
             set => Stats.SetStats(value);
         }
 
-        public int HP => Stats.HP;
-        public int AdditionalHP => Stats.BuffStats.HP;
-        public int ATK => Stats.ATK;
-        public int DEF => Stats.DEF;
-        public int CRI => Stats.CRI;
-        public int HIT => Stats.HIT;
-        public int SPD => Stats.SPD;
-        public int DRV => Stats.DRV;
-        public int DRR => Stats.DRR;
-        public int CDMG => Stats.CDMG;
-        public int ArmorPenetration => Stats.ArmorPenetration;
-        public int Thorn => Stats.Thorn;
+        public long HP => Stats.HP;
+        public long AdditionalHP => Stats.BuffStats.HP;
+        public long ATK => Stats.ATK;
+        public long DEF => Stats.DEF;
+        public long CRI => Stats.CRI;
+        public long HIT => Stats.HIT;
+        public long SPD => Stats.SPD;
+        public long DRV => Stats.DRV;
+        public long DRR => Stats.DRR;
+        public long CDMG => Stats.CDMG;
+        public long ArmorPenetration => Stats.ArmorPenetration;
+        public long Thorn => Stats.Thorn;
 
         public bool IsDead => CurrentHP <= 0;
         public Dictionary<int, Buff.Buff> Buffs { get; } = new Dictionary<int, Buff.Buff>();
@@ -84,38 +88,6 @@ namespace Nekoyume.Model
         public IEnumerable<ActionBuff> ActionBuffs => Buffs.Values.OfType<ActionBuff>();
 
         public object Clone() => new ArenaCharacter(this);
-
-        public ArenaCharacter(
-            ArenaSimulatorV1 simulator,
-            ArenaPlayerDigest digest,
-            ArenaSimulatorSheetsV1 sheets,
-            bool isEnemy = false)
-        {
-            OffensiveElementalType = GetElementalType(digest.Equipments, ItemSubType.Weapon);
-            DefenseElementalType = GetElementalType(digest.Equipments, ItemSubType.Armor);
-            var row = CharacterRow(digest.CharacterId, sheets);
-            SizeType = row?.SizeType ?? SizeType.S;
-            RunSpeed = row?.RunSpeed ?? 1f;
-            AttackRange = row?.AttackRange ?? 1f;
-            CharacterId = digest.CharacterId;
-            IsEnemy = isEnemy;
-
-            _skillSheet = sheets.SkillSheet;
-            _skillBuffSheet = sheets.SkillBuffSheet;
-            _statBuffSheet = sheets.StatBuffSheet;
-            _skillActionBuffSheet = sheets.SkillActionBuffSheet;
-            _actionBuffSheet = sheets.ActionBuffSheet;
-
-            _simulator = simulator;
-            Stats = GetStat(
-                digest,
-                row,
-                sheets.EquipmentItemSetEffectSheet,
-                sheets.CostumeStatSheet);
-            _skills = GetSkills(digest.Equipments, sheets.SkillSheet);
-            _attackCountMax = AttackCountHelper.GetCountMax(digest.Level);
-            ResetCurrentHP();
-        }
 
         public ArenaCharacter(
             IArenaSimulator simulator,
@@ -138,8 +110,8 @@ namespace Nekoyume.Model
             _skillActionBuffSheet = sheets.SkillActionBuffSheet;
             _actionBuffSheet = sheets.ActionBuffSheet;
 
-            _simulator = simulator;
-            Stats = GetStat(
+            Simulator = simulator;
+            Stats = GetStatV1(
                 digest,
                 row,
                 sheets.EquipmentItemSetEffectSheet,
@@ -147,6 +119,67 @@ namespace Nekoyume.Model
             _skills = GetSkills(digest.Equipments, sheets.SkillSheet);
             _attackCountMax = AttackCountHelper.GetCountMax(digest.Level);
             ResetCurrentHP();
+        }
+
+        public ArenaCharacter(
+            IArenaSimulator simulator,
+            ArenaPlayerDigest digest,
+            ArenaSimulatorSheets sheets,
+            long hpModifier,
+            List<StatModifier> collectionModifiers,
+            bool isEnemy = false,
+            bool setExtraValueBuffBeforeGetBuffs = false)
+        {
+            OffensiveElementalType = GetElementalType(digest.Equipments, ItemSubType.Weapon);
+            DefenseElementalType = GetElementalType(digest.Equipments, ItemSubType.Armor);
+            var row = CharacterRow(digest.CharacterId, sheets);
+            SizeType = row?.SizeType ?? SizeType.S;
+            RunSpeed = row?.RunSpeed ?? 1f;
+            AttackRange = row?.AttackRange ?? 1f;
+            CharacterId = digest.CharacterId;
+            IsEnemy = isEnemy;
+            _setExtraValueBuffBeforeGetBuffs = setExtraValueBuffBeforeGetBuffs;
+
+            _skillSheet = sheets.SkillSheet;
+            _skillBuffSheet = sheets.SkillBuffSheet;
+            _statBuffSheet = sheets.StatBuffSheet;
+            _skillActionBuffSheet = sheets.SkillActionBuffSheet;
+            _actionBuffSheet = sheets.ActionBuffSheet;
+            _buffLinkSheet = simulator.BuffLinkSheet;
+
+            Simulator = simulator;
+            Stats = GetStat(
+                digest,
+                row,
+                sheets.EquipmentItemSetEffectSheet,
+                sheets.CostumeStatSheet,
+                hpModifier);
+            _skills = GetSkills(digest.Equipments, sheets.SkillSheet);
+            _attackCountMax = AttackCountHelper.GetCountMax(digest.Level);
+
+            var equippedRuneIds = digest.RuneSlotState.GetEquippedRuneSlotInfos().Select(
+                rs => rs.RuneId
+            ).ToList();
+            var equippedRunes = digest.Runes.Runes.Values.Where(
+                rs => equippedRuneIds.Contains(rs.RuneId)
+            ).ToList();
+            var runeOptionSheet = sheets.RuneOptionSheet;
+            var runeExist = equippedRunes.Any();
+            if (runeExist)
+            {
+                var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(digest.Runes,
+                    sheets.RuneListSheet,
+                    sheets.RuneLevelBonusSheet);
+                SetRuneStats(equippedRunes, runeOptionSheet, runeLevelBonus);
+            }
+
+            Stats.SetCollections(collectionModifiers);
+            ResetCurrentHP();
+            if (runeExist)
+            {
+                // call SetRuneSkills last. because rune skills affect from total calculated stats
+                SetRuneSkills(equippedRunes, runeOptionSheet, sheets.SkillSheet);
+            }
         }
 
         private ArenaCharacter(ArenaCharacter value)
@@ -167,7 +200,7 @@ namespace Nekoyume.Model
             _skillActionBuffSheet = value._skillActionBuffSheet;
             _actionBuffSheet = value._actionBuffSheet;
 
-            _simulator = value._simulator;
+            Simulator = value.Simulator;
             Stats = new CharacterStats(value.Stats);
             _skills = value._skills;
             Buffs = new Dictionary<int, Buff.Buff>();
@@ -178,8 +211,8 @@ namespace Nekoyume.Model
                 Buffs.Add(pair.Key, (Buff.Buff) pair.Value.Clone());
             }
 
-            _attackCountMax = value._attackCount;
-            _attackCount = value._attackCount;
+            _attackCountMax = value.AttackCount;
+            AttackCount = value.AttackCount;
             _target = value._target;
             CurrentHP = value.CurrentHP;
         }
@@ -219,6 +252,33 @@ namespace Nekoyume.Model
             ArenaPlayerDigest digest,
             CharacterSheet.Row characterRow,
             EquipmentItemSetEffectSheet equipmentItemSetEffectSheet,
+            CostumeStatSheet costumeStatSheet,
+            long hpModifier)
+        {
+            var stats = new CharacterStats(characterRow, digest.Level)
+            {
+                IsArenaCharacter = true,
+                HpIncreasingModifier = hpModifier
+            };
+            stats.SetEquipments(digest.Equipments, equipmentItemSetEffectSheet);
+
+            var options = new List<StatModifier>();
+            foreach (var itemId in digest.Costumes.Select(costume => costume.Id))
+            {
+                if (TryGetStats(costumeStatSheet, itemId, out var option))
+                {
+                    options.AddRange(option);
+                }
+            }
+
+            stats.SetCostume(options);
+            return stats;
+        }
+
+        private static CharacterStats GetStatV1(
+            ArenaPlayerDigest digest,
+            CharacterSheet.Row characterRow,
+            EquipmentItemSetEffectSheet equipmentItemSetEffectSheet,
             CostumeStatSheet costumeStatSheet)
         {
             var stats = new CharacterStats(characterRow, digest.Level)
@@ -236,13 +296,13 @@ namespace Nekoyume.Model
                 }
             }
 
-            stats.SetOption(options);
+            stats.SetCostume(options);
             return stats;
         }
 
         private static bool TryGetStats(
             CostumeStatSheet statSheet,
-            int itemId,
+            long itemId,
             out IEnumerable<StatModifier> statModifiers)
         {
             statModifiers = statSheet.OrderedList
@@ -273,8 +333,8 @@ namespace Nekoyume.Model
                         new StatModifier(
                             x.stat.StatType,
                             x.operationType,
-                            x.stat.TotalValueAsInt)));
-                Stats.AddOptional(statModifiers);
+                            x.stat.TotalValueAsLong)));
+                Stats.AddCostume(statModifiers);
                 ResetCurrentHP();
 
                 if (optionInfo.SkillId == default ||
@@ -283,12 +343,12 @@ namespace Nekoyume.Model
                     continue;
                 }
 
-                var power = 0;
+                long power = 0;
                 if (optionInfo.StatReferenceType == EnumType.StatReferenceType.Caster)
                 {
                     if (optionInfo.SkillValueType == StatModifier.OperationType.Add)
                     {
-                        power = (int)optionInfo.SkillValue;
+                        power = (long)optionInfo.SkillValue;
                     }
                     else
                     {
@@ -305,7 +365,7 @@ namespace Nekoyume.Model
                                 break;
                         }
 
-                        power = (int)Math.Round(power * optionInfo.SkillValue);
+                        power = (long)Math.Round(power * optionInfo.SkillValue);
                     }
                 }
                 var skill = SkillFactory.GetForArena(skillRow, power, optionInfo.SkillChance, default, StatType.NONE);
@@ -334,8 +394,8 @@ namespace Nekoyume.Model
                         new StatModifier(
                             x.stat.StatType,
                             x.operationType,
-                            x.stat.TotalValueAsInt)));
-                Stats.AddOptional(statModifiers);
+                            x.stat.TotalValueAsLong)));
+                Stats.AddCostume(statModifiers);
                 ResetCurrentHP();
 
                 if (optionInfo.SkillId == default ||
@@ -352,7 +412,7 @@ namespace Nekoyume.Model
                 }
                 else if (optionInfo.StatReferenceType == EnumType.StatReferenceType.Caster)
                 {
-                    var value = Stats.GetStatAsInt(optionInfo.SkillStatType);
+                    var value = Stats.GetStatAsLong(optionInfo.SkillStatType);
                     power = (int)Math.Round(value * optionInfo.SkillValue);
                 }
                 var skill = SkillFactory.GetForArena(skillRow, power, optionInfo.SkillChance, default, StatType.NONE);
@@ -367,10 +427,8 @@ namespace Nekoyume.Model
             }
         }
 
-        public void SetRune(
-            List<RuneState> runes,
-            RuneOptionSheet runeOptionSheet,
-            SkillSheet skillSheet)
+        public void SetRuneStats(IEnumerable<RuneState> runes, RuneOptionSheet runeOptionSheet,
+            int runeLevelBonus)
         {
             foreach (var rune in runes)
             {
@@ -382,13 +440,29 @@ namespace Nekoyume.Model
 
                 var statModifiers = new List<StatModifier>();
                 statModifiers.AddRange(
-                    optionInfo.Stats.Select(x =>
-                        new StatModifier(
-                            x.stat.StatType,
-                            x.operationType,
-                            x.stat.TotalValueAsInt)));
+                    optionInfo.Stats.Select(x => new StatModifier(
+                        x.stat.StatType,
+                        x.operationType,
+                        (long)(x.stat.TotalValue * (100000 + runeLevelBonus) / 100000m)
+                    ))
+                );
                 Stats.AddRune(statModifiers);
                 ResetCurrentHP();
+            }
+        }
+
+        public void SetRuneSkills(
+            IEnumerable<RuneState> runes,
+            RuneOptionSheet runeOptionSheet,
+            SkillSheet skillSheet)
+        {
+            foreach (var rune in runes)
+            {
+                if (!runeOptionSheet.TryGetValue(rune.RuneId, out var optionRow) ||
+                    !optionRow.LevelOptionMap.TryGetValue(rune.Level, out var optionInfo))
+                {
+                    continue;
+                }
 
                 if (optionInfo.SkillId == default ||
                     !skillSheet.TryGetValue(optionInfo.SkillId, out var skillRow))
@@ -404,7 +478,7 @@ namespace Nekoyume.Model
                 }
                 else if (optionInfo.StatReferenceType == EnumType.StatReferenceType.Caster)
                 {
-                    var value = Stats.GetStatAsInt(optionInfo.SkillStatType);
+                    var value = Stats.GetStatAsLong(optionInfo.SkillStatType);
                     power = (int)Math.Round(value * optionInfo.SkillValue);
                 }
                 var skill = SkillFactory.GetForArena(skillRow, power, optionInfo.SkillChance, default, StatType.NONE);
@@ -480,15 +554,6 @@ namespace Nekoyume.Model
             );
         }
 
-        [Obsolete("Use InitAI")]
-        private void InitAIV1()
-        {
-            _root = new Root();
-            _root.OpenBranch(
-                BT.Call(ActV1)
-            );
-        }
-
         private void Act()
         {
             if (IsDead)
@@ -498,27 +563,21 @@ namespace Nekoyume.Model
 
             ReduceDurationOfBuffs();
             ReduceSkillCooldown();
-            OnPreSkill();
-            var usedSkill = UseSkill();
+            if (OnPreSkill())
+            {
+                usedSkill = new ArenaTick((ArenaCharacter)Clone());
+                Simulator.Log.Add(usedSkill);
+            }
+            else
+            {
+                usedSkill = UseSkill();
+            }
+
             if (usedSkill != null)
             {
                 OnPostSkill(usedSkill);
             }
             RemoveBuffs();
-        }
-
-        [Obsolete("Use Act")]
-        private void ActV1()
-        {
-            if (IsDead)
-            {
-                return;
-            }
-
-            ReduceDurationOfBuffs();
-            ReduceSkillCooldown();
-            UseSkillV1();
-            RemoveBuffsV1();
         }
 
         [Obsolete("Use Act")]
@@ -535,38 +594,61 @@ namespace Nekoyume.Model
             RemoveBuffs();
         }
 
-        protected virtual void OnPreSkill()
+        protected virtual bool OnPreSkill()
         {
-
+            return Buffs.Values.Any(buff => buff is Stun);
         }
 
         protected virtual void OnPostSkill(BattleStatus.Arena.ArenaSkill usedSkill)
         {
+            var attackSkills = usedSkill.SkillInfos
+                .Where(skillInfo => skillInfo.SkillCategory
+                    is SkillCategory.NormalAttack
+                    or SkillCategory.BlowAttack
+                    or SkillCategory.DoubleAttack
+                    or SkillCategory.AreaAttack
+                    or SkillCategory.BuffRemovalAttack)
+                .ToList();
+            if (Buffs.Values.OfType<Vampiric>().OrderBy(x => x.BuffInfo.Id) is
+                { } vampirics)
+            {
+                foreach (var vampiric in vampirics)
+                {
+                    foreach (var effect in attackSkills
+                                 .Select(skillInfo =>
+                                     vampiric.GiveEffectForArena(this, skillInfo, Simulator.Turn)))
+                    {
+                        Simulator.Log.Add(effect);
+                    }
+                }
+            }
+
             var bleeds = Buffs.Values.OfType<Bleed>().OrderBy(x => x.BuffInfo.Id);
             foreach (var bleed in bleeds)
             {
-                var effect = bleed.GiveEffectForArena(this, _simulator.Turn);
-                _simulator.Log.Add(effect);
+                var effect = bleed.GiveEffectForArena(this, Simulator.Turn);
+                Simulator.Log.Add(effect);
             }
 
             // Apply thorn damage if target has thorn
-            foreach (var skillInfo in usedSkill.SkillInfos)
+            foreach (var skillInfo in attackSkills)
             {
-                var isAttackSkill =
-                    skillInfo.SkillCategory == SkillCategory.NormalAttack ||
-                    skillInfo.SkillCategory == SkillCategory.BlowAttack ||
-                    skillInfo.SkillCategory == SkillCategory.DoubleAttack ||
-                    skillInfo.SkillCategory == SkillCategory.AreaAttack ||
-                    skillInfo.SkillCategory == SkillCategory.BuffRemovalAttack;
-                if (isAttackSkill && skillInfo.Target.Thorn > 0)
+                if (skillInfo.Target.Thorn > 0)
                 {
                     var effect = GiveThornDamage(skillInfo.Target.Thorn);
-                    _simulator.Log.Add(effect);
+                    Simulator.Log.Add(effect);
+                }
+
+                if (skillInfo.IceShield is not null)
+                {
+                    var frostBite = skillInfo.IceShield.FrostBite(_statBuffSheet, _buffLinkSheet);
+                    AddBuff(frostBite);
+                    Simulator.Log.Add(new ArenaTick(frostBite.RowData.Id, (ArenaCharacter)Clone(), this.usedSkill.SkillInfos, usedSkill.BuffInfos));
                 }
             }
         }
 
-        private ArenaSkill GiveThornDamage(int targetThorn)
+        private ArenaSkill GiveThornDamage(long targetThorn)
         {
             var clone = (ArenaCharacter)Clone();
             // minimum 1 damage
@@ -579,12 +661,13 @@ namespace Nekoyume.Model
                     thornDamage,
                     false,
                     SkillCategory.TickDamage,
-                    _simulator.Turn,
+                    Simulator.Turn,
                     ElementalType.Normal,
                     SkillTargetType.Enemy)
             };
 
             var tickDamage = new ArenaTickDamage(
+                default,
                 clone,
                 damageInfos,
                 null);
@@ -610,20 +693,24 @@ namespace Nekoyume.Model
 
         private BattleStatus.Arena.ArenaSkill UseSkill()
         {
-            var selectedRuneSkill = _runeSkills.SelectWithoutDefaultAttack(_simulator.Random);
-            var selectedSkill = selectedRuneSkill ??
-                _skills.Select(_simulator.Random);
-            var usedSkill = selectedSkill.Use(
+            var selectedRuneSkill = _runeSkills.SelectWithoutDefaultAttack(Simulator.Random);
+            var selectedSkill = selectedRuneSkill ?? _skills.Select(Simulator.Random);
+            usedSkill = selectedSkill.Use(
                 this,
                 _target,
-                _simulator.Turn,
+                Simulator.Turn,
                 BuffFactory.GetBuffs(
                     Stats,
                     selectedSkill,
                     _skillBuffSheet,
                     _statBuffSheet,
                     _skillActionBuffSheet,
-                    _actionBuffSheet)
+                    _actionBuffSheet,
+                    _setExtraValueBuffBeforeGetBuffs &&
+                    selectedSkill is ArenaBuffSkill &&
+                    (selectedSkill.Power > 0 ||
+                     selectedSkill.ReferencedStatType !=
+                     StatType.NONE))
             );
 
             if (!_skillSheet.TryGetValue(selectedSkill.SkillRow.Id, out var row))
@@ -641,34 +728,8 @@ namespace Nekoyume.Model
                 _runeSkills.SetCooldown(selectedSkill.SkillRow.Id, row.Cooldown);
             }
 
-            _simulator.Log.Add(usedSkill);
+            Simulator.Log.Add(usedSkill);
             return usedSkill;
-        }
-
-        [Obsolete("Use UseSkill")]
-        private void UseSkillV1()
-        {
-            var selectedSkill = _skills.Select(_simulator.Random);
-            SkillLog = selectedSkill.UseV1(
-                this,
-                _target,
-                _simulator.Turn,
-                BuffFactory.GetBuffs(
-                    Stats,
-                    selectedSkill,
-                    _skillBuffSheet,
-                    _statBuffSheet,
-                    _skillActionBuffSheet,
-                    _actionBuffSheet)
-            );
-
-            if (!_skillSheet.TryGetValue(selectedSkill.SkillRow.Id, out var row))
-            {
-                throw new KeyNotFoundException(
-                    selectedSkill.SkillRow.Id.ToString(CultureInfo.InvariantCulture));
-            }
-
-            _skills.SetCooldown(selectedSkill.SkillRow.Id, row.Cooldown);
         }
 
         private void RemoveBuffs()
@@ -689,7 +750,7 @@ namespace Nekoyume.Model
             if (!isBuffRemoved)
                 return;
 
-            Stats.SetBuffs(StatBuffs);
+            Stats.SetBuffs(StatBuffs, Simulator.BuffLimitSheet);
         }
 
         [Obsolete("Use RemoveBuffs")]
@@ -711,7 +772,7 @@ namespace Nekoyume.Model
 
             if (isApply)
             {
-                Stats.SetBuffs(StatBuffs);
+                Stats.SetBuffs(StatBuffs, Simulator.BuffLimitSheet);
             }
         }
 
@@ -728,48 +789,92 @@ namespace Nekoyume.Model
         }
 
         [Obsolete("Use Spawn")]
-        public void SpawnV1(ArenaCharacter target)
-        {
-            _target = target;
-            InitAIV1();
-        }
-
-        [Obsolete("Use Spawn")]
         public void SpawnV2(ArenaCharacter target)
         {
             _target = target;
             InitAIV2();
         }
 
-        public void AddBuff(Buff.Buff buff, bool updateImmediate = true)
+        public IEnumerable<Buff.Buff> AddBuff(Buff.Buff buff, bool updateImmediate = true)
         {
             if (Buffs.TryGetValue(buff.BuffInfo.GroupId, out var outBuff) &&
                 outBuff.BuffInfo.Id > buff.BuffInfo.Id)
-                return;
+                return null;
 
-            if (buff is StatBuff stat)
+            var dispelList = new List<Buff.Buff>();
+            switch (buff)
             {
-                var clone = (StatBuff)stat.Clone();
-                Buffs[stat.RowData.GroupId] = clone;
-                Stats.AddBuff(clone, updateImmediate);
+                // StatBuff Modifies stats
+                case StatBuff stat:
+                {
+                    var clone = (StatBuff)stat.Clone();
+                    if (Buffs.TryGetValue(stat.RowData.GroupId, out var current))
+                    {
+                        var stack = ((StatBuff) current).Stack + 1;
+                        clone.SetStack(stack);
+                    }
+                    Buffs[stat.RowData.GroupId] = clone;
+                    Stats.AddBuff(clone, Simulator.BuffLimitSheet, updateImmediate);
+                    break;
+                }
+                case ActionBuff action:
+                {
+                    var clone = (ActionBuff)action.Clone();
+
+                    switch (action)
+                    {
+                        // Stun freezes target
+                        case Stun stun:
+                        {
+                            Buffs[stun.BuffInfo.GroupId] = clone;
+                            break;
+                        }
+                        // Dispel removes debuffs
+                        case Dispel dispel:
+                        {
+                            Buffs[dispel.BuffInfo.GroupId] = clone;
+
+                            dispelList = Buffs.Values.Where(
+                                            bff => bff.IsDebuff() &&
+                                                Simulator.Random.Next(0, 100) <
+                                                action.RowData.Chance).ToList();
+
+                            foreach (var bff in dispelList)
+                            {
+                                switch (bff)
+                                {
+                                    case StatBuff statBuff:
+                                        RemoveStatBuff(statBuff);
+                                        break;
+                                    case ActionBuff actionBuff:
+                                        RemoveActionBuff(actionBuff);
+                                        break;
+                                }
+                            }
+
+                            break;
+                        }
+                        default:
+                            Buffs[action.RowData.GroupId] = clone;
+                            break;
+                    }
+
+                    break;
+                }
             }
-            else if (buff is ActionBuff action)
-            {
-                var clone = (ActionBuff)action.Clone();
-                Buffs[action.RowData.GroupId] = clone;
-            }
+
+            return dispelList;
         }
 
-        [Obsolete("Use AddBuff")]
-        public void AddBuffV1(Buff.Buff buff, bool updateImmediate = true)
+        public void RemoveActionBuff(ActionBuff removedBuff)
         {
-            if (Buffs.TryGetValue(buff.BuffInfo.GroupId, out var outBuff) &&
-                outBuff.BuffInfo.Id > buff.BuffInfo.Id)
-                return;
+            Buffs.Remove(removedBuff.RowData.GroupId);
+        }
 
-            var clone = (Buff.StatBuff) buff.Clone();
-            Buffs[buff.BuffInfo.GroupId] = clone;
-            Stats.AddBuff(clone, updateImmediate);
+        public void RemoveStatBuff(StatBuff removedBuff)
+        {
+            Stats.RemoveBuff(removedBuff);
+            Buffs.Remove(removedBuff.RowData.GroupId);
         }
 
         public void RemoveRecentStatBuff()
@@ -802,55 +907,59 @@ namespace Nekoyume.Model
 
             if (removedBuff != null)
             {
-                Stats.RemoveBuff(removedBuff);
-                Buffs.Remove(removedBuff.RowData.GroupId);
+                RemoveStatBuff(removedBuff);
             }
         }
 
-        public void Heal(int heal)
+        public void Heal(long heal)
         {
             CurrentHP += heal;
         }
 
         public bool IsCritical(bool considerAttackCount = true)
         {
-            var chance = _simulator.Random.Next(0, 100);
+            var chance = Simulator.Random.Next(0, 100);
             if (!considerAttackCount)
                 return CRI >= chance;
 
             var additionalCriticalChance =
-                (int) AttackCountHelper.GetAdditionalCriticalChance(_attackCount, _attackCountMax);
+                AttackCountHelper.GetAdditionalCriticalChance(AttackCount, _attackCountMax);
             return CRI + additionalCriticalChance >= chance;
         }
 
         public virtual bool IsHit(ArenaCharacter caster)
         {
+            if (caster.ActionBuffs.Any(buff => buff is Focus))
+            {
+                return true;
+            }
+
             var isHit = HitHelper.IsHitWithoutLevelCorrection(
                 caster.Level,
                 caster.HIT,
                 Level,
                 HIT,
-                _simulator.Random.Next(0, 100));
+                Simulator.Random.Next(0, 100));
             if (!isHit)
             {
-                caster._attackCount = 0;
+                caster.AttackCount = 0;
             }
 
             return isHit;
         }
 
-        public int GetDamage(int damage, bool considerAttackCount = true)
+        public long GetDamage(long damage, bool considerAttackCount = true)
         {
             if (!considerAttackCount)
                 return damage;
 
-            _attackCount++;
-            if (_attackCount > _attackCountMax)
+            AttackCount++;
+            if (AttackCount > _attackCountMax)
             {
-                _attackCount = 1;
+                AttackCount = 1;
             }
 
-            var damageMultiplier = (int) AttackCountHelper.GetDamageMultiplier(_attackCount, _attackCountMax);
+            var damageMultiplier = AttackCountHelper.GetDamageMultiplier(AttackCount, _attackCountMax);
             damage *= damageMultiplier;
             return damage;
         }

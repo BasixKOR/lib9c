@@ -2,34 +2,76 @@ name: publish
 
 on:
   push:
-    branches: main
+    branches:
+      - development
+      - main
+      - release/*
+    tags:
+      - "*.*.*"
 
 jobs:
   nuget:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-dotnet@v4
       with:
-        submodules: true
-    - uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.100
-    - name: bulid
+        dotnet-version: 6.0.400
+    - name: build
       run: |
         dotnet_args="-c Release -p:NoPackageAnalysis=true"
         if [[ ! "$GITHUB_REF" =~ ^refs/tags/* ]]; then
           project_suffix=dev.${{ github.sha }}
           dotnet_args="$dotnet_args --version-suffix $project_suffix"
         fi
+        # shellcheck disable=SC2086
         dotnet build $dotnet_args
-        dotnet pack  $dotnet_args
+        # shellcheck disable=SC2086
+        dotnet pack $dotnet_args
     - name: push
       if: github.event_name != 'pull_request'
       run: |
         if [[ "$NUGET_API_KEY" != "" ]]; then
-          dotnet nuget push ./Lib9c/.bin/Lib9c.*.nupkg \
-            --api-key "$NUGET_API_KEY" \
-            --source https://api.nuget.org/v3/index.json
+          for project in Lib9c Lib9c.Abstractions Lib9c.MessagePack Lib9c.Renderers \
+            Lib9c.Policy .Lib9c.Plugin.Shared .Lib9c.ActionEvaluatorCommonComponents
+          do
+            dotnet nuget push ./$project/.bin/Lib9c.*.nupkg \
+              --api-key "$NUGET_API_KEY" \
+              --skip-duplicate \
+              --source https://api.nuget.org/v3/index.json
+          done
         fi
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+  jsr:
+    strategy:
+      matrix:
+        package: [ "lib9c", "9c-headless-provider" ]
+    name: "jsr (@planetarium/${{ matrix.package }})"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: "9"
+          run_install: |
+            cwd: "integrations/javascript/@planetarium/"
+            recursive: true
+      - run: pnpm -r codegen
+        working-directory: "integrations/javascript/@planetarium"
+      - run: pnpm -r build
+        working-directory: "integrations/javascript/@planetarium"
+      - name: choose version
+        working-directory: "integrations/javascript/@planetarium/${{ matrix.package }}"
+        run: |
+          if [[ ! "$GITHUB_REF" =~ ^refs/tags/[0-9]+.[0-9]+.[0-9]+$ ]]; then
+            timestamp=$(date -u "+%Y%m%d%H%M%S%4N")
+            suffix="-dev.$timestamp+${{ github.sha }}"
+            jq ".version = .version + \"$suffix\"" jsr.json > jsr.json.tmp
+            mv jsr.json.tmp jsr.json
+          fi
+      - run: npx jsr publish --allow-dirty
+        working-directory: "integrations/javascript/@planetarium/${{ matrix.package }}"

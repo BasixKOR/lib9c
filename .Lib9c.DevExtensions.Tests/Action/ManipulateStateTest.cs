@@ -2,17 +2,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.DevExtensions.Action;
 using Lib9c.Tests;
 using Lib9c.Tests.Action;
 using Lib9c.Tests.Util;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
-using Libplanet.State;
+using Libplanet.Types.Assets;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model;
@@ -20,47 +19,43 @@ using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Xunit;
 
 namespace Lib9c.DevExtensions.Tests.Action
 {
     public class ManipulateStateTest
     {
-        private static readonly Address AdminAddr = new PrivateKey().ToAddress();
+        private static readonly Address AdminAddr = new PrivateKey().Address;
 
-        private static readonly Currency Ncg = Currency.Legacy(
+        // See also InitializeUtil.cs
+        private static readonly Currency Ncg = Currency.Uncapped(
             "NCG",
             2,
-            new[] { AdminAddr }.ToImmutableHashSet());
+            null
+        );
 
         private static readonly Currency Crystal = CrystalCalculator.CRYSTAL;
 
         private readonly TableSheets _tableSheets;
         private readonly Address _agentAddress;
         private readonly Address _avatarAddress;
-        private readonly IAccountStateDelta _initialStateV2;
-        private readonly Address _inventoryAddress;
-        private readonly Address _worldInformationAddress;
-        private readonly Address _questListAddress;
+        private readonly IWorld _initialStateV2;
         private readonly Address _recipeAddress;
         private readonly AvatarState _avatarState;
 
         public ManipulateStateTest()
         {
-            (_tableSheets, _agentAddress, _avatarAddress, _, _initialStateV2) =
+            (_tableSheets, _agentAddress, _avatarAddress, _initialStateV2) =
                 InitializeUtil.InitializeStates(
-                    adminAddr: AdminAddr,
+                    AdminAddr,
                     isDevEx: true);
-            _inventoryAddress = _avatarAddress.Derive(SerializeKeys.LegacyInventoryKey);
-            _worldInformationAddress =
-                _avatarAddress.Derive(SerializeKeys.LegacyWorldInformationKey);
-            _questListAddress = _avatarAddress.Derive(SerializeKeys.LegacyQuestListKey);
             _recipeAddress = _avatarAddress.Derive("recipe_ids");
-            _avatarState = _initialStateV2.GetAvatarStateV2(_avatarAddress);
+            _avatarState = _initialStateV2.GetAvatarState(_avatarAddress);
         }
 
         // MemberData
-        public static IEnumerable<object[]> FetchAvatarState()
+        public static IEnumerable<object?[]> FetchAvatarState()
         {
             var random = new Random();
             var blockIndex = (long)random.Next(1, 100);
@@ -70,53 +65,53 @@ namespace Lib9c.DevExtensions.Tests.Action
              hair, lens, ear, tail */
 
             // Change name
-            yield return new object[]
+            yield return new object?[]
             {
                 "newAvatar", null, null, null,
                 null, null,
-                null, null, null, null
+                null, null, null, null,
             };
             // Change level and exp
-            yield return new object[]
+            yield return new object?[]
             {
                 null, random.Next(1, 300), (long)random.Next(0, 100), null,
                 null, null,
-                null, null, null, null
+                null, null, null, null,
             };
             // Change AP
-            yield return new object[]
+            yield return new object?[]
             {
                 null, null, null, random.Next(0, 120),
                 null, null,
-                null, null, null, null
+                null, null, null, null,
             };
             // Change block indexes
-            yield return new object[]
+            yield return new object?[]
             {
                 null, null, null, null,
                 blockIndex + 1700, blockIndex, // Get another daily reward
-                null, null, null, null
+                null, null, null, null,
             };
             // Change outfit
-            yield return new object[]
+            yield return new object?[]
             {
                 null, null, null, null,
                 null, null,
-                random.Next(0, 4), random.Next(0, 4), random.Next(0, 4), random.Next(0, 4)
+                random.Next(0, 4), random.Next(0, 4), random.Next(0, 4), random.Next(0, 4),
             };
             // Change multiple things
-            yield return new object[]
+            yield return new object?[]
             {
                 "newAvatar", random.Next(1, 300), (long)random.Next(0, 100), random.Next(0, 120),
                 blockIndex + 1700, blockIndex,
-                random.Next(0, 4), random.Next(0, 4), random.Next(0, 4), random.Next(0, 4)
+                random.Next(0, 4), random.Next(0, 4), random.Next(0, 4), random.Next(0, 4),
             };
         }
 
         public static IEnumerable<object[]> FetchInventory()
         {
             var random = new TestRandom();
-            var (tableSheets, _, _, _, _) = InitializeUtil.InitializeStates(isDevEx: true);
+            var (tableSheets, _, _, _) = InitializeUtil.InitializeStates(isDevEx: true);
             var equipmentList = tableSheets.EquipmentItemSheet.Values.ToList();
             var consumableList = tableSheets.ConsumableItemSheet.Values.ToList();
             var materialList = tableSheets.MaterialItemSheet.Values.ToList();
@@ -136,7 +131,7 @@ namespace Lib9c.DevExtensions.Tests.Action
             // Clear Inventory
             yield return new object[]
             {
-                new Inventory()
+                new Inventory(),
             };
 
             // Equipment
@@ -144,7 +139,7 @@ namespace Lib9c.DevExtensions.Tests.Action
             equipmentInventory.AddItem(equipment);
             yield return new object[]
             {
-                equipmentInventory
+                equipmentInventory,
             };
 
             // Material
@@ -152,14 +147,14 @@ namespace Lib9c.DevExtensions.Tests.Action
             materialInventory.AddItem(material);
             yield return new object[]
             {
-                materialInventory
+                materialInventory,
             };
             // Consumable
             var consumableInventory = new Inventory();
             consumableInventory.AddItem(equipment);
             yield return new object[]
             {
-                consumableInventory
+                consumableInventory,
             };
             // Mixed
             var inventory = new Inventory();
@@ -168,39 +163,39 @@ namespace Lib9c.DevExtensions.Tests.Action
             inventory.AddItem(material);
             yield return new object[]
             {
-                inventory
+                inventory,
             };
         }
 
         public static IEnumerable<object[]> FetchWorldInfo()
         {
             var random = new Random();
-            var (tableSheets, _, _, _, _) = InitializeUtil.InitializeStates(isDevEx: true);
+            var (tableSheets, _, _, _) = InitializeUtil.InitializeStates(isDevEx: true);
             var worldSheet = tableSheets.WorldSheet;
             yield return new object[]
             {
                 0,
-                new WorldInformation(0L, worldSheet, 0)
+                new WorldInformation(0L, worldSheet, 0),
             };
 
             var targetStage = random.Next(1, 300);
             yield return new object[]
             {
                 targetStage,
-                new WorldInformation(0L, worldSheet, targetStage)
+                new WorldInformation(0L, worldSheet, targetStage),
             };
 
             yield return new object[]
             {
-                tableSheets.WorldSheet.OrderedList.Last(world => world.Id < 100).StageEnd,
-                new WorldInformation(0L, worldSheet, true)
+                tableSheets.WorldSheet.OrderedList!.Last(world => world.Id < 100).StageEnd,
+                new WorldInformation(0L, worldSheet, true),
             };
         }
 
         public static IEnumerable<object[]> FetchQuest()
         {
             var random = new Random();
-            var (tableSheets, _, _, _, stateV2) = InitializeUtil.InitializeStates(isDevEx: true);
+            var (tableSheets, _, _, stateV2) = InitializeUtil.InitializeStates(isDevEx: true);
             // Empty QuestList
             yield return new object[]
             {
@@ -218,7 +213,7 @@ namespace Lib9c.DevExtensions.Tests.Action
                     tableSheets.QuestItemRewardSheet,
                     tableSheets.EquipmentItemRecipeSheet,
                     tableSheets.EquipmentItemSubRecipeSheet
-                )
+                ),
             };
 
             // Clear combination quest
@@ -236,7 +231,7 @@ namespace Lib9c.DevExtensions.Tests.Action
             yield return new object[]
             {
                 combinationQuestList.completedQuestIds,
-                combinationQuestList
+                combinationQuestList,
             };
 
             // Clear trade quest
@@ -252,7 +247,7 @@ namespace Lib9c.DevExtensions.Tests.Action
             yield return new object[]
             {
                 tradeQuestList.completedQuestIds,
-                tradeQuestList
+                tradeQuestList,
             };
 
             // Clear stage quest
@@ -274,7 +269,7 @@ namespace Lib9c.DevExtensions.Tests.Action
             yield return new object[]
             {
                 stageQuestList.completedQuestIds,
-                stageQuestList
+                stageQuestList,
             };
 
             // Clear multiple
@@ -296,7 +291,7 @@ namespace Lib9c.DevExtensions.Tests.Action
             yield return new object[]
             {
                 questList.completedQuestIds,
-                questList
+                questList,
             };
         }
 
@@ -304,37 +299,37 @@ namespace Lib9c.DevExtensions.Tests.Action
         {
             yield return new object[]
             {
-                new PrivateKey().ToAddress(),
+                new PrivateKey().Address,
                 new FungibleAssetValue(Ncg, 0, 1),
             };
             yield return new object[]
             {
-                new PrivateKey().ToAddress(),
+                new PrivateKey().Address,
                 new FungibleAssetValue(Ncg, 1, 0),
             };
             yield return new object[]
             {
-                new PrivateKey().ToAddress(),
+                new PrivateKey().Address,
                 new FungibleAssetValue(Ncg, 1_000_000_000 - 1, 99),
             };
             yield return new object[]
             {
-                new PrivateKey().ToAddress(),
+                new PrivateKey().Address,
                 new FungibleAssetValue(Ncg, 1_000_000_000, 0),
             };
             yield return new object[]
             {
-                new PrivateKey().ToAddress(),
+                new PrivateKey().Address,
                 new FungibleAssetValue(Crystal, 0, 1),
             };
             yield return new object[]
             {
-                new PrivateKey().ToAddress(),
+                new PrivateKey().Address,
                 new FungibleAssetValue(Crystal, 1, 0),
             };
             yield return new object[]
             {
-                new PrivateKey().ToAddress(),
+                new PrivateKey().Address,
                 new FungibleAssetValue(
                     Crystal,
                     long.MaxValue,
@@ -344,9 +339,9 @@ namespace Lib9c.DevExtensions.Tests.Action
         // ~MemberData
 
         // Logics
-        private IAccountStateDelta Manipulate(
-            IAccountStateDelta state,
-            List<(Address addr, IValue value)> targetStateList,
+        private IWorld Manipulate(
+            IWorld state,
+            List<(Address accountAddr, Address addr, IValue value)> targetStateList,
             List<(Address addr, FungibleAssetValue fav)> targetBalanceList
         )
         {
@@ -358,20 +353,20 @@ namespace Lib9c.DevExtensions.Tests.Action
 
             return action.Execute(new ActionContext
             {
-                PreviousStates = state,
+                PreviousState = state,
                 Signer = _agentAddress,
-                BlockIndex = int.MaxValue / 2
+                BlockIndex = int.MaxValue / 2,
             });
         }
 
         private void TestAvatarState(
-            IAccountStateDelta state,
+            IWorld state,
             string? name, int? level, long? exp, int? actionPoint,
             long? blockIndex, long? dailyRewardReceivedIndex,
             int? hair, int? lens, int? ear, int? tail
         )
         {
-            var targetAvatarState = state.GetAvatarStateV2(_avatarAddress);
+            var targetAvatarState = state.GetAvatarState(_avatarAddress);
 
             if (name != null)
             {
@@ -424,10 +419,9 @@ namespace Lib9c.DevExtensions.Tests.Action
             }
         }
 
-        private void TestInventoryState(IAccountStateDelta state, Inventory targetInventory)
+        private void TestInventoryState(IWorld state, Inventory targetInventory)
         {
-            var avatarState = state.GetAvatarStateV2(_avatarAddress);
-            var inventoryState = avatarState.inventory;
+            var inventoryState = new Inventory((List)state.GetAccount(Addresses.Inventory).GetState(_avatarAddress)!);
             Assert.Equal(targetInventory.Items.Count, inventoryState.Items.Count);
             foreach (var item in targetInventory.Items)
             {
@@ -459,9 +453,9 @@ namespace Lib9c.DevExtensions.Tests.Action
 
             var state = Manipulate(
                 _initialStateV2,
-                new List<(Address, IValue)>
+                new List<(Address, Address, IValue)>
                 {
-                    (_avatarAddress, newAvatarState.SerializeV2())
+                    (Addresses.Avatar, _avatarAddress, newAvatarState.SerializeList()),
                 },
                 new List<(Address, FungibleAssetValue)>()
             );
@@ -474,9 +468,9 @@ namespace Lib9c.DevExtensions.Tests.Action
             );
         }
 
-        private void TestQuestState(IAccountStateDelta state, List<int> targetQuestIdList)
+        private void TestQuestState(IWorld state, List<int> targetQuestIdList)
         {
-            var avatarState = state.GetAvatarStateV2(_avatarAddress);
+            var avatarState = state.GetAvatarState(_avatarAddress);
             var questState = avatarState.questList;
             foreach (var target in targetQuestIdList)
             {
@@ -484,9 +478,9 @@ namespace Lib9c.DevExtensions.Tests.Action
             }
         }
 
-        private void TestWorldInformation(IAccountStateDelta state, int lastClearedStage)
+        private void TestWorldInformation(IWorld state, int lastClearedStage)
         {
-            var avatarState = state.GetAvatarStateV2(_avatarAddress);
+            var avatarState = state.GetAvatarState(_avatarAddress);
             var worldInformation = avatarState.worldInformation;
 
             for (var i = 0; i < lastClearedStage; i++)
@@ -502,9 +496,9 @@ namespace Lib9c.DevExtensions.Tests.Action
             var crystal = new FungibleAssetValue(Crystal, 100, 0);
             var action = new ManipulateState
             {
-                StateList = new List<(Address, IValue)>
+                StateList = new List<(Address, Address, IValue)>
                 {
-                    (_avatarAddress, _avatarState.SerializeV2()),
+                    (Addresses.Avatar, _avatarAddress, _avatarState.SerializeList()),
                 },
                 BalanceList = new List<(Address, FungibleAssetValue)>
                 {
@@ -533,9 +527,9 @@ namespace Lib9c.DevExtensions.Tests.Action
         {
             var state = Manipulate(
                 _initialStateV2,
-                new List<(Address, IValue)>
+                new List<(Address, Address, IValue)>
                 {
-                    (_inventoryAddress, targetInventory.Serialize()),
+                    (Addresses.Inventory, _avatarAddress, targetInventory.Serialize()),
                 },
                 new List<(Address, FungibleAssetValue)>()
             );
@@ -547,11 +541,13 @@ namespace Lib9c.DevExtensions.Tests.Action
         [MemberData(nameof(FetchWorldInfo))]
         public void SetWorldInformation(int lastClearedStage, WorldInformation targetInfo)
         {
+            // FIXME: The test now writes worldInformation in LegacyAccount,
+            // which should be moved to Addresses.WorldInformation
             var state = Manipulate(
                 _initialStateV2,
-                new List<(Address, IValue)>
+                new List<(Address, Address, IValue)>
                 {
-                    (_worldInformationAddress, targetInfo.Serialize())
+                    (Addresses.WorldInformation, _avatarAddress, targetInfo.Serialize()),
                 },
                 new List<(Address, FungibleAssetValue)>()
             );
@@ -564,9 +560,9 @@ namespace Lib9c.DevExtensions.Tests.Action
         public void SetQuestState(List<int> targetQuestIdList, QuestList questList)
         {
             var state = Manipulate(_initialStateV2,
-                new List<(Address, IValue)>
+                new List<(Address, Address, IValue)>
                 {
-                    (_questListAddress, questList.Serialize())
+                    (Addresses.QuestList, _avatarAddress, questList.Serialize()),
                 },
                 new List<(Address, FungibleAssetValue)>()
             );
@@ -580,10 +576,10 @@ namespace Lib9c.DevExtensions.Tests.Action
         {
             var states = Manipulate(
                 _initialStateV2,
-                new List<(Address, IValue)>(),
+                new List<(Address, Address, IValue)>(),
                 new List<(Address, FungibleAssetValue)>
                 {
-                    (addr, fav)
+                    (addr, fav),
                 }
             );
 
@@ -593,7 +589,7 @@ namespace Lib9c.DevExtensions.Tests.Action
         [Fact]
         public void SetMultipleStates()
         {
-            var avatarData = FetchAvatarState().Last();
+            var avatarData = FetchAvatarState().Last().Cast<object>().ToArray();
             var newAvatarState = (AvatarState)_avatarState.Clone();
             newAvatarState.name = (string)avatarData[0];
             newAvatarState.level = (int)avatarData[1];
@@ -620,12 +616,12 @@ namespace Lib9c.DevExtensions.Tests.Action
 
             var state = Manipulate(
                 _initialStateV2,
-                new List<(Address, IValue)>
+                new List<(Address, Address, IValue)>
                 {
-                    (_avatarAddress, newAvatarState.Serialize()),
-                    (_inventoryAddress, inventory.Serialize()),
-                    (_worldInformationAddress, worldState.Serialize()),
-                    (_questListAddress, questList.Serialize()),
+                    (Addresses.Avatar, _avatarAddress, newAvatarState.SerializeList()),
+                    (Addresses.Inventory, _avatarAddress, inventory.Serialize()),
+                    (Addresses.WorldInformation, _avatarAddress, worldState.Serialize()),
+                    (Addresses.QuestList, _avatarAddress, questList.Serialize()),
                 },
                 balanceList
             );

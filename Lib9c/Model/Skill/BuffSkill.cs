@@ -10,7 +10,7 @@ namespace Nekoyume.Model.Skill
     {
         public BuffSkill(
             SkillSheet.Row skillRow,
-            int power,
+            long power,
             int chance,
             int statPowerRatio,
             StatType referencedStatType) : base(skillRow, power, chance, statPowerRatio, referencedStatType)
@@ -18,10 +18,10 @@ namespace Nekoyume.Model.Skill
         }
 
         public override BattleStatus.Skill Use(CharacterBase caster, int simulatorWaveTurn,
-            IEnumerable<Buff.Buff> buffs)
+            IEnumerable<Buff.Buff> buffs, bool copyCharacter)
         {
-            var clone = (CharacterBase) caster.Clone();
-            var buff = ProcessBuff(caster, simulatorWaveTurn, buffs);
+            var clone = copyCharacter ? (CharacterBase) caster.Clone() : null;
+            var buff = ProcessBuff(caster, simulatorWaveTurn, buffs, copyCharacter);
 
             return new BattleStatus.Buff(SkillRow.Id, clone, buff);
         }

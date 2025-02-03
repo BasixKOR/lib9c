@@ -138,5 +138,30 @@ namespace Nekoyume.Helper
                 equipmentItemOptionSheet,
                 addressesHex);
         }
+
+        public static (List<Equipment> equipments, List<Costume> costumes) ValidEquipmentAndCostumeV2(
+            this AvatarState avatarState,
+            IEnumerable<Guid> costumeIds,
+            List<Guid> equipmentIds,
+            ItemRequirementSheet itemRequirementSheet,
+            EquipmentItemRecipeSheet equipmentItemRecipeSheet,
+            EquipmentItemSubRecipeSheetV2 equipmentItemSubRecipeSheetV2,
+            EquipmentItemOptionSheet equipmentItemOptionSheet,
+            long blockIndex,
+            string addressesHex,
+            GameConfigState gameConfigState)
+        {
+            var equipments = avatarState.ValidateEquipmentsV3(equipmentIds, blockIndex, gameConfigState);
+            var costumes = avatarState.ValidateCostumeV2(costumeIds, gameConfigState);
+            avatarState.ValidateItemRequirement(
+                costumes.Select(e => e.Id).ToList(),
+                equipments,
+                itemRequirementSheet,
+                equipmentItemRecipeSheet,
+                equipmentItemSubRecipeSheetV2,
+                equipmentItemOptionSheet,
+                addressesHex);
+            return (equipments, costumes);
+        }
     }
 }

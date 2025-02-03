@@ -1,20 +1,20 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Numerics;
 using Bencodex.Types;
 using Libplanet.Action;
-using Libplanet.State;
-using Libplanet.Consensus;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Types.Consensus;
+using Nekoyume.Module;
 
 namespace Nekoyume.Action
 {
     [Serializable]
-    [ActionType("op_validator_set")]
-    public sealed class ValidatorSetOperate
-        : GameAction, IEquatable<ValidatorSetOperate>
+    [ActionType(TypeIdentifier)]
+    public sealed class ValidatorSetOperate : ActionBase, IEquatable<ValidatorSetOperate>
     {
+        public const string TypeIdentifier = "op_validator_set";
+
         // fixme: this is a temporary key for backward compatibility.
         private static readonly byte[] PowerKey = { 0x70 }; // 'p'
         private static readonly byte[] PublicKeyKey = { 0x50 }; // 'P'
@@ -50,11 +50,6 @@ namespace Nekoyume.Action
 
         public bool Equals(ValidatorSetOperate other)
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
             if (ReferenceEquals(this, other))
             {
                 return true;
@@ -74,9 +69,9 @@ namespace Nekoyume.Action
         public override int GetHashCode() =>
             (Error, (int)Operator, Operand).GetHashCode();
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
+            GasTracer.UseGas(1);
             if (Error != null)
             {
                 throw new InvalidOperationException(Error);
@@ -84,34 +79,40 @@ namespace Nekoyume.Action
 
             CheckPermission(context);
 
-            IAccountStateDelta previousState = context.PreviousStates;
+            IWorld previousState = context.PreviousState;
             ValidatorSet validatorSet = previousState.GetValidatorSet();
 
             Func<ValidatorSet, Validator, Validator> func = Operator.ToFunc();
-            return previousState.SetValidator(func(validatorSet, Operand));
+            return previousState.SetValidatorSet(previousState
+                .GetValidatorSet()
+                .Update(func(validatorSet, Operand)));
         }
 
         public override IValue PlainValue =>
-            (Error is null)
-                ? (IValue)Bencodex.Types.Dictionary.Empty
-                    .Add(
-                        "op",
-                        Operator is ValidatorSetOperatorType op
-                            ? new Text(op.ToString())
-                            : (IValue)Null.Value
-                    )
-                    .Add("operand", Operand.Bencoded)
-                : (Text)Error;
+            Dictionary.Empty
+                .Add("type_id", TypeIdentifier)
+                .Add("values", (Error is null)
+                    ? (IValue)Bencodex.Types.Dictionary.Empty
+                        .Add(
+                            "op",
+                            Operator is ValidatorSetOperatorType op
+                                ? new Text(op.ToString())
+                                : (IValue)Null.Value
+                        )
+                        .Add("operand", Operand.Bencoded)
+                    : (Text)Error);
 
         public override void LoadPlainValue(IValue plainValue)
         {
-            if (plainValue is Text t)
+            IValue values = ((Dictionary)plainValue)["values"];
+
+            if (values is Text t)
             {
                 Error = t;
                 return;
             }
 
-            if (!(plainValue is Dictionary d))
+            if (!(values is Dictionary d))
             {
                 Error =
                     "The action serialization is invalid; " +
@@ -152,27 +153,11 @@ namespace Nekoyume.Action
 
             Operator = op;
             // FIXME: This is a temporary code for backward compatibility.
-            Operand = BackwardCompability(operandDict);
+            Operand = BackwardCompatibility(operandDict);
             Error = null;
         }
 
-        protected override IImmutableDictionary<string, IValue> PlainValueInternal =>
-            new Dictionary<string, IValue>
-            {
-                [ValidatorSetOperateKey] = PlainValue
-            }.ToImmutableDictionary();
-        protected override void LoadPlainValueInternal(IImmutableDictionary<string, IValue> plainValue)
-        {
-            if (plainValue.TryGetValue(ValidatorSetOperateKey, out IValue rawValue))
-            {
-                LoadPlainValue(rawValue);
-            }
-
-            Error =
-                $"The serialized dictionary lacks the key \"{nameof(ValidatorSetOperateKey)}\".";
-        }
-
-        private Validator BackwardCompability(Bencodex.Types.Dictionary dict)
+        private Validator BackwardCompatibility(Bencodex.Types.Dictionary dict)
         {
             try
             {
@@ -181,9 +166,9 @@ namespace Nekoyume.Action
             catch (Exception)
             {
                 BigInteger power =
-                    new BigInteger(dict.GetValue<Binary>(PowerKey).ToByteArray());
+                    new BigInteger(((Binary)dict[PowerKey]).ToByteArray());
                 PublicKey publicKey =
-                    new PublicKey(dict.GetValue<Binary>(PublicKeyKey).ToByteArray());
+                    new PublicKey(((Binary)dict[PublicKeyKey]).ToByteArray());
 
                 return new Validator(publicKey, power);
             }

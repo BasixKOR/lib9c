@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Nekoyume.Action;
 using Nekoyume.Battle;
@@ -58,6 +57,8 @@ namespace Nekoyume.Model
         public Belt belt;
         public Necklace necklace;
         public Ring ring;
+        public Aura aura;
+        public Grimoire Grimoire;
 
         public CollectionMap monsterMap;
         public CollectionMap eventMap;
@@ -104,6 +105,8 @@ namespace Nekoyume.Model
             belt = null;
             necklace = null;
             ring = null;
+            aura = null;
+            Grimoire = null;
             monsterMap = new CollectionMap();
             eventMap = new CollectionMap();
             monsterMapForBeforeV100310 = new CollectionMap();
@@ -135,6 +138,8 @@ namespace Nekoyume.Model
             belt = null;
             necklace = null;
             ring = null;
+            aura = null;
+            Grimoire = null;
             monsterMap = new CollectionMap();
             eventMap = new CollectionMap();
             monsterMapForBeforeV100310 = new CollectionMap();
@@ -165,6 +170,8 @@ namespace Nekoyume.Model
             belt = null;
             necklace = null;
             ring = null;
+            aura = null;
+            Grimoire = null;
             monsterMap = new CollectionMap();
             eventMap = new CollectionMap();
             monsterMapForBeforeV100310 = new CollectionMap();
@@ -214,6 +221,8 @@ namespace Nekoyume.Model
             belt = value.belt;
             necklace = value.necklace;
             ring = value.ring;
+            aura = value.aura;
+            Grimoire = value.Grimoire;
             monsterMap = value.monsterMap;
             eventMap = value.eventMap;
             monsterMapForBeforeV100310 = value.monsterMapForBeforeV100310;
@@ -317,6 +326,12 @@ namespace Nekoyume.Model
                         break;
                     case ItemSubType.Ring:
                         ring = equipment as Ring;
+                        break;
+                    case ItemSubType.Aura:
+                        aura = equipment as Aura;
+                        break;
+                    case ItemSubType.Grimoire:
+                        Grimoire = equipment as Grimoire;
                         break;
                     default:
                         throw new RequiredBlockIndexException();
@@ -434,23 +449,14 @@ namespace Nekoyume.Model
             return map;
         }
 
-        [Obsolete("Use GetRewards")]
-        public CollectionMap GetRewards2(List<ItemBase> items)
-        {
-            var map = new CollectionMap();
-            foreach (var item in items)
-            {
-                map.Add(Inventory.AddItem2(item));
-            }
-
-            return map;
-        }
-
         public virtual void Spawn()
         {
             InitAI();
-            var spawn = new SpawnPlayer((CharacterBase)Clone());
-            Simulator.Log.Add(spawn);
+            if (Simulator.LogEvent)
+            {
+                var spawn = new SpawnPlayer((CharacterBase)Clone());
+                Simulator.Log.Add(spawn);
+            }
         }
 
         [Obsolete("Use Spawn")]
@@ -512,6 +518,8 @@ namespace Nekoyume.Model
                 return base.UseSkill();
             }
 
+            bool log = Simulator.LogEvent;
+
             var usedSkill = selectedSkill.Use(
                 this,
                 Simulator.WaveTurn,
@@ -522,12 +530,16 @@ namespace Nekoyume.Model
                     Simulator.StatBuffSheet,
                     Simulator.SkillActionBuffSheet,
                     Simulator.ActionBuffSheet
-                )
+                ),
+                log
             );
 
             var cooldown = RuneSkillCooldownMap[selectedSkill.SkillRow.Id];
             RuneSkills.SetCooldown(selectedSkill.SkillRow.Id, cooldown);
-            Simulator.Log.Add(usedSkill);
+            if (log)
+            {
+                Simulator.Log.Add(usedSkill);
+            }
             return usedSkill;
         }
 
@@ -539,41 +551,47 @@ namespace Nekoyume.Model
 
         public void SetCostumeStat(CostumeStatSheet costumeStatSheet)
         {
-            var statModifiers = new List<StatModifier>();
-            foreach (var itemId in costumes.Select(costume => costume.Id))
-            {
-                statModifiers.AddRange(
-                    costumeStatSheet.OrderedList
-                        .Where(r => r.CostumeId == itemId)
-                        .Select(row => new StatModifier(row.StatType, StatModifier.OperationType.Add, (int) row.Stat))
-                );
-            }
-            Stats.SetOption(statModifiers);
+            Stats.SetCostumeStat(costumes, costumeStatSheet);
             ResetCurrentHP();
         }
 
-        public void SetRune(
+        /// <summary>
+        /// Sets the rune stats for a player character.
+        /// </summary>
+        /// <param name="runes">The AllRuneState for the player character.</param>
+        /// <param name="runeOptionSheet">The rune option sheet that contains information about rune options.</param>
+        /// <param name="runeLevelBonus">The rune level bonus value from RuneLevelBonusSheet. This enhances equipped rune stats.</param>
+        public void SetRuneStats(List<RuneState> runes, RuneOptionSheet runeOptionSheet, int runeLevelBonus)
+        {
+            foreach (var rune in runes)
+            {
+                if (!runeOptionSheet.TryGetOptionInfo(rune.RuneId, rune.Level, out var optionInfo))
+                {
+                    continue;
+                }
+
+                Stats.AddRuneStat(optionInfo, runeLevelBonus);
+                ResetCurrentHP();
+            }
+        }
+
+        /// <summary>
+        /// Sets the rune skills for the player.
+        /// </summary>
+        /// <param name="runes">The list of rune states.</param>
+        /// <param name="runeOptionSheet">The rune option sheet.</param>
+        /// <param name="skillSheet">The skill sheet.</param>
+        public void SetRuneSkills(
             List<RuneState> runes,
             RuneOptionSheet runeOptionSheet,
             SkillSheet skillSheet)
         {
             foreach (var rune in runes)
             {
-                if (!runeOptionSheet.TryGetValue(rune.RuneId, out var optionRow) ||
-                    !optionRow.LevelOptionMap.TryGetValue(rune.Level, out var optionInfo))
+                if (!runeOptionSheet.TryGetOptionInfo(rune.RuneId, rune.Level, out var optionInfo))
                 {
                     continue;
                 }
-
-                var statModifiers = new List<StatModifier>();
-                statModifiers.AddRange(
-                    optionInfo.Stats.Select(x =>
-                        new StatModifier(
-                            x.stat.StatType,
-                            x.operationType,
-                            x.stat.BaseValueAsInt)));
-                Stats.AddRune(statModifiers);
-                ResetCurrentHP();
 
                 if (optionInfo.SkillId == default ||
                     !skillSheet.TryGetValue(optionInfo.SkillId, out var skillRow))
@@ -589,7 +607,7 @@ namespace Nekoyume.Model
                 }
                 else if (optionInfo.StatReferenceType == EnumType.StatReferenceType.Caster)
                 {
-                    var value = Stats.GetStatAsInt(optionInfo.SkillStatType);
+                    var value = Stats.GetStatAsLong(optionInfo.SkillStatType);
                     power = (int)Math.Round(value * optionInfo.SkillValue);
                 }
                 var skill = SkillFactory.GetV1(skillRow, power, optionInfo.SkillChance);
@@ -603,6 +621,28 @@ namespace Nekoyume.Model
                 RuneSkills.Add(skill);
                 RuneSkillCooldownMap[optionInfo.SkillId] = optionInfo.SkillCooldown;
             }
+        }
+
+        public void SetCollections(IEnumerable<StatModifier> statModifiers)
+        {
+            Stats.SetCollections(statModifiers);
+            ResetCurrentHP();
+        }
+
+        public void ConfigureStats(
+            CostumeStatSheet costumeStatSheet,
+            List<RuneState> runeStates, RuneOptionSheet runeOptionSheet, int runeLevelBonus,
+            SkillSheet skillSheet,
+            List<StatModifier> collectionModifiers
+        )
+        {
+            SetCostumeStat(costumeStatSheet);
+            if (runeStates != null)
+            {
+                SetRuneStats(runeStates, runeOptionSheet, runeLevelBonus);
+            }
+
+            SetCollections(collectionModifiers);
         }
 
         [Obsolete("Use SetRune")]
@@ -625,8 +665,8 @@ namespace Nekoyume.Model
                         new StatModifier(
                             x.stat.StatType,
                             x.operationType,
-                            x.stat.TotalValueAsInt)));
-                Stats.AddOptional(statModifiers);
+                            x.stat.TotalValueAsLong)));
+                Stats.AddCostume(statModifiers);
                 ResetCurrentHP();
 
                 if (optionInfo.SkillId == default ||
@@ -643,7 +683,7 @@ namespace Nekoyume.Model
                 }
                 else if (optionInfo.StatReferenceType == EnumType.StatReferenceType.Caster)
                 {
-                    var value = Stats.GetStatAsInt(optionInfo.SkillStatType);
+                    var value = Stats.GetStatAsLong(optionInfo.SkillStatType);
                     power = (int)Math.Round(value * optionInfo.SkillValue);
                 }
                 var skill = SkillFactory.GetV1(skillRow, power, optionInfo.SkillChance);
@@ -672,7 +712,10 @@ namespace Nekoyume.Model
 
             Simulator.TurnNumber++;
             Simulator.WaveTurn++;
-            Simulator.Log.Add(new WaveTurnEnd(this, Simulator.TurnNumber, Simulator.WaveTurn));
+            if (Simulator.LogEvent)
+            {
+                Simulator.Log.Add(new WaveTurnEnd((CharacterBase)Clone(), Simulator.TurnNumber, Simulator.WaveTurn));
+            }
         }
     }
 }

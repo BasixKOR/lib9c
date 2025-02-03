@@ -1,6 +1,7 @@
 
 using Libplanet.Action;
 using Nekoyume.Model.BattleStatus.Arena;
+using Nekoyume.TableData;
 
 namespace Nekoyume.Arena
 {
@@ -9,5 +10,8 @@ namespace Nekoyume.Arena
         public ArenaLog Log { get; }
         public IRandom Random { get; }
         public int Turn { get; }
+        public long ShatterStrikeMaxDamage { get; }
+        public BuffLimitSheet BuffLimitSheet { get; }
+        BuffLinkSheet BuffLinkSheet { get; set; }
     }
 }

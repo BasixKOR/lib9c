@@ -9,7 +9,7 @@ namespace Lib9c.Tests.Model.State
     using Bencodex;
     using Bencodex.Types;
     using Lib9c.Tests.Model.Item;
-    using Libplanet;
+    using Libplanet.Common;
     using Libplanet.Crypto;
     using Nekoyume;
     using Nekoyume.Action;
@@ -32,25 +32,19 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void Serialize()
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
 
-            var serialized = avatarState.Serialize();
-            var deserialized = new AvatarState((Bencodex.Types.Dictionary)serialized);
+            var serialized = avatarState.SerializeList();
+            var deserialized = new AvatarState((Bencodex.Types.List)serialized);
 
             Assert.Equal(avatarState.address, deserialized.address);
             Assert.Equal(avatarState.agentAddress, deserialized.agentAddress);
             Assert.Equal(avatarState.blockIndex, deserialized.blockIndex);
-
-            var serializeV2 = avatarState.SerializeV2();
-            var deserializeV2 = new AvatarState((Bencodex.Types.Dictionary)serializeV2);
-            Assert.Equal(avatarState.address, deserializeV2.address);
-            Assert.Equal(avatarState.agentAddress, deserializeV2.agentAddress);
-            Assert.Equal(avatarState.blockIndex, deserializeV2.blockIndex);
-            Assert.Null(deserializeV2.inventory);
-            Assert.Null(deserializeV2.worldInformation);
-            Assert.Null(deserializeV2.questList);
+            Assert.Null(deserialized.inventory);
+            Assert.Null(deserialized.worldInformation);
+            Assert.Null(deserialized.questList);
         }
 
         [Theory]
@@ -59,14 +53,17 @@ namespace Lib9c.Tests.Model.State
         [InlineData(4)]
         public async Task ConstructDeterministic(int waitMilliseconds)
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
-            AvatarState avatarStateA = GetNewAvatarState(avatarAddress, agentAddress);
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
+            var avatarStateA = GetNewAvatarState(avatarAddress, agentAddress);
             await Task.Delay(waitMilliseconds);
-            AvatarState avatarStateB = GetNewAvatarState(avatarAddress, agentAddress);
+            var avatarStateB = GetNewAvatarState(avatarAddress, agentAddress);
 
-            HashDigest<SHA256> Hash(AvatarState avatarState) =>
-                HashDigest<SHA256>.DeriveFrom(new Codec().Encode(avatarState.Serialize()));
+            HashDigest<SHA256> Hash(AvatarState avatarState)
+            {
+                return HashDigest<SHA256>.DeriveFrom(new Codec().Encode(avatarState.SerializeList()));
+            }
+
             Assert.Equal(Hash(avatarStateA), Hash(avatarStateB));
         }
 
@@ -74,14 +71,13 @@ namespace Lib9c.Tests.Model.State
         public void UpdateFromQuestRewardDeterministic()
         {
             var rankingState = new RankingState1();
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
-            var avatarState = new AvatarState(
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
+            var avatarState = AvatarState.Create(
                 avatarAddress,
                 agentAddress,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
                 rankingState.UpdateRankingMap(avatarAddress));
             var itemIds = avatarState.questList.OfType<ItemTypeCollectQuest>().First().ItemIds;
             var map = new Dictionary<int, int>()
@@ -121,8 +117,8 @@ namespace Lib9c.Tests.Model.State
         [InlineData(5, GameConfig.RequireCharacterLevel.CharacterConsumableSlot5)]
         public void ValidateConsumable(int count, int level)
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             avatarState.level = level;
 
@@ -142,8 +138,8 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void ValidateConsumableThrowRequiredBlockIndexException()
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
 
             var consumableIds = new List<Guid>();
@@ -158,8 +154,8 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void ValidateConsumableThrowConsumableSlotOutOfRangeException()
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             avatarState.level = GameConfig.RequireCharacterLevel.CharacterConsumableSlot5;
 
@@ -184,8 +180,8 @@ namespace Lib9c.Tests.Model.State
         [InlineData(5, GameConfig.RequireCharacterLevel.CharacterConsumableSlot5)]
         public void ValidateConsumableSlotThrowConsumableSlotUnlockException(int count, int level)
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             avatarState.level = level - 1;
 
@@ -205,8 +201,8 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void ValidateCostume()
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             avatarState.level = 100;
 
@@ -240,8 +236,8 @@ namespace Lib9c.Tests.Model.State
         [InlineData(ItemSubType.Title)]
         public void ValidateCostumeThrowDuplicateCostumeException(ItemSubType type)
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             avatarState.level = 100;
 
@@ -265,8 +261,8 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void ValidateCostumeThrowInvalidItemTypeException()
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             avatarState.level = 100;
 
@@ -275,7 +271,7 @@ namespace Lib9c.Tests.Model.State
             var serialized = (Dictionary)costume.Serialize();
             serialized = serialized.SetItem("item_sub_type", ItemSubType.Armor.Serialize());
             var costume2 = new Costume(serialized);
-            var costumeIds = new HashSet<int> { costume2.Id };
+            var costumeIds = new HashSet<int> { costume2.Id, };
             avatarState.inventory.AddItem(costume2);
 
             Assert.Throws<InvalidItemTypeException>(() => avatarState.ValidateCostume(costumeIds));
@@ -290,14 +286,14 @@ namespace Lib9c.Tests.Model.State
         [InlineData(ItemSubType.Title, GameConfig.RequireCharacterLevel.CharacterTitleSlot)]
         public void ValidateCostumeThrowCostumeSlotUnlockException(ItemSubType type, int level)
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             avatarState.level = level - 1;
 
             var row = _tableSheets.CostumeItemSheet.Values.First(r => r.ItemSubType == type);
             var costume = ItemFactory.CreateCostume(row, default);
-            var costumeIds = new HashSet<int> { costume.Id };
+            var costumeIds = new HashSet<int> { costume.Id, };
             avatarState.inventory.AddItem(costume);
 
             Assert.Throws<CostumeSlotUnlockException>(() => avatarState.ValidateCostume(costumeIds));
@@ -306,8 +302,8 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void UpdateV2()
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             var result = new CombinationConsumable5.ResultModel()
             {
@@ -331,8 +327,8 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void UpdateV4()
         {
-            Address avatarAddress = new PrivateKey().ToAddress();
-            Address agentAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
+            var agentAddress = new PrivateKey().Address;
             var avatarState = GetNewAvatarState(avatarAddress, agentAddress);
             var result = new CombinationConsumable5.ResultModel()
             {
@@ -375,7 +371,7 @@ namespace Lib9c.Tests.Model.State
                 mailBox.Add(mail);
             }
 
-            mailBox.CleanUp2();
+            mailBox.CleanUpV1();
 
             Assert.Equal(30, mailBox.Count);
             Assert.DoesNotContain(mailBox, m => m.blockIndex < 30);
@@ -384,7 +380,7 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void EquipItems()
         {
-            var avatarState = GetNewAvatarState(new PrivateKey().ToAddress(), new PrivateKey().ToAddress());
+            var avatarState = GetNewAvatarState(new PrivateKey().Address, new PrivateKey().Address);
             avatarState.inventory.AddItem(EquipmentTest.CreateFirstEquipment(_tableSheets));
             avatarState.inventory.AddItem(CostumeTest.CreateFirstCostume(_tableSheets));
 
@@ -397,8 +393,9 @@ namespace Lib9c.Tests.Model.State
                 Assert.False(equippableItem.Equipped);
             }
 
-            avatarState.EquipItems(equippableItems.OfType<INonFungibleItem>()
-                .Select(nonFungibleItem => nonFungibleItem.NonFungibleId));
+            avatarState.EquipItems(
+                equippableItems.OfType<INonFungibleItem>()
+                    .Select(nonFungibleItem => nonFungibleItem.NonFungibleId));
 
             foreach (var equippableItem in equippableItems)
             {
@@ -406,46 +403,30 @@ namespace Lib9c.Tests.Model.State
             }
         }
 
-        [Theory]
-        [InlineData(0, 5, false, false, typeof(NotEnoughActionPointException))]
-        [InlineData(0, 5, true, false, typeof(NotEnoughMaterialException))]
-        [InlineData(120, 5, false, true, null)]
-        [InlineData(120, 5, false, false, null)]
-        [InlineData(120, 5, true, false, null)]
-        [InlineData(120, 5, true, true, null)]
-        public void UseAp(int ap, int requiredAp, bool chargeAp, bool materialExist, Type exc)
+        [Fact]
+        public void Clone()
         {
             var avatarState = GetNewAvatarState(default, default);
-            var gameConfigState = new GameConfigState((Text)_tableSheets.GameConfigSheet.Serialize());
-            var row = _tableSheets.MaterialItemSheet.Values.First(r =>
-                r.ItemSubType == ItemSubType.ApStone);
-            if (materialExist)
+            var clonedAvatar = (AvatarState)avatarState.Clone();
+            Assert.Equal(clonedAvatar.SerializeList(), avatarState.SerializeList());
+            var weaponRows = _tableSheets
+                .EquipmentItemSheet
+                .Values
+                .Where(r => r.ItemSubType == ItemSubType.Weapon)
+                .Take(1);
+            foreach (var row in weaponRows)
             {
-                var apStone = ItemFactory.CreateMaterial(row);
-                avatarState.inventory.AddItem(apStone);
+                var equipment = ItemFactory.CreateItemUsable(
+                        _tableSheets.EquipmentItemSheet[row.Id],
+                        Guid.NewGuid(),
+                        0)
+                    as Equipment;
+
+                clonedAvatar.inventory.AddItem(equipment);
             }
 
-            avatarState.actionPoint = ap;
-
-            Assert.Equal(avatarState.inventory.HasItem(row.Id), materialExist);
-
-            if (exc is null)
-            {
-                avatarState.UseAp(requiredAp, chargeAp, _tableSheets.MaterialItemSheet, 0L, gameConfigState);
-                Assert.Equal(materialExist, avatarState.inventory.TryGetItem(row.Id, out var inventoryItem));
-                if (materialExist)
-                {
-                    Assert.Equal(1, inventoryItem.count);
-                }
-
-                Assert.Equal(gameConfigState.ActionPointMax - requiredAp, avatarState.actionPoint);
-            }
-            else
-            {
-                Assert.Throws(
-                    exc, () => avatarState.UseAp(requiredAp, chargeAp, _tableSheets.MaterialItemSheet, 0L, gameConfigState)
-                );
-            }
+            // Make sure the inventory is cloned
+            Assert.NotEqual(avatarState.inventory.Serialize(), clonedAvatar.inventory.Serialize());
         }
 
         [Theory]
@@ -456,7 +437,7 @@ namespace Lib9c.Tests.Model.State
         [InlineData(ItemSubType.Ring, 3, GameConfig.MaxEquipmentSlotCount.Ring, 0, 0)]
         private void ValidateEquipmentsV2(ItemSubType type, int count, int maxCount, long blockIndex, long requiredBlockIndex)
         {
-            var avatarState = GetNewAvatarState(new PrivateKey().ToAddress(), new PrivateKey().ToAddress());
+            var avatarState = GetNewAvatarState(new PrivateKey().Address, new PrivateKey().Address);
             var maxLevel = _tableSheets.CharacterLevelSheet.Max(row => row.Value.Level);
             var expRow = _tableSheets.CharacterLevelSheet[maxLevel];
             var maxLevelExp = expRow.Exp;
@@ -474,9 +455,9 @@ namespace Lib9c.Tests.Model.State
             foreach (var row in weaponRows)
             {
                 var equipment = ItemFactory.CreateItemUsable(
-                    _tableSheets.EquipmentItemSheet[row.Id],
-                    Guid.NewGuid(),
-                    requiredBlockIndex)
+                        _tableSheets.EquipmentItemSheet[row.Id],
+                        Guid.NewGuid(),
+                        requiredBlockIndex)
                     as Equipment;
 
                 equipments.Add(equipment.ItemId);
@@ -503,12 +484,11 @@ namespace Lib9c.Tests.Model.State
         private AvatarState GetNewAvatarState(Address avatarAddress, Address agentAddress)
         {
             var rankingState = new RankingState1();
-            return new AvatarState(
+            return AvatarState.Create(
                 avatarAddress,
                 agentAddress,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
                 rankingState.UpdateRankingMap(avatarAddress));
         }
     }

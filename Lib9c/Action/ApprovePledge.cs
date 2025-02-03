@@ -1,9 +1,13 @@
 using Bencodex.Types;
-using Lib9c;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Nekoyume.Action.Guild;
+using Nekoyume.Extensions;
+using Nekoyume.Model.Guild;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
+using Nekoyume.Module.Guild;
 
 namespace Nekoyume.Action
 {
@@ -25,13 +29,13 @@ namespace Nekoyume.Action
             PatronAddress = ((Dictionary)plainValue)["values"].ToAddress();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
+            GasTracer.UseGas(1);
             Address signer = context.Signer;
-            var states = context.PreviousStates;
+            var states = context.PreviousState;
             var contractAddress = signer.GetPledgeAddress();
-            if (!states.TryGetState(contractAddress, out List contract))
+            if (!states.TryGetLegacyState(contractAddress, out List contract))
             {
                 throw new FailedLoadStateException("failed to find requested pledge.");
             }
@@ -46,7 +50,14 @@ namespace Nekoyume.Action
                 throw new AlreadyContractedException($"{signer} already contracted.");
             }
 
-            return states.SetState(
+            var repository = new GuildRepository(states, context);
+            if (PatronAddress == MeadConfig.PatronAddress
+                && repository.GetJoinedGuild(GuildConfig.PlanetariumGuildOwner) is { } guildAddress)
+            {
+                states = repository.JoinGuild(guildAddress, context.GetAgentAddress()).World;
+            }
+
+            return states.SetLegacyState(
                 contractAddress,
                 List.Empty
                     .Add(PatronAddress.Serialize())

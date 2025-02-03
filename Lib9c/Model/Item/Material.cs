@@ -2,7 +2,7 @@ using System;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Common;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 
@@ -18,6 +18,11 @@ namespace Nekoyume.Model.Item
         public Material(MaterialItemSheet.Row data) : base(data)
         {
             ItemId = data.ItemId;
+        }
+
+        public Material(Material other) : base(other)
+        {
+            ItemId = other.ItemId;
         }
 
         public Material(Dictionary serialized) : base(serialized)

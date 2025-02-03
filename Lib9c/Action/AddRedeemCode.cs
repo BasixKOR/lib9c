@@ -3,8 +3,9 @@ using System.Collections.Immutable;
 using Bencodex.Types;
 using Lib9c.Abstractions;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 
 namespace Nekoyume.Action
@@ -17,15 +18,10 @@ namespace Nekoyume.Action
 
         string IAddRedeemCodeV1.RedeemCsv => redeemCsv;
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states
-                    .SetState(Addresses.RedeemCode, MarkChanged);
-            }
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
 
             CheckPermission(context);
 
@@ -34,7 +30,7 @@ namespace Nekoyume.Action
             sheet.Set(redeemCsv);
             redeem.Update(sheet);
             return states
-                .SetState(Addresses.RedeemCode, redeem.Serialize());
+                .SetLegacyState(Addresses.RedeemCode, redeem.Serialize());
         }
 
         protected override IImmutableDictionary<string, IValue> PlainValueInternal =>

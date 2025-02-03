@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.Serialization;
 using Bencodex;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Crypto;
 using Nekoyume.Action;
 
@@ -34,7 +33,7 @@ namespace Nekoyume.Model.State
         public PendingActivationState(Dictionary serialized)
             : base(serialized)
         {
-            Nonce = (Binary)serialized["nonce"];
+            Nonce = ((Binary)serialized["nonce"]).ToByteArray();
             PublicKey = serialized["public_key"].ToPublicKey();
         }
 
@@ -52,18 +51,13 @@ namespace Nekoyume.Model.State
             };
 
 #pragma warning disable LAA1002
-            return new Dictionary(values.Union((Dictionary)base.Serialize()));
+            return new Dictionary(values.Union((Dictionary)base.SerializeBase()));
 #pragma warning restore LAA1002
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             info.AddValue("serialized", new Codec().Encode(Serialize()));
-        }
-
-        public bool Verify(ActivateAccount action)
-        {
-            return Verify(action.Signature);
         }
 
         public bool Verify(byte[] signature)

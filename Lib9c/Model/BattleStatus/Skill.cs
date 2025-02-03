@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using Nekoyume.Model.Buff;
 using Nekoyume.Model.Elemental;
 using Nekoyume.Model.Skill;
 
@@ -12,22 +13,34 @@ namespace Nekoyume.Model.BattleStatus
         [Serializable]
         public class SkillInfo
         {
-            public readonly CharacterBase Target;
-            public readonly int Effect;
+            public readonly CharacterBase? Target;
+            public readonly long Effect;
             public readonly bool Critical;
             public readonly SkillCategory SkillCategory;
             public readonly ElementalType ElementalType;
             public readonly SkillTargetType SkillTargetType;
             public readonly int WaveTurn;
+            public readonly long Thorn;
+            public readonly bool IsDead;
+            public readonly Guid CharacterId;
+            public readonly IEnumerable<Nekoyume.Model.Buff.Buff>? DispelList;
+            public readonly bool Affected;
 
-            
             public readonly Model.Buff.Buff? Buff;
+            public readonly IceShield? IceShield;
 
-            public SkillInfo(CharacterBase character, int effect, bool critical, SkillCategory skillCategory,
+            public SkillInfo(Guid characterId, bool isDead, long thorn, long effect, bool critical,
+                SkillCategory skillCategory,
                 int waveTurn, ElementalType elementalType = ElementalType.Normal,
-                SkillTargetType targetType = SkillTargetType.Enemy, Model.Buff.Buff? buff = null)
+                SkillTargetType targetType = SkillTargetType.Enemy, Model.Buff.Buff? buff = null,
+                CharacterBase? target = null,
+                bool affected = true,
+                IEnumerable<Nekoyume.Model.Buff.Buff>? dispelList = null,
+                IceShield? iceShield = null)
             {
-                Target = character;
+                CharacterId = characterId;
+                IsDead = isDead;
+                Thorn = thorn;
                 Effect = effect;
                 Critical = critical;
                 SkillCategory = skillCategory;
@@ -35,6 +48,10 @@ namespace Nekoyume.Model.BattleStatus
                 SkillTargetType = targetType;
                 Buff = buff;
                 WaveTurn = waveTurn;
+                Target = target;
+                Affected = affected;
+                DispelList = dispelList;
+                IceShield = iceShield;
             }
         }
 
@@ -42,7 +59,7 @@ namespace Nekoyume.Model.BattleStatus
 
         public readonly IEnumerable<SkillInfo> SkillInfos;
 
-        
+
         public readonly IEnumerable<SkillInfo>? BuffInfos;
 
         protected Skill(int skillId, CharacterBase character, IEnumerable<SkillInfo> skillInfos,

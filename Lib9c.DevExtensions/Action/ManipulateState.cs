@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 
 namespace Lib9c.DevExtensions.Action
 {
@@ -16,7 +17,7 @@ namespace Lib9c.DevExtensions.Action
     [ActionType("manipulate_state")]
     public class ManipulateState : GameAction
     {
-        public List<(Address addr, IValue value)> StateList { get; set; }
+        public List<(Address accountAddr, Address addr, IValue value)> StateList { get; set; }
         public List<(Address addr, FungibleAssetValue fav)> BalanceList { get; set; }
 
         protected override IImmutableDictionary<string, IValue> PlainValueInternal =>
@@ -44,26 +45,24 @@ namespace Lib9c.DevExtensions.Action
                 .ToList();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            if (context.Rehearsal)
-            {
-                return context.PreviousStates;
-            }
-
-            return Execute(context.PreviousStates, StateList, BalanceList);
+            GasTracer.UseGas(1);
+            return Execute(context, context.PreviousState, StateList, BalanceList);
         }
 
-        public static IAccountStateDelta Execute(
-            IAccountStateDelta prevStates,
-            List<(Address addr, IValue value)> stateList,
+        public static IWorld Execute(
+            IActionContext context,
+            IWorld prevStates,
+            List<(Address accountAddr, Address addr, IValue value)> stateList,
             List<(Address addr, FungibleAssetValue fav)> balanceList)
         {
             var states = prevStates;
-            foreach (var (addr, value) in stateList)
+            foreach (var (accountAddr, addr, value) in stateList)
             {
-                states = states.SetState(addr, value);
+                states = states.SetAccount(
+                    accountAddr,
+                    states.GetAccount(accountAddr).SetState(addr, value));
             }
 
             var ncg = states.GetGoldCurrency();
@@ -82,6 +81,7 @@ namespace Lib9c.DevExtensions.Action
                         if (currentFav > fav)
                         {
                             states = states.TransferAsset(
+                                context,
                                 addr,
                                 GoldCurrencyState.Address,
                                 currentFav - fav);
@@ -89,6 +89,7 @@ namespace Lib9c.DevExtensions.Action
                         else
                         {
                             states = states.TransferAsset(
+                                context,
                                 GoldCurrencyState.Address,
                                 addr,
                                 fav - currentFav);
@@ -101,8 +102,8 @@ namespace Lib9c.DevExtensions.Action
                 }
 
                 states = currentFav > fav
-                    ? states.BurnAsset(addr, currentFav - fav)
-                    : states.MintAsset(addr, fav - currentFav);
+                    ? states.BurnAsset(context, addr, currentFav - fav)
+                    : states.MintAsset(context, addr, fav - currentFav);
             }
 
             return states;

@@ -1,11 +1,7 @@
-using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Bencodex;
 using Bencodex.Types;
-using Libplanet.Action;
 using Libplanet.Action.Loader;
 using MessagePack;
 using MessagePack.Formatters;
@@ -17,15 +13,6 @@ namespace Lib9c.Formatters
     public class NCActionFormatter : IMessagePackFormatter<ActionBase?>
     {
         private readonly IActionLoader _actionLoader;
-
-        private static readonly IDictionary<IValue, Type> Types = typeof(ActionBase)
-            .Assembly
-            .GetTypes()
-            .Where(t => t.IsDefined(typeof(ActionTypeAttribute)))
-            .ToDictionary(
-                t => ActionTypeAttribute.ValueOf(t)
-                    ?? throw new InvalidOperationException("Unreachable code."),
-                t => t);
 
         public NCActionFormatter()
         {

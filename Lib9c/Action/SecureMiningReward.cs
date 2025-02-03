@@ -1,12 +1,12 @@
 using System.Collections.Immutable;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
-using Libplanet.Assets;
 using Libplanet.Action;
-using Libplanet.State;
 using Nekoyume.Model.State;
-using System.Linq;
+using Nekoyume.Module;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 
 namespace Nekoyume.Action
 {
@@ -55,17 +55,10 @@ namespace Nekoyume.Action
             .Add("type_id", "secure_mining_reward")
             .Add("values", Recipient.Bencoded);
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            IAccountStateDelta state = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return state.MarkBalanceChanged(
-                    NCG,
-                    AuthorizedMiners.Add(Recipient).Add(Treasury).ToArray()
-                );
-            }
+            GasTracer.UseGas(1);
+            IWorld state = context.PreviousState;
 
             CheckPermission(context);
 
@@ -76,9 +69,9 @@ namespace Nekoyume.Action
                 FungibleAssetValue toRecipient = balance.DivRem(100, out _) * EarnRate;
                 FungibleAssetValue toBurn = balance - (toTreasury + toRecipient);
 
-                state = state.TransferAsset(minerAddress, Treasury, toTreasury);
-                state = state.TransferAsset(minerAddress, Recipient, toRecipient);
-                state = state.TransferAsset(minerAddress, Nil, toBurn);
+                state = state.TransferAsset(context, minerAddress, Treasury, toTreasury);
+                state = state.TransferAsset(context, minerAddress, Recipient, toRecipient);
+                state = state.TransferAsset(context, minerAddress, Nil, toBurn);
             }
 
             return state;

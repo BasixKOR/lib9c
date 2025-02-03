@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
 using Bencodex.Types;
 using Nekoyume.Model.State;
@@ -10,7 +8,7 @@ using static Lib9c.SerializeKeys;
 namespace Nekoyume.Model.Item
 {
     [Serializable]
-    public class Costume : ItemBase, INonFungibleItem, IEquippableItem
+    public class Costume : ItemBase, INonFungibleItem, IEquippableItem, ITradableItem
     {
         // FIXME: Whether the equipment is equipped or not has no asset value and must be removed from the state.
         public bool equipped = false;

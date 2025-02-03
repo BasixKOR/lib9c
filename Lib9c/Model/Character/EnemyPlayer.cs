@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Nekoyume.Battle;
-using Nekoyume.Model.Arena;
 using Nekoyume.Model.BattleStatus;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
@@ -49,6 +48,8 @@ namespace Nekoyume.Model
             belt = null;
             necklace = null;
             ring = null;
+            aura = null;
+            Grimoire = null;
             monsterMap = new CollectionMap();
             eventMap = new CollectionMap();
             hairIndex = enemyPlayerDigest.HairIndex;

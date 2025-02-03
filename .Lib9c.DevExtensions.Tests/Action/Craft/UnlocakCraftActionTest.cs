@@ -1,16 +1,13 @@
-using Bencodex.Types;
 using Lib9c.DevExtensions.Action.Craft;
 using Lib9c.Tests;
 using Lib9c.Tests.Action;
 using Lib9c.Tests.Util;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume;
-using Nekoyume.Action;
-using Nekoyume.Model;
+using Nekoyume.Module;
 using Xunit;
-using static Lib9c.SerializeKeys;
 
 namespace Lib9c.DevExtensions.Tests.Action.Craft
 {
@@ -19,14 +16,12 @@ namespace Lib9c.DevExtensions.Tests.Action.Craft
         private readonly TableSheets _tableSheets;
         private readonly Address _agentAddress;
         private readonly Address _avatarAddress;
-        private readonly IAccountStateDelta _initialStateV2;
-        private readonly Address _worldInformationAddress;
+        private readonly IWorld _initialStateV2;
 
         public UnlockCraftActionTest()
         {
-            (_tableSheets, _agentAddress, _avatarAddress, _, _initialStateV2) =
+            (_tableSheets, _agentAddress, _avatarAddress, _initialStateV2) =
                 InitializeUtil.InitializeStates(isDevEx: true);
-            _worldInformationAddress = _avatarAddress.Derive(LegacyWorldInformationKey);
         }
 
         [Theory]
@@ -47,18 +42,18 @@ namespace Lib9c.DevExtensions.Tests.Action.Craft
             var action = new UnlockCraftAction
             {
                 AvatarAddress = _avatarAddress,
-                ActionType = new ActionTypeAttribute(typeIdentifier)
+                ActionType = new ActionTypeAttribute(typeIdentifier),
             };
 
             var state = action.Execute(new ActionContext
             {
-                PreviousStates = _initialStateV2,
+                PreviousState = _initialStateV2,
                 Signer = _agentAddress,
-                BlockIndex = 0L
+                BlockIndex = 0L,
             });
 
-            var worldInformation =
-                new WorldInformation((Dictionary)state.GetState(_worldInformationAddress));
+            var avatarState = state.GetAvatarState(_avatarAddress);
+            var worldInformation = avatarState.worldInformation;
             Assert.True(worldInformation.IsStageCleared(expectedStage));
         }
     }

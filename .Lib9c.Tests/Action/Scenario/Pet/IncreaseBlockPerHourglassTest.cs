@@ -7,16 +7,15 @@ namespace Lib9c.Tests.Action.Scenario.Pet
     using System.Linq;
     using Bencodex.Types;
     using Lib9c.Tests.Util;
-    using Libplanet;
-    using Libplanet.State;
-    using Nekoyume;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
     using Nekoyume.Action;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Pet;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Xunit;
-    using static Lib9c.SerializeKeys;
 
     public class IncreaseBlockPerHourglassTest
     {
@@ -25,11 +24,8 @@ namespace Lib9c.Tests.Action.Scenario.Pet
 
         private readonly Address _agentAddr;
         private readonly Address _avatarAddr;
-        private readonly Address _inventoryAddr;
-        private readonly Address _worldInfoAddr;
         private readonly Address _recipeIdsAddr;
-        private readonly IAccountStateDelta _initialStateV1;
-        private readonly IAccountStateDelta _initialStateV2;
+        private readonly IWorld _initialStateV2;
         private readonly TableSheets _tableSheets;
         private readonly int _hourglassItemId;
         private int? _petId;
@@ -40,11 +36,8 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 _tableSheets,
                 _agentAddr,
                 _avatarAddr,
-                _initialStateV1,
                 _initialStateV2
             ) = InitializeUtil.InitializeStates();
-            _inventoryAddr = _avatarAddr.Derive(LegacyInventoryKey);
-            _worldInfoAddr = _avatarAddr.Derive(LegacyWorldInformationKey);
             _recipeIdsAddr = _avatarAddr.Derive("recipe_ids");
             _hourglassItemId = _tableSheets.MaterialItemSheet.Values.First(
                 item => item.ItemSubType == ItemSubType.Hourglass
@@ -52,21 +45,20 @@ namespace Lib9c.Tests.Action.Scenario.Pet
         }
 
         [Theory]
-        [InlineData(1, 10113000, null)] // No Pet
-        [InlineData(1, 10113000, 1)] // Lv.1 increases 1 block per HG: 3 -> 4
-        [InlineData(1, 10113000, 30)] // Lv.30 increases 30 blocks per HG: 3 -> 33
-        [InlineData(1, 10120000, 30)] // Test for min. Hourglass is 1
+        [InlineData(1, 155, null)] // No Pet
+        [InlineData(1, 155, 1)] // Lv.1 increases 1 block per HG: 3 -> 4
+        [InlineData(1, 155, 30)] // Lv.30 increases 30 blocks per HG: 3 -> 33
+        [InlineData(1, 37, 30)] // Test for min. Hourglass is 1
         public void RapidCombinationTest_Equipment(
             int randomSeed,
-            int targetItemId,
+            int requiredBlock,
             int? petLevel
         )
         {
             var random = new TestRandom(randomSeed);
 
             // Disable all quests to prevent contamination by quest reward
-            var (stateV1, stateV2) = QuestUtil.DisableQuestList(
-                _initialStateV1,
+            var stateV2 = QuestUtil.DisableQuestList(
                 _initialStateV2,
                 _avatarAddr
             );
@@ -74,7 +66,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             // Get recipe
             var recipe =
                 _tableSheets.EquipmentItemRecipeSheet.Values.First(
-                    recipe => recipe.ResultEquipmentId == targetItemId
+                    recipe => recipe.RequiredBlockIndex >= requiredBlock
                 );
             Assert.NotNull(recipe);
 
@@ -89,11 +81,10 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 recipeIds = recipeIds.Add(i.Serialize());
             }
 
-            stateV2 = stateV2.SetState(_recipeIdsAddr, recipeIds);
+            stateV2 = stateV2.SetLegacyState(_recipeIdsAddr, recipeIds);
 
             var expectedHourglass = (int)Math.Ceiling(
-                ((double)recipe.RequiredBlockIndex
-                 - stateV2.GetGameConfigState().RequiredAppraiseBlock)
+                (double)recipe.RequiredBlockIndex
                 /
                 stateV2.GetGameConfigState().HourglassPerBlock);
 
@@ -104,16 +95,15 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                     pet => pet.LevelOptionMap[(int)petLevel!].OptionType == PetOptionType
                 );
                 _petId = petRow.PetId;
-                stateV2 = stateV2.SetState(
+                stateV2 = stateV2.SetLegacyState(
                     PetState.DeriveAddress(_avatarAddr, (int)_petId),
                     new List(_petId!.Serialize(), petLevel.Serialize(), 0L.Serialize())
                 );
                 expectedHourglass = (int)Math.Ceiling(
-                    (recipe.RequiredBlockIndex
-                     - stateV2.GetGameConfigState().RequiredAppraiseBlock)
+                    recipe.RequiredBlockIndex
                     /
                     (stateV2.GetGameConfigState().HourglassPerBlock
-                     + petRow.LevelOptionMap[(int)petLevel].OptionValue)
+                        + petRow.LevelOptionMap[(int)petLevel].OptionValue)
                 );
             }
 
@@ -124,7 +114,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 _avatarAddr,
                 new List<EquipmentItemSubRecipeSheet.MaterialInfo>
                 {
-                    new EquipmentItemSubRecipeSheet.MaterialInfo(
+                    new (
                         _hourglassItemId,
                         expectedHourglass
                     ),
@@ -133,7 +123,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             );
 
             // Prepare to combination
-            stateV2 = CraftUtil.PrepareCombinationSlot(stateV2, _avatarAddr, 0);
+            stateV2 = CraftUtil.PrepareCombinationSlot(stateV2, _avatarAddr);
             stateV2 = CraftUtil.AddMaterialsToInventory(
                 stateV2,
                 _tableSheets,
@@ -144,7 +134,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             stateV2 = CraftUtil.UnlockStage(
                 stateV2,
                 _tableSheets,
-                _worldInfoAddr,
+                _avatarAddr,
                 recipe.UnlockStage
             );
 
@@ -154,44 +144,47 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 avatarAddress = _avatarAddr,
                 slotIndex = 0,
                 recipeId = recipe.Id,
-                subRecipeId = recipe.SubRecipeIds?[0],
+                subRecipeId = null,
                 petId = _petId,
             };
 
-            stateV2 = action.Execute(new ActionContext
-            {
-                PreviousStates = stateV2,
-                Signer = _agentAddr,
-                BlockIndex = 0L,
-                Random = random,
-            });
+            stateV2 = action.Execute(
+                new ActionContext
+                {
+                    PreviousState = stateV2,
+                    Signer = _agentAddr,
+                    BlockIndex = 0L,
+                    RandomSeed = random.Seed,
+                });
 
             // Do rapid combination
             var rapidAction = new RapidCombination
             {
                 avatarAddress = _avatarAddr,
-                slotIndex = 0,
+                slotIndexList = new List<int> { 0, },
             };
-            stateV2 = rapidAction.Execute(new ActionContext
-            {
-                PreviousStates = stateV2,
-                Signer = _agentAddr,
-                BlockIndex = stateV2.GetGameConfigState().RequiredAppraiseBlock,
-                Random = random,
-            });
+            stateV2 = rapidAction.Execute(
+                new ActionContext
+                {
+                    PreviousState = stateV2,
+                    Signer = _agentAddr,
+                    BlockIndex = 0,
+                    RandomSeed = random.Seed,
+                });
 
-            var slotState = stateV2.GetCombinationSlotState(_avatarAddr, 0);
+            var allSlotState = stateV2.GetAllCombinationSlotState(_avatarAddr);
+            var slotState = allSlotState.GetSlot(0);
             // TEST: Combination should be done
             Assert.Equal(
-                stateV2.GetGameConfigState().RequiredAppraiseBlock,
+                0,
                 slotState.RequiredBlockIndex
             );
 
             // TEST: All Hourglasses should be used
-            var inventoryState = new Inventory((List)stateV2.GetState(_inventoryAddr));
-            Assert.Equal(1, inventoryState.Items.Count);
-            Assert.Throws<InvalidOperationException>(() =>
-                inventoryState.Items.First(item => item.item.Id == _hourglassItemId));
+            var avatarState = stateV2.GetAvatarState(_avatarAddr);
+            Assert.Throws<InvalidOperationException>(
+                () =>
+                    avatarState.inventory.Items.First(item => item.item.Id == _hourglassItemId));
         }
     }
 }

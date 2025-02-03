@@ -2,9 +2,10 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Nekoyume.Module;
 
 namespace Nekoyume.Action.Coupons
 {
@@ -28,10 +29,10 @@ namespace Nekoyume.Action.Coupons
             private set;
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var signerWallet = states.GetCouponWallet(context.Signer);
             var orderedRecipients = CouponsPerRecipient.OrderBy(pair => pair.Key);
             foreach ((Address recipient, IImmutableSet<Guid> couponIds) in orderedRecipients)
@@ -55,10 +56,10 @@ namespace Nekoyume.Action.Coupons
                     recipientWallet = recipientWallet.Add(id, coupon);
                 }
 
-                states = states.SetCouponWallet(recipient, recipientWallet, context.Rehearsal);
+                states = states.SetCouponWallet(recipient, recipientWallet);
             }
 
-            states = states.SetCouponWallet(context.Signer, signerWallet, context.Rehearsal);
+            states = states.SetCouponWallet(context.Signer, signerWallet);
             return states;
         }
 
@@ -77,7 +78,7 @@ namespace Nekoyume.Action.Coupons
                 .ToImmutableDictionary(
                     pair => new Address(pair.Key),
                     pair => (IImmutableSet<Guid>)((Bencodex.Types.List)pair.Value).Select(
-                        value => new Guid((Binary)value)
+                        value => new Guid(((Binary)value).ToByteArray())
                         ).ToImmutableHashSet()
             );
     }

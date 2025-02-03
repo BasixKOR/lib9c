@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Nekoyume.Model.State;
 using static Nekoyume.TableData.TableExtensions;
@@ -24,7 +24,7 @@ namespace Nekoyume.TableData
             {
                 Id = ParseInt(fields[0]);
                 RewardId = ParseInt(fields[1]);
-                PublicKeyBinary = ByteUtil.ParseHex(fields[2]);
+                PublicKeyBinary = new Binary(ByteUtil.ParseHex(fields[2]));
             }
         }
 

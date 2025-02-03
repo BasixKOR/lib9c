@@ -3,7 +3,6 @@ using Nekoyume.Model.Buff;
 using Nekoyume.Model.Skill;
 using Nekoyume.Model.Stat;
 using Nekoyume.TableData;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -104,7 +103,8 @@ namespace Nekoyume.Model
                     Simulator.StatBuffSheet,
                     Simulator.SkillActionBuffSheet,
                     Simulator.ActionBuffSheet
-                )
+                ),
+                Simulator.LogEvent
             );
 
             Simulator.Log.Add(usedSkill);
@@ -116,6 +116,11 @@ namespace Nekoyume.Model
             if (!IgnoreLevelCorrectionOnHit)
             {
                 return base.IsHit(caster);
+            }
+
+            if (caster.ActionBuffs.Any(buff => buff is Focus))
+            {
+                return true;
             }
 
             var isHit = HitHelper.IsHitWithoutLevelCorrection(
@@ -145,16 +150,17 @@ namespace Nekoyume.Model
                     Simulator.StatBuffSheet,
                     Simulator.SkillActionBuffSheet,
                     Simulator.ActionBuffSheet
-                )
+                ),
+                Simulator.LogEvent
             );
 
             Simulator.Log.Add(usedSkill);
             foreach (var info in usedSkill.SkillInfos)
             {
-                if (!info.Target.IsDead)
+                if (!info.IsDead)
                     continue;
 
-                var target = Targets.FirstOrDefault(i => i.Id == info.Target.Id);
+                var target = Targets.FirstOrDefault(i => i.Id == info.CharacterId);
                 target?.Die();
             }
         }

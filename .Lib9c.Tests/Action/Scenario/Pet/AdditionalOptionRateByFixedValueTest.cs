@@ -6,16 +6,16 @@ namespace Lib9c.Tests.Action.Scenario.Pet
     using System.Linq;
     using Bencodex.Types;
     using Lib9c.Tests.Util;
-    using Libplanet;
-    using Libplanet.State;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
     using Nekoyume.Action;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Pet;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Pet;
     using Xunit;
-    using Xunit.Abstractions;
-    using static Lib9c.SerializeKeys;
 
     public class AdditionalOptionRateByFixedValueTest
     {
@@ -25,19 +25,18 @@ namespace Lib9c.Tests.Action.Scenario.Pet
         private readonly TableSheets _tableSheets;
         private readonly Address _agentAddr;
         private readonly Address _avatarAddr;
-        private readonly IAccountStateDelta _initialStateV1;
-        private readonly IAccountStateDelta _initialStateV2;
-        private readonly Address _inventoryAddr;
-        private readonly Address _worldInfoAddr;
+        private readonly IWorld _initialStateV2;
         private readonly Address _recipeAddr;
         private int? _petId;
 
         public AdditionalOptionRateByFixedValueTest()
         {
-            (_tableSheets, _agentAddr, _avatarAddr, _initialStateV1, _initialStateV2)
-                = InitializeUtil.InitializeStates();
-            _inventoryAddr = _avatarAddr.Derive(LegacyInventoryKey);
-            _worldInfoAddr = _avatarAddr.Derive(LegacyWorldInformationKey);
+            var sheets = TableSheetsImporter.ImportSheets();
+            sheets[nameof(PetOptionSheet)] = @"ID,_PET NAME,PetLevel,OptionType,OptionValue
+1004,꼬마 펜리르,1,AdditionalOptionRateByFixedValue,5.5
+1004,꼬마 펜리르,30,AdditionalOptionRateByFixedValue,20";
+            (_tableSheets, _agentAddr, _avatarAddr, _initialStateV2)
+                = InitializeUtil.InitializeStates(sheetsOverride: sheets);
             _recipeAddr = _avatarAddr.Derive("recipe_ids");
         }
 
@@ -50,7 +49,6 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             int petLevel
         )
         {
-            var (beforeResult, afterResult) = (false, false);
             // Get Recipe
             var recipe = _tableSheets.EquipmentItemRecipeSheet.Values.First(
                 recipe => recipe.ResultEquipmentId == targetItemId
@@ -58,9 +56,10 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             Assert.NotNull(recipe);
 
             // Get Materials and stages
-            List<EquipmentItemSubRecipeSheet.MaterialInfo> materialList =
+            var materialList =
                 recipe.GetAllMaterials(
-                    _tableSheets.EquipmentItemSubRecipeSheetV2, CraftType.Premium
+                    _tableSheets.EquipmentItemSubRecipeSheetV2,
+                    CraftType.Premium
                 ).ToList();
             var stageList = List.Empty;
             for (var i = 0; i < recipe.UnlockStage; i++)
@@ -68,41 +67,27 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 stageList = stageList.Add(i.Serialize());
             }
 
-            var stateV2 = _initialStateV2.SetState(_recipeAddr, stageList);
+            var stateV2 = _initialStateV2.SetLegacyState(_recipeAddr, stageList);
             stateV2 = CraftUtil.UnlockStage(
                 stateV2,
                 _tableSheets,
-                _worldInfoAddr,
+                _avatarAddr,
                 recipe.UnlockStage
             );
 
             var subRecipe = _tableSheets.EquipmentItemSubRecipeSheetV2[recipe.SubRecipeIds![1]];
-            var (originalOption2Ratio, originalOption3Ratio, originalOption4Ratio) =
-                (subRecipe.Options[1].Ratio, subRecipe.Options[2].Ratio,
-                    subRecipe.Options[3].Ratio);
-            var (expectedOption2Ratio, expectedOption3Ratio, expectedOption4Ratio) =
-                (originalOption2Ratio, originalOption3Ratio, originalOption4Ratio);
-
             // Get pet
             var petRow = _tableSheets.PetOptionSheet.Values.First(
                 pet => pet.LevelOptionMap[(int)petLevel!].OptionType == PetOptionType
             );
             _petId = petRow.PetId;
-            stateV2 = stateV2.SetState(
+            stateV2 = stateV2.SetLegacyState(
                 PetState.DeriveAddress(_avatarAddr, (int)_petId),
                 new List(_petId!.Serialize(), petLevel.Serialize(), 0L.Serialize())
             );
-            var increment = (int)petRow.LevelOptionMap[petLevel].OptionValue * 100;
-            (expectedOption2Ratio, expectedOption3Ratio, expectedOption4Ratio) =
-            (
-                originalOption2Ratio + increment,
-                originalOption3Ratio + increment,
-                originalOption4Ratio + increment
-            );
 
             // Prepare
-            stateV2 = CraftUtil.PrepareCombinationSlot(stateV2, _avatarAddr, 0);
-            stateV2 = CraftUtil.PrepareCombinationSlot(stateV2, _avatarAddr, 1);
+            stateV2 = CraftUtil.PrepareCombinationSlot(stateV2, _avatarAddr);
 
             // Find specific random seed to meet test condition
             var random = new TestRandom(randomSeed);
@@ -124,14 +109,16 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 recipeId = recipe.Id,
                 subRecipeId = recipe.SubRecipeIds?[1],
             };
-            stateV2 = action.Execute(new ActionContext
+            var ctx = new ActionContext
             {
-                PreviousStates = stateV2,
+                PreviousState = stateV2,
                 Signer = _agentAddr,
                 BlockIndex = 0L,
-                Random = random,
-            });
-            var slotState = stateV2.GetCombinationSlotState(_avatarAddr, 0);
+            };
+            ctx.SetRandom(random);
+            stateV2 = action.Execute(ctx);
+            var allSlotState = stateV2.GetAllCombinationSlotState(_avatarAddr);
+            var slotState = allSlotState.GetSlot(0);
             // TEST: No additional option added (1 star)
             Assert.Equal(
                 recipe.RequiredBlockIndex + subRecipe.RequiredBlockIndex +
@@ -164,14 +151,16 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 subRecipeId = recipe.SubRecipeIds?[1],
                 petId = _petId,
             };
-            stateV2 = petAction.Execute(new ActionContext
+            ctx = new ActionContext
             {
-                PreviousStates = stateV2,
+                PreviousState = stateV2,
                 Signer = _agentAddr,
                 BlockIndex = 0L,
-                Random = random,
-            });
-            var petSlotState = stateV2.GetCombinationSlotState(_avatarAddr, 1);
+            };
+            ctx.SetRandom(random);
+            stateV2 = petAction.Execute(ctx);
+            allSlotState = stateV2.GetAllCombinationSlotState(_avatarAddr);
+            var petSlotState = allSlotState.GetSlot(1);
             // TEST: One additional option added (2 star)
             Assert.Equal(
                 recipe.RequiredBlockIndex + subRecipe.RequiredBlockIndex +

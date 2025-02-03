@@ -5,14 +5,15 @@ using System.Diagnostics;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Serilog;
 
@@ -216,33 +217,11 @@ namespace Nekoyume.Action
             purchaseInfos = plainValue["products"].ToList(StateExtensions.ToPurchaseInfoLegacy);
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
+            GasTracer.UseGas(1);
             IActionContext ctx = context;
-            var states = ctx.PreviousStates;
-
-            if (ctx.Rehearsal)
-            {
-                states = states
-                    .SetState(buyerAvatarAddress, MarkChanged)
-                    .SetState(ctx.Signer, MarkChanged);
-
-                foreach (var info in purchaseInfos)
-                {
-                    var sellerAgentAddress = info.sellerAgentAddress;
-                    var sellerAvatarAddress = info.sellerAvatarAddress;
-
-                    states = states.SetState(sellerAvatarAddress, MarkChanged)
-                        .MarkBalanceChanged(
-                            GoldCurrencyMock,
-                            ctx.Signer,
-                            sellerAgentAddress,
-                            GoldCurrencyState.Address);
-                }
-
-                return states.SetState(ShopState.Address, MarkChanged);
-            }
+            var states = ctx.PreviousState;
 
             CheckObsolete(ActionObsoleteConfig.V100080ObsoleteIndex, context);
 
@@ -280,7 +259,7 @@ namespace Nekoyume.Action
                     current);
             }
 
-            if (!states.TryGetState(ShopState.Address, out Bencodex.Types.Dictionary shopStateDict))
+            if (!states.TryGetLegacyState(ShopState.Address, out Bencodex.Types.Dictionary shopStateDict))
             {
                 throw new FailedLoadStateException($"{addressesHex}Aborted as the shop state was failed to load.");
             }
@@ -305,6 +284,7 @@ namespace Nekoyume.Action
             var sellerResults = new List<Buy7.SellerResult>();
             var materialSheet = states.GetSheet<MaterialItemSheet>();
 
+            var random = ctx.GetRandom();
             foreach (var productInfo in purchaseInfos)
             {
                 if (productInfo is null)
@@ -370,12 +350,14 @@ namespace Nekoyume.Action
 
                 // Transfer tax
                 states = states.TransferAsset(
+                    context,
                     context.Signer,
                     GoldCurrencyState.Address,
                     tax);
 
                 // Transfer paid money (taxed) to the seller.
                 states = states.TransferAsset(
+                    context,
                     context.Signer,
                     productInfo.sellerAgentAddress,
                     taxedPrice
@@ -384,7 +366,7 @@ namespace Nekoyume.Action
                 productDict = (Dictionary)productDict.Remove(productIdSerialized);
                 shopStateDict = shopStateDict.SetItem("products", productDict);
 
-                var buyerMail = new BuyerMail(purchaseResult, ctx.BlockIndex, ctx.Random.GenerateRandomGuid(), ctx.BlockIndex);
+                var buyerMail = new BuyerMail(purchaseResult, ctx.BlockIndex, random.GenerateRandomGuid(), ctx.BlockIndex);
                 purchaseResult.id = buyerMail.id;
 
                 var sellerResultToAdd = new Buy7.SellerResult
@@ -394,7 +376,7 @@ namespace Nekoyume.Action
                     costume = shopItem.Costume,
                     gold = taxedPrice
                 };
-                var sellerMail = new SellerMail(sellerResultToAdd, ctx.BlockIndex, ctx.Random.GenerateRandomGuid(),
+                var sellerMail = new SellerMail(sellerResultToAdd, ctx.BlockIndex, random.GenerateRandomGuid(),
                     ctx.BlockIndex);
                 sellerResultToAdd.id = sellerMail.id;
                 sellerResults.Add(sellerResultToAdd);
@@ -402,11 +384,11 @@ namespace Nekoyume.Action
                 buyerAvatarState.Update(buyerMail);
                 if (purchaseResult.itemUsable != null)
                 {
-                    buyerAvatarState.UpdateFromAddItem2(purchaseResult.itemUsable, false);
+                    buyerAvatarState.UpdateFromAddItem(purchaseResult.itemUsable, false);
                 }
                 if (purchaseResult.costume != null)
                 {
-                    buyerAvatarState.UpdateFromAddCostume(purchaseResult.costume, false);
+                    buyerAvatarState.UpdateFromAddCostume(purchaseResult.costume);
                 }
                 sellerAvatarState.Update(sellerMail);
 
@@ -416,10 +398,10 @@ namespace Nekoyume.Action
 
                 sellerAvatarState.updatedAt = ctx.BlockIndex;
                 sellerAvatarState.blockIndex = ctx.BlockIndex;
-                sellerAvatarState.UpdateQuestRewards2(materialSheet);
+                sellerAvatarState.UpdateQuestRewards(materialSheet);
 
                 sw.Restart();
-                states = states.SetState(productInfo.sellerAvatarAddress, sellerAvatarState.Serialize());
+                states = states.SetAvatarState(productInfo.sellerAvatarAddress, sellerAvatarState);
                 sw.Stop();
                 Log.Verbose("{AddressesHex}BuyMultiple Set Seller AvatarState: {Elapsed}", addressesHex, sw.Elapsed);
             }
@@ -430,15 +412,15 @@ namespace Nekoyume.Action
             buyerAvatarState.updatedAt = ctx.BlockIndex;
             buyerAvatarState.blockIndex = ctx.BlockIndex;
 
-            buyerAvatarState.UpdateQuestRewards2(materialSheet);
+            buyerAvatarState.UpdateQuestRewards(materialSheet);
 
             sw.Restart();
-            states = states.SetState(buyerAvatarAddress, buyerAvatarState.Serialize());
+            states = states.SetAvatarState(buyerAvatarAddress, buyerAvatarState);
             sw.Stop();
             Log.Verbose("{AddressesHex}BuyMultiple Set Buyer AvatarState: {Elapsed}", addressesHex, sw.Elapsed);
 
             sw.Restart();
-            states = states.SetState(ShopState.Address, shopStateDict);
+            states = states.SetLegacyState(ShopState.Address, shopStateDict);
             sw.Stop();
             var ended = DateTimeOffset.UtcNow;
             Log.Verbose("{AddressesHex}BuyMultiple Set ShopState: {Elapsed}", addressesHex, sw.Elapsed);

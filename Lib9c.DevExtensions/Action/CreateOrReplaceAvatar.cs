@@ -1,5 +1,4 @@
 #nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -7,9 +6,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Bencodex.Types;
 using Lib9c.DevExtensions.Action.Interface;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Extensions;
@@ -19,14 +18,15 @@ using Nekoyume.Model.Quest;
 using Nekoyume.Model.Skill;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
-using static Lib9c.SerializeKeys;
 
 namespace Lib9c.DevExtensions.Action
 {
     [Serializable]
     [ActionType("create_or_replace_avatar")]
+    // Don't use on client
     public class CreateOrReplaceAvatar : GameAction, ICreateOrReplaceAvatar
     {
         public int AvatarIndex { get; private set; }
@@ -41,11 +41,7 @@ namespace Lib9c.DevExtensions.Action
         public IOrderedEnumerable<int> CostumeIds { get; private set; }
         public IOrderedEnumerable<(int runeId, int level)> Runes { get; private set; }
 
-        public (int stageId, IOrderedEnumerable<int> crystalRandomBuffIds)? CrystalRandomBuff
-        {
-            get;
-            private set;
-        }
+        public (int stageId, IOrderedEnumerable<int> crystalRandomBuffIds)? CrystalRandomBuff { get; private set; }
         // public
 
         protected override IImmutableDictionary<string, IValue> PlainValueInternal
@@ -363,23 +359,19 @@ namespace Lib9c.DevExtensions.Action
             CrystalRandomBuff = crystalRandomBuff;
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            if (context.Rehearsal)
-            {
-                return context.PreviousStates;
-            }
-
+            GasTracer.UseGas(1);
+            var random = context.GetRandom();
             return Execute(
-                context.PreviousStates,
-                context.Random,
+                context.PreviousState,
+                random,
                 context.BlockIndex,
                 context.Signer);
         }
 
-        public IAccountStateDelta Execute(
-            IAccountStateDelta states,
+        public IWorld Execute(
+            IWorld states,
             IRandom random,
             long blockIndex,
             Address signer)
@@ -388,18 +380,18 @@ namespace Lib9c.DevExtensions.Action
             var avatarAddr = Addresses.GetAvatarAddress(agentAddr, AvatarIndex);
 
             // Set AgentState.
-            var agent = states.GetState(agentAddr) is Dictionary agentDict
+            var agent = states.GetLegacyState(agentAddr) is Dictionary agentDict
                 ? new AgentState(agentDict)
                 : new AgentState(agentAddr);
             if (!agent.avatarAddresses.ContainsKey(AvatarIndex))
             {
                 agent.avatarAddresses[AvatarIndex] = avatarAddr;
-                states = states.SetState(agentAddr, agent.Serialize());
+                states = states.SetAgentState(agentAddr, agent);
             }
             // ~Set AgentState.
 
             var sheets = states.GetSheets(
-                containAvatarSheets: true,
+                true,
                 containQuestSheet: true,
                 sheetTypes: new[]
                 {
@@ -416,50 +408,39 @@ namespace Lib9c.DevExtensions.Action
                     typeof(CostumeItemSheet),
                     typeof(CrystalStageBuffGachaSheet),
                 });
-            var gameConfig = states.GetGameConfigState();
 
             // Set AvatarState.
-            var avatar = new AvatarState(
+            var avatar = AvatarState.Create(
                 avatarAddr,
                 agentAddr,
                 blockIndex,
                 sheets.GetAvatarSheets(),
-                gameConfig,
                 default,
-                Name)
-            {
-                level = Level,
-                hair = Hair,
-                lens = Lens,
-                ear = Ear,
-                tail = Tail,
-            };
-            states = states.SetState(avatarAddr, avatar.Serialize());
+                Name);
+            avatar.level = Level;
+            avatar.hair = Hair;
+            avatar.lens = Lens;
+            avatar.ear = Ear;
+            avatar.tail = Tail;
             // ~Set AvatarState.
 
             // Set WorldInformation.
-            var worldInfoAddr = avatarAddr.Derive(LegacyWorldInformationKey);
-            var worldInfo = new WorldInformation(
+            avatar.worldInformation = new WorldInformation(
                 blockIndex,
                 sheets.GetSheet<WorldSheet>(),
                 false);
-            states = states.SetState(worldInfoAddr, worldInfo.Serialize());
             // ~Set WorldInformation.
 
             // Set QuestList.
-            var questListAddr = avatarAddr.Derive(LegacyQuestListKey);
-            var questList = new QuestList(
+            avatar.questList = new QuestList(
                 sheets.GetQuestSheet(),
                 sheets.GetSheet<QuestRewardSheet>(),
                 sheets.GetSheet<QuestItemRewardSheet>(),
                 sheets.GetSheet<EquipmentItemRecipeSheet>(),
                 sheets.GetSheet<EquipmentItemSubRecipeSheet>());
-            states = states.SetState(questListAddr, questList.Serialize());
             // ~Set QuestList.
 
             // Set Inventory.
-            var inventoryAddr = avatarAddr.Derive(LegacyInventoryKey);
-            var inventory = new Nekoyume.Model.Item.Inventory();
             var equipmentItemSheet = sheets.GetSheet<EquipmentItemSheet>();
             var enhancementCostSheetV2 = sheets.GetSheet<EnhancementCostSheetV2>();
             var recipeSheet = sheets.GetSheet<EquipmentItemRecipeSheet>();
@@ -482,7 +463,7 @@ namespace Lib9c.DevExtensions.Action
                     blockIndex);
                 if (equipment.Grade == 0)
                 {
-                    inventory.AddItem(equipment);
+                    avatar.inventory.AddItem(equipment);
                     continue;
                 }
 
@@ -528,7 +509,7 @@ namespace Lib9c.DevExtensions.Action
                 }
 
                 if (eLevel > 0 &&
-                    ItemEnhancement.TryGetRow(
+                    ItemEnhancement11.TryGetRow(
                         equipment,
                         enhancementCostSheetV2,
                         out var enhancementCostRow))
@@ -539,7 +520,7 @@ namespace Lib9c.DevExtensions.Action
                     }
                 }
 
-                inventory.AddItem(equipment);
+                avatar.inventory.AddItem(equipment);
             }
 
             var consumableItemSheet = sheets.GetSheet<ConsumableItemSheet>();
@@ -549,7 +530,7 @@ namespace Lib9c.DevExtensions.Action
                 {
                     for (var i = 0; i < count; i++)
                     {
-                        inventory.AddItem(ItemFactory.CreateItemUsable(
+                        avatar.inventory.AddItem(ItemFactory.CreateItemUsable(
                             consumableRow,
                             random.GenerateRandomGuid(),
                             blockIndex));
@@ -562,39 +543,35 @@ namespace Lib9c.DevExtensions.Action
             {
                 if (costumeItemSheet.TryGetValue(costumeId, out var costumeRow))
                 {
-                    inventory.AddItem(ItemFactory.CreateCostume(
+                    avatar.inventory.AddItem(ItemFactory.CreateCostume(
                         costumeRow,
                         random.GenerateRandomGuid()));
                 }
             }
-
-            states = states.SetState(inventoryAddr, inventory.Serialize());
             // ~Set Inventory.
 
+            states = states.SetAvatarState(avatarAddr, avatar);
+
             // Set CombinationSlot.
-            for (var i = 0; i < AvatarState.CombinationSlotCapacity; i++)
+            var allCombinationSlotState = new AllCombinationSlotState();
+            for (var i = 0; i < AvatarState.DefaultCombinationSlotCount; i++)
             {
                 var slotAddr = Addresses.GetCombinationSlotAddress(avatarAddr, i);
-                var slot = new CombinationSlotState(
-                    slotAddr,
-                    GameConfig.RequireClearedStageLevel.CombinationEquipmentAction);
-                states = states.SetState(slotAddr, slot.Serialize());
+                var slot = new CombinationSlotState(slotAddr, i);
+                allCombinationSlotState.AddSlot(slot);
             }
+
+            states = states.SetCombinationSlotState(avatarAddr, allCombinationSlotState);
             // ~Set CombinationSlot.
 
             // Set Runes
+            var allRuneState = new AllRuneState();
             foreach (var (runeId, level) in Runes)
             {
-                var rune = new RuneState(runeId);
-                for (var i = 0; i < level; i++)
-                {
-                    rune.LevelUp();
-                }
-
-                states = states.SetState(
-                    RuneState.DeriveAddress(avatarAddr, runeId),
-                    rune.Serialize());
+                allRuneState.AddRuneState(new RuneState(runeId, level));
             }
+
+            states = states.SetRuneState(avatarAddr, allRuneState);
             // ~Set Runes
 
             // Set CrystalRandomBuffState
@@ -602,7 +579,7 @@ namespace Lib9c.DevExtensions.Action
                 Addresses.GetSkillStateAddressFromAvatarAddress(avatarAddr);
             if (CrystalRandomBuff is null)
             {
-                states = states.SetState(crystalRandomSkillAddr, Null.Value);
+                states = states.RemoveLegacyState(crystalRandomSkillAddr);
             }
             else
             {
@@ -612,8 +589,8 @@ namespace Lib9c.DevExtensions.Action
                     crb.stageId);
                 var crystalStageBuffGachaSheet = sheets.GetSheet<CrystalStageBuffGachaSheet>();
                 if (crystalStageBuffGachaSheet.TryGetValue(
-                        crb.stageId,
-                        out var crystalStageBuffGachaRow))
+                    crb.stageId,
+                    out var crystalStageBuffGachaRow))
                 {
                     crystalRandomSkillState.Update(
                         crystalStageBuffGachaRow.MaxStar,
@@ -621,7 +598,7 @@ namespace Lib9c.DevExtensions.Action
                 }
 
                 crystalRandomSkillState.Update(crb.crystalRandomBuffIds.ToList());
-                states = states.SetState(crystalRandomSkillAddr,
+                states = states.SetLegacyState(crystalRandomSkillAddr,
                     crystalRandomSkillState.Serialize());
             }
             // ~Set CrystalRandomBuffState

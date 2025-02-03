@@ -3,12 +3,9 @@ namespace Lib9c.Tests.Model.State
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
     using System.Runtime.Serialization.Formatters.Binary;
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Crypto;
-    using Nekoyume.Action;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
     using Xunit;
@@ -72,11 +69,12 @@ namespace Lib9c.Tests.Model.State
         public void ArenaInfoGetRewardCount(int minScore, int maxScore, int expected)
         {
             var score = new Random().Next(minScore, maxScore);
-            var serialized = new Dictionary(new Dictionary<IKey, IValue>
-            {
-                [(Text)"score"] = score.Serialize(),
-                [(Text)"receive"] = false.Serialize(),
-            });
+            var serialized = new Dictionary(
+                new Dictionary<IKey, IValue>
+                {
+                    [(Text)"score"] = score.Serialize(),
+                    [(Text)"receive"] = false.Serialize(),
+                });
             var info = new ArenaInfo(serialized);
             Assert.Equal(expected, info.GetRewardCount());
         }
@@ -95,22 +93,21 @@ namespace Lib9c.Tests.Model.State
             int count,
             int expectedCount)
         {
-            var weeklyArenaState = new WeeklyArenaState(new PrivateKey().ToAddress());
+            var weeklyArenaState = new WeeklyArenaState(new PrivateKey().Address);
             var characterSheet = new CharacterSheet();
             characterSheet.Set(_sheets[nameof(CharacterSheet)]);
 
             for (var i = 0; i < infoCount; i++)
             {
-                var avatarState = new AvatarState(
-                    new PrivateKey().ToAddress(),
-                    new PrivateKey().ToAddress(),
+                var avatarState = AvatarState.Create(
+                    new PrivateKey().Address,
+                    new PrivateKey().Address,
                     0L,
                     _tableSheets.GetAvatarSheets(),
-                    new GameConfigState(),
                     default,
                     i.ToString());
                 weeklyArenaState.Add(
-                    new PrivateKey().ToAddress(),
+                    new PrivateKey().Address,
                     new ArenaInfo(avatarState, characterSheet, new CostumeStatSheet(), true));
             }
 
@@ -129,27 +126,27 @@ namespace Lib9c.Tests.Model.State
         [InlineData(10, 11)]
         public void GetArenaInfosByFirstRankAndCountThrow(int infoCount, int firstRank)
         {
-            var weeklyArenaState = new WeeklyArenaState(new PrivateKey().ToAddress());
+            var weeklyArenaState = new WeeklyArenaState(new PrivateKey().Address);
             var characterSheet = new CharacterSheet();
             characterSheet.Set(_sheets[nameof(CharacterSheet)]);
 
             for (var i = 0; i < infoCount; i++)
             {
-                var avatarState = new AvatarState(
-                    new PrivateKey().ToAddress(),
-                    new PrivateKey().ToAddress(),
+                var avatarState = AvatarState.Create(
+                    new PrivateKey().Address,
+                    new PrivateKey().Address,
                     0L,
                     _tableSheets.GetAvatarSheets(),
-                    new GameConfigState(),
                     default,
                     i.ToString());
                 weeklyArenaState.Add(
-                    new PrivateKey().ToAddress(),
+                    new PrivateKey().Address,
                     new ArenaInfo(avatarState, characterSheet, new CostumeStatSheet(), true));
             }
 
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                weeklyArenaState.GetArenaInfos(firstRank, 100));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () =>
+                    weeklyArenaState.GetArenaInfos(firstRank, 100));
         }
 
         [Theory]
@@ -163,28 +160,27 @@ namespace Lib9c.Tests.Model.State
             int lowerRange,
             int expectedCount)
         {
-            var weeklyArenaState = new WeeklyArenaState(new PrivateKey().ToAddress());
+            var weeklyArenaState = new WeeklyArenaState(new PrivateKey().Address);
             Address targetAddress = default;
             var characterSheet = new CharacterSheet();
             characterSheet.Set(_sheets[nameof(CharacterSheet)]);
             for (var i = 0; i < infoCount; i++)
             {
-                var avatarAddress = new PrivateKey().ToAddress();
+                var avatarAddress = new PrivateKey().Address;
                 if (i + 1 == targetRank)
                 {
                     targetAddress = avatarAddress;
                 }
 
-                var avatarState = new AvatarState(
+                var avatarState = AvatarState.Create(
                     avatarAddress,
-                    new PrivateKey().ToAddress(),
+                    new PrivateKey().Address,
                     0L,
                     _tableSheets.GetAvatarSheets(),
-                    new GameConfigState(),
                     default,
                     i.ToString());
                 weeklyArenaState.Add(
-                    new PrivateKey().ToAddress(),
+                    new PrivateKey().Address,
                     new ArenaInfo(avatarState, characterSheet, new CostumeStatSheet(), true));
             }
 

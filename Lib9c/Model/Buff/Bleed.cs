@@ -9,9 +9,9 @@ namespace Nekoyume.Model.Buff
     [Serializable]
     public class Bleed : ActionBuff
     {
-        public int Power { get; }
+        public long Power { get; }
 
-        public Bleed(ActionBuffSheet.Row row, int power) : base(row)
+        public Bleed(ActionBuffSheet.Row row, long power) : base(row)
         {
             Power = power;
         }
@@ -31,19 +31,19 @@ namespace Nekoyume.Model.Buff
             return new Bleed(this);
         }
 
-        public override BattleStatus.Skill GiveEffect(
-            CharacterBase affectedCharacter,
-            int simulatorWaveTurn)
+        public BattleStatus.Skill GiveEffect(CharacterBase affectedCharacter,
+            int simulatorWaveTurn, bool copyCharacter = true)
         {
-            var clone = (CharacterBase)affectedCharacter.Clone();
+            var clone = copyCharacter ? (CharacterBase) affectedCharacter.Clone() : null;
             var damage = affectedCharacter.GetDamage(Power, false);
             affectedCharacter.CurrentHP -= damage;
-
+            // Copy new Character with damaged.
+            var target = copyCharacter ? (CharacterBase) affectedCharacter.Clone() : null;
             var damageInfos = new List<BattleStatus.Skill.SkillInfo>
             {
-                new BattleStatus.Skill.SkillInfo((CharacterBase)affectedCharacter.Clone(), damage, false,
+                new BattleStatus.Skill.SkillInfo(affectedCharacter.Id, affectedCharacter.IsDead, affectedCharacter.Thorn, damage, false,
                     SkillCategory.Debuff, simulatorWaveTurn, RowData.ElementalType,
-                    RowData.TargetType)
+                    RowData.TargetType, target: target)
             };
 
             return new Model.BattleStatus.TickDamage(
@@ -53,7 +53,7 @@ namespace Nekoyume.Model.Buff
                 null);
         }
 
-        public override ArenaSkill GiveEffectForArena(
+        public ArenaSkill GiveEffectForArena(
             ArenaCharacter affectedCharacter,
             int simulatorWaveTurn)
         {
@@ -70,6 +70,7 @@ namespace Nekoyume.Model.Buff
             };
 
             return new ArenaTickDamage(
+                RowData.Id,
                 clone,
                 damageInfos,
                 null);

@@ -21,12 +21,11 @@ namespace Lib9c.Tests.Model
             _tableSheets = new TableSheets(TableSheetsImporter.ImportSheets());
             _random = new TestRandom();
 
-            _avatarState = new AvatarState(
+            _avatarState = AvatarState.Create(
                 default,
                 default,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
                 default
             );
 

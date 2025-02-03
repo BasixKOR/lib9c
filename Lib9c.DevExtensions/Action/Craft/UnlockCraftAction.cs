@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Exceptions;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
-using static Lib9c.SerializeKeys;
 
 namespace Lib9c.DevExtensions.Action.Craft
 {
@@ -22,15 +22,10 @@ namespace Lib9c.DevExtensions.Action.Craft
         public Address AvatarAddress { get; set; }
         public ActionTypeAttribute ActionType { get; set; }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            if (context.Rehearsal)
-            {
-                return context.PreviousStates;
-            }
-
-            var states = context.PreviousStates;
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             int targetStage;
 
             if (ActionType.TypeIdentifier is Text text)
@@ -59,27 +54,31 @@ namespace Lib9c.DevExtensions.Action.Craft
                     $"{ActionType.TypeIdentifier} is not valid action");
             }
 
-            var worldInformation = new WorldInformation(
+            var avatarState = states.GetAvatarState(AvatarAddress);
+            if (avatarState is null || !avatarState.agentAddress.Equals(context.Signer))
+            {
+                var addressesHex = GetSignerAndOtherAddressesHex(context, AvatarAddress);
+                throw new FailedLoadStateException($"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
+            }
+
+            avatarState.worldInformation = new WorldInformation(
                 context.BlockIndex,
                 states.GetSheet<WorldSheet>(),
                 targetStage
             );
-            return states.SetState(
-                AvatarAddress.Derive(LegacyWorldInformationKey),
-                worldInformation.Serialize()
-            );
+            return states.SetAvatarState(AvatarAddress, avatarState);
         }
 
         protected override IImmutableDictionary<string, IValue> PlainValueInternal =>
             new Dictionary<string, IValue>
             {
                 ["avatarAddress"] = AvatarAddress.Serialize(),
-                ["typeIdentifier"] = ActionType.TypeIdentifier
+                ["typeIdentifier"] = ActionType.TypeIdentifier,
             }.ToImmutableDictionary();
 
         protected override void LoadPlainValueInternal(
             IImmutableDictionary<string, IValue> plainValue
-            )
+        )
         {
             AvatarAddress = plainValue["avatarAddress"].ToAddress();
             ActionType = new ActionTypeAttribute(plainValue["typeIdentifier"].ToDotnetString());

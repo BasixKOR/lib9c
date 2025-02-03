@@ -1,40 +1,52 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using Bencodex.Types;
-using Libplanet;
+using Lib9c;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Battle;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Market;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
+using Serilog;
 using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.Action
 {
-    [ActionType("register_product2")]
+    [ActionType("register_product3")]
     public class RegisterProduct : GameAction
     {
+        public static readonly IReadOnlyCollection<Currency> NonTradableTickerCurrencies = new List<Currency>
+        {
+            Currencies.FreyaBlessingRune,
+            Currencies.FreyaLiberationRune,
+            Currencies.Crystal,
+            Currencies.OdinWeaknessRune,
+            Currencies.OdinWisdomRune,
+        };
+
         public const int CostAp = 5;
         public const int Capacity = 100;
         public Address AvatarAddress;
         public IEnumerable<IRegisterInfo> RegisterInfos;
         public bool ChargeAp;
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states;
-            }
+            var sw = new Stopwatch();
 
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
+
+            sw.Start();
             if (!RegisterInfos.Any())
             {
                 throw new ListEmptyException("RegisterInfos was empty");
@@ -53,59 +65,76 @@ namespace Nekoyume.Action
                 registerInfo.Validate();
             }
 
-            if (!states.TryGetAvatarStateV2(context.Signer, AvatarAddress, out var avatarState,
-                    out var migrationRequired))
+            if (!states.TryGetAvatarState(context.Signer, AvatarAddress, out var avatarState))
             {
                 throw new FailedLoadStateException("failed to load avatar state.");
             }
 
-            if (!avatarState.worldInformation.IsStageCleared(
-                    GameConfig.RequireClearedStageLevel.ActionsInShop))
+            sw.Stop();
+            Log.Debug("{Source} {Process} from #{BlockIndex}: {Elapsed}",
+                nameof(RegisterProduct), "Get States And Validate", context.BlockIndex, sw.Elapsed.TotalMilliseconds);
+
+            sw.Restart();
+            if (!states.TryGetActionPoint(AvatarAddress, out var actionPoint))
             {
-                avatarState.worldInformation.TryGetLastClearedStageId(out var current);
-                throw new NotEnoughClearedStageLevelException(
-                    AvatarAddress.ToHex(),
-                    GameConfig.RequireClearedStageLevel.ActionsInShop,
-                    current);
+                actionPoint = avatarState.actionPoint;
             }
 
-            avatarState.UseAp(CostAp, ChargeAp, states.GetSheet<MaterialItemSheet>(), context.BlockIndex, states.GetGameConfigState());
+            var resultActionPoint = avatarState.inventory.UseActionPoint(
+                actionPoint,
+                CostAp,
+                ChargeAp,
+                states.GetSheet<MaterialItemSheet>(),
+                context.BlockIndex);
+            sw.Stop();
+            Log.Debug("{Source} {Process} from #{BlockIndex}: {Elapsed}",
+                nameof(RegisterProduct), "UseAp", context.BlockIndex, sw.Elapsed.TotalMilliseconds);
+
+            sw.Restart();
             var productsStateAddress = ProductsState.DeriveAddress(AvatarAddress);
             ProductsState productsState;
-            if (states.TryGetState(productsStateAddress, out List rawProducts))
+            if (states.TryGetLegacyState(productsStateAddress, out List rawProducts))
             {
                 productsState = new ProductsState(rawProducts);
             }
             else
             {
                 productsState = new ProductsState();
-                var marketState = states.TryGetState(Addresses.Market, out List rawMarketList)
-                    ? new MarketState(rawMarketList)
-                    : new MarketState();
-                marketState.AvatarAddresses.Add(AvatarAddress);
-                states = states.SetState(Addresses.Market, marketState.Serialize());
+                var marketState = states.TryGetLegacyState(Addresses.Market, out List rawMarketList)
+                    ? rawMarketList
+                    : List.Empty;
+                marketState = marketState.Add(AvatarAddress.Serialize());
+                states = states.SetLegacyState(Addresses.Market, marketState);
             }
+            sw.Stop();
+            Log.Debug("{Source} {Process} from #{BlockIndex}: {Elapsed}",
+                nameof(RegisterProduct), "Get productsState", context.BlockIndex, sw.Elapsed.TotalMilliseconds);
+
+            sw.Restart();
+            var random = context.GetRandom();
             foreach (var info in RegisterInfos.OrderBy(r => r.Type).ThenBy(r => r.Price))
             {
-                states = Register(context, info, avatarState, productsState, states);
+                states = Register(context, info, avatarState, productsState, states, random);
             }
+            sw.Stop();
+            Log.Debug("{Source} {Process} from #{BlockIndex}: {Elapsed}, ProductCount: {ProductCount}",
+                nameof(RegisterProduct), "Register Infos", context.BlockIndex, sw.Elapsed.TotalMilliseconds, RegisterInfos.Count());
 
+            sw.Restart();
             states = states
-                .SetState(AvatarAddress.Derive(LegacyInventoryKey), avatarState.inventory.Serialize())
-                .SetState(AvatarAddress, avatarState.SerializeV2())
-                .SetState(productsStateAddress, productsState.Serialize());
-            if (migrationRequired)
-            {
-                states = states
-                    .SetState(AvatarAddress.Derive(LegacyQuestListKey), avatarState.questList.Serialize())
-                    .SetState(AvatarAddress.Derive(LegacyWorldInformationKey), avatarState.worldInformation.Serialize());
-            }
+                .SetAvatarState(AvatarAddress, avatarState)
+                .SetActionPoint(AvatarAddress, resultActionPoint)
+                .SetLegacyState(productsStateAddress, productsState.Serialize());
+
+            sw.Stop();
+            Log.Debug("{Source} {Process} from #{BlockIndex}: {Elapsed}",
+                nameof(RegisterProduct), "Set States", context.BlockIndex, sw.Elapsed.TotalMilliseconds);
 
             return states;
         }
 
-        public static IAccountStateDelta Register(IActionContext context, IRegisterInfo info, AvatarState avatarState,
-            ProductsState productsState, IAccountStateDelta states)
+        public static IWorld Register(IActionContext context, IRegisterInfo info, AvatarState avatarState,
+            ProductsState productsState, IWorld states, IRandom random)
         {
             switch (info)
             {
@@ -164,7 +193,7 @@ namespace Nekoyume.Action
                                             out var item) &&
                                         avatarState.inventory.RemoveNonFungibleItem(tradableId))
                                     {
-                                        tradableItem = (ITradableItem) item.item;
+                                        tradableItem = item.item as ITradableItem;
                                     }
 
                                     break;
@@ -176,7 +205,14 @@ namespace Nekoyume.Action
                                 throw new ItemDoesNotExistException($"can't find item: {tradableId}");
                             }
 
-                            Guid productId = context.Random.GenerateRandomGuid();
+                            Guid productId = random.GenerateRandomGuid();
+                            var productAddress = Product.DeriveAddress(productId);
+                            // 중복된 ProductId가 발급되면 상태를 덮어씌우는 현상을 방지하기위해 예외발생
+                            if (states.TryGetLegacyState(productAddress, out IValue v) && v is not Null)
+                            {
+                                // FIXME 클라이언트 배포를 회피하기위해 기존 오류를 사용했으나 정규배포때 별도 예외로 구분ㅐ
+                                throw new DuplicateOrderIdException("already registered id.");
+                            }
                             var product = new ItemProduct
                             {
                                 ProductId = productId,
@@ -189,8 +225,7 @@ namespace Nekoyume.Action
                                 SellerAvatarAddress = registerInfo.AvatarAddress,
                             };
                             productsState.ProductIds.Add(productId);
-                            states = states.SetState(Product.DeriveAddress(productId),
-                                product.Serialize());
+                            states = states.SetLegacyState(productAddress, product.Serialize());
                             break;
                         }
                     }
@@ -198,8 +233,15 @@ namespace Nekoyume.Action
                     break;
                 case AssetInfo assetInfo:
                 {
-                    Guid productId = context.Random.GenerateRandomGuid();
+                    Guid productId = random.GenerateRandomGuid();
                     Address productAddress = Product.DeriveAddress(productId);
+                    // 중복된 ProductId가 발급되면 상태를 덮어씌우는 현상을 방지하기위해 예외발생
+                    if (states.TryGetLegacyState(productAddress, out IValue v) && v is not Null)
+                    {
+                        // FIXME 클라이언트 배포를 회피하기위해 기존 오류를 사용했으나 정규배포때 별도 예외로 구분ㅐ
+                        throw new DuplicateOrderIdException("already registered id.");
+                    }
+
                     FungibleAssetValue asset = assetInfo.Asset;
                     var product = new FavProduct
                     {
@@ -212,8 +254,8 @@ namespace Nekoyume.Action
                         SellerAvatarAddress = assetInfo.AvatarAddress,
                     };
                     states = states
-                        .TransferAsset(avatarState.address, productAddress, asset)
-                        .SetState(productAddress, product.Serialize());
+                        .TransferAsset(context, avatarState.address, productAddress, asset)
+                        .SetLegacyState(productAddress, product.Serialize());
                     productsState.ProductIds.Add(productId);
                     break;
                 }

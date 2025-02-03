@@ -4,10 +4,11 @@ using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 
 namespace Nekoyume.Action
 {
@@ -23,13 +24,12 @@ namespace Nekoyume.Action
         public IList<(byte[] Address, byte[] Nonce, byte[] PublicKey)> PendingActivations { get; internal set; }
 
         IEnumerable<IValue> ICreatePendingActivationsV1.PendingActivations =>
-            PendingActivations.Select(t =>
-                new List(new Binary[] { t.Address, t.Nonce, t.PublicKey }.Cast<IValue>()));
+            PendingActivations.Select(t => new List(new[] { t.Address, t.Nonce, t.PublicKey }));
 
         public override IValue PlainValue => Dictionary.Empty
             .Add("type_id", "create_pending_activations")
             .Add("values", PendingActivations
-                .Select(t => new List(new Binary[] { t.Address, t.Nonce, t.PublicKey }.Cast<IValue>()))
+                .Select(t => new List(new[] { t.Address, t.Nonce, t.PublicKey }))
                 .Serialize());
 
         public CreatePendingActivations()
@@ -41,15 +41,15 @@ namespace Nekoyume.Action
             PendingActivations = states.Select(pa => (pa.address.ToByteArray(), pa.Nonce, pa.PublicKey.Format(true))).ToImmutableList();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
+            GasTracer.UseGas(1);
             CheckObsolete(ActionObsoleteConfig.V200030ObsoleteIndex, context);
             CheckPermission(context);
-            var state = context.PreviousStates;
+            var state = context.PreviousState;
             foreach ((byte[] address, byte[] nonce, byte[] publicKey) in PendingActivations)
             {
-                state = state.SetState(
+                state = state.SetLegacyState(
                     new Address(address),
                     new Dictionary(
                         new[]

@@ -4,20 +4,31 @@ namespace Lib9c.Tests
     using System.Collections.Generic;
     using System.Text;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.AdventureBoss;
     using Nekoyume.TableData.Crystal;
+    using Nekoyume.TableData.CustomEquipmentCraft;
     using Nekoyume.TableData.Event;
+    using Nekoyume.TableData.Garages;
     using Nekoyume.TableData.GrandFinale;
     using Nekoyume.TableData.Pet;
+    using Nekoyume.TableData.Rune;
+    using Nekoyume.TableData.Stake;
+    using Nekoyume.TableData.Summon;
 
     public class TableSheets
     {
-        public TableSheets(Dictionary<string, string> sheets)
+        public TableSheets(Dictionary<string, string> sheets, bool ignoreFailedGetProperty = true)
         {
             foreach (var (key, value) in sheets)
             {
                 var sheetPropertyInfo = GetType().GetProperty(key);
                 if (sheetPropertyInfo is null)
                 {
+                    if (ignoreFailedGetProperty)
+                    {
+                        continue;
+                    }
+
                     var sb = new StringBuilder($"[{nameof(TableSheets)}]");
                     sb.Append($" / ({key}, csv)");
                     sb.Append(" / failed to get property");
@@ -130,6 +141,8 @@ namespace Lib9c.Tests
 
         public EnhancementCostSheetV2 EnhancementCostSheetV2 { get; private set; }
 
+        public EnhancementCostSheetV3 EnhancementCostSheetV3 { get; private set; }
+
         public WeeklyArenaRewardSheet WeeklyArenaRewardSheet { get; internal set; }
 
         public CostumeStatSheet CostumeStatSheet { get; private set; }
@@ -143,6 +156,8 @@ namespace Lib9c.Tests
         public StakeRegularFixedRewardSheet StakeRegularFixedRewardSheet { get; private set; }
 
         public StakeAchievementRewardSheet StakeAchievementRewardSheet { get; private set; }
+
+        public StakePolicySheet StakePolicySheet { get; private set; }
 
         public SweepRequiredCPSheet SweepRequiredCPSheet { get; private set; }
 
@@ -208,6 +223,8 @@ namespace Lib9c.Tests
 
         public RuneOptionSheet RuneOptionSheet { get; private set; }
 
+        public RuneLevelBonusSheet RuneLevelBonusSheet { get; private set; }
+
         public GrandFinaleScheduleSheet GrandFinaleScheduleSheet { get; private set; }
 
         public GrandFinaleParticipantsSheet GrandFinaleParticipantsSheet { get; private set; }
@@ -217,6 +234,58 @@ namespace Lib9c.Tests
         public PetOptionSheet PetOptionSheet { get; private set; }
 
         public PetCostSheet PetCostSheet { get; private set; }
+
+        public LoadIntoMyGaragesCostSheet LoadIntoMyGaragesCostSheet { get; private set; }
+
+        public EquipmentSummonSheet EquipmentSummonSheet { get; private set; }
+
+        public RuneSummonSheet RuneSummonSheet { get; private set; }
+
+        public CostumeSummonSheet CostumeSummonSheet { get; private set; }
+
+        public CreateAvatarItemSheet CreateAvatarItemSheet { get; set; }
+
+        public CreateAvatarFavSheet CreateAvatarFavSheet { get; set; }
+
+        public CollectionSheet CollectionSheet { get; private set; }
+
+        public BuffLimitSheet BuffLimitSheet { get; set; }
+
+        public BuffLinkSheet BuffLinkSheet { get; set; }
+
+        // Adventure Boss
+        public AdventureBossSheet AdventureBossSheet { get; private set; }
+
+        public AdventureBossFloorSheet AdventureBossFloorSheet { get; private set; }
+
+        public AdventureBossFloorWaveSheet AdventureBossFloorWaveSheet { get; private set; }
+
+        public AdventureBossNcgRewardRatioSheet AdventureBossNcgRewardRatioSheet { get; private set; }
+
+        public AdventureBossFloorFirstRewardSheet AdventureBossFloorFirstRewardSheet { get; private set; }
+
+        /* Adventure Boss */
+
+        // Custom Craft
+        public CustomEquipmentCraftRecipeSheet CustomEquipmentCraftRecipeSheet { get; private set; }
+
+        public CustomEquipmentCraftRelationshipSheet CustomEquipmentCraftRelationshipSheet { get; private set; }
+
+        public CustomEquipmentCraftIconSheet CustomEquipmentCraftIconSheet { get; private set; }
+
+        public CustomEquipmentCraftOptionSheet CustomEquipmentCraftOptionSheet { get; private set; }
+
+        public CustomEquipmentCraftRecipeSkillSheet CustomEquipmentCraftRecipeSkillSheet { get; private set; }
+
+        /* Custom Craft */
+
+        public ClaimableGiftsSheet ClaimableGiftsSheet { get; private set; }
+
+        public SynthesizeSheet SynthesizeSheet { get; private set; }
+
+        public SynthesizeWeightSheet SynthesizeWeightSheet { get; private set; }
+
+        public PatrolRewardSheet PatrolRewardSheet { get; private set; }
 
         public void ItemSheetInitialize()
         {
@@ -255,7 +324,9 @@ namespace Lib9c.Tests
                 CharacterSheet,
                 CharacterLevelSheet,
                 EquipmentItemSetEffectSheet,
-                RuneOptionSheet
+                RuneOptionSheet,
+                RuneListSheet,
+                RuneLevelBonusSheet
             );
         }
 
@@ -289,7 +360,9 @@ namespace Lib9c.Tests
                 StageSheet,
                 StageWaveSheet,
                 EnemySkillSheet,
-                RuneOptionSheet
+                RuneOptionSheet,
+                RuneListSheet,
+                RuneLevelBonusSheet
             );
         }
 
@@ -340,7 +413,9 @@ namespace Lib9c.Tests
                 CharacterLevelSheet,
                 EquipmentItemSetEffectSheet,
                 WeeklyArenaRewardSheet,
-                RuneOptionSheet
+                RuneOptionSheet,
+                RuneListSheet,
+                RuneLevelBonusSheet
             );
         }
 
@@ -361,7 +436,7 @@ namespace Lib9c.Tests
             );
         }
 
-        public ArenaSimulatorSheets GetArenaSimulatorSheets()
+        public ArenaSimulatorSheets GetArenaSimulatorSheets(RuneOptionSheet runeOptionSheet = null)
         {
             return new ArenaSimulatorSheets(
                 MaterialItemSheet,
@@ -375,7 +450,9 @@ namespace Lib9c.Tests
                 EquipmentItemSetEffectSheet,
                 CostumeStatSheet,
                 WeeklyArenaRewardSheet,
-                RuneOptionSheet
+                runeOptionSheet ?? RuneOptionSheet,
+                RuneListSheet,
+                RuneLevelBonusSheet
             );
         }
 
@@ -416,7 +493,9 @@ namespace Lib9c.Tests
                 WorldBossBattleRewardSheet,
                 RuneWeightSheet,
                 RuneSheet,
-                RuneOptionSheet
+                RuneOptionSheet,
+                RuneListSheet,
+                RuneLevelBonusSheet
             );
         }
 

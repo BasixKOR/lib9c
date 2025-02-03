@@ -1,14 +1,11 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Security.Cryptography;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
-using Libplanet.Tx;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
+using Nekoyume.Action.ValidatorDelegation;
 
 namespace Nekoyume.Blockchain.Policy
 {
@@ -18,17 +15,32 @@ namespace Nekoyume.Blockchain.Policy
         {
         }
 
-        public IAction BlockAction { get; } = new RewardGold();
+        public IPolicyActionsRegistry PolicyActionsRegistry { get; } =
+            new PolicyActionsRegistry(
+                beginBlockActions: new IAction[] {
+                    new SlashValidator(),
+                    new AllocateGuildReward(),
+                    new AllocateReward(),
+                }.ToImmutableArray(),
+                endBlockActions: new IAction[] {
+                    new UpdateValidators(),
+                    new RecordProposer(),
+                    new RewardGold(),
+                }.ToImmutableArray(),
+                beginTxActions: new IAction[] {
+                    new Mortgage(),
+                }.ToImmutableArray(),
+                endTxActions: new IAction[] {
+                    new Reward(), new Refund(),
+                }.ToImmutableArray());
 
-        public IFeeCalculator? FeeCalculator { get; }
-
-        public TxPolicyViolationException ValidateNextBlockTx(
+        public TxPolicyViolationException? ValidateNextBlockTx(
             BlockChain blockChain, Transaction transaction)
         {
             return null;
         }
 
-        public BlockPolicyViolationException ValidateNextBlock(
+        public BlockPolicyViolationException? ValidateNextBlock(
             BlockChain blockChain, Block nextBlock)
         {
             return null;
@@ -43,5 +55,7 @@ namespace Nekoyume.Blockchain.Policy
         public int GetMaxTransactionsPerSignerPerBlock(long index) => int.MaxValue;
 
         public int GetMinBlockProtocolVersion(long index) => 0;
+
+        public long GetMaxEvidencePendingDuration(long index) => 10L;
     }
 }

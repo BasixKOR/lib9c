@@ -1,32 +1,28 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using System.Numerics;
-using System.Security.Cryptography;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Serilog;
-using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.Action
 {
     /// <summary>
-    /// Hard forked at https://github.com/planetarium/lib9c/pull/637
-    /// Updated at https://github.com/planetarium/lib9c/pull/861
-    /// Updated at https://github.com/planetarium/lib9c/pull/957
+    /// Hard forked at https://github.com/planetarium/lib9c/pull/2195
     /// </summary>
     [Serializable]
-    [ActionType("combination_consumable8")]
+    [ActionType("combination_consumable9")]
     public class CombinationConsumable : GameAction, ICombinationConsumableV1
     {
         public const string AvatarAddressKey = "a";
@@ -57,62 +53,30 @@ namespace Nekoyume.Action
             recipeId = plainValue[RecipeIdKey].ToInteger();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            var slotAddress = avatarAddress.Derive(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    CombinationSlotState.DeriveFormat,
-                    slotIndex
-                )
-            );
-            var inventoryAddress = avatarAddress.Derive(LegacyInventoryKey);
-            var worldInformationAddress = avatarAddress.Derive(LegacyWorldInformationKey);
-            var questListAddress = avatarAddress.Derive(LegacyQuestListKey);
-            if (context.Rehearsal)
-            {
-                return states
-                    .SetState(avatarAddress, MarkChanged)
-                    .SetState(context.Signer, MarkChanged)
-                    .SetState(inventoryAddress, MarkChanged)
-                    .SetState(worldInformationAddress, MarkChanged)
-                    .SetState(questListAddress, MarkChanged)
-                    .SetState(slotAddress, MarkChanged);
-            }
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
 
             var addressesHex = GetSignerAndOtherAddressesHex(context, avatarAddress);
             var started = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}Combination exec started", addressesHex);
 
-            if (!states.TryGetAvatarStateV2(context.Signer, avatarAddress, out var avatarState, out _))
+            if (!states.TryGetAvatarState(context.Signer, avatarAddress, out var avatarState))
             {
                 throw new FailedLoadStateException(
                     $"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
             }
 
-            // Validate Required Cleared Stage
-            if (!avatarState.worldInformation.IsStageCleared(
-                GameConfig.RequireClearedStageLevel.CombinationConsumableAction))
+            var allSlotState = states.GetAllCombinationSlotState(avatarAddress);
+            if (allSlotState is null)
             {
-                avatarState.worldInformation.TryGetLastClearedStageId(out var current);
-                throw new NotEnoughClearedStageLevelException(
-                    addressesHex,
-                    GameConfig.RequireClearedStageLevel.CombinationConsumableAction,
-                    current);
+                throw new FailedLoadStateException($"Aborted as the allSlotState was failed to load.");
             }
-            // ~Validate Required Cleared Stage
 
             // Validate SlotIndex
-            var slotState = states.GetCombinationSlotState(avatarAddress, slotIndex);
-            if (slotState is null)
-            {
-                throw new FailedLoadStateException(
-                    $"{addressesHex}Aborted as the slot state is failed to load: # {slotIndex}");
-            }
-
-            if (!slotState.Validate(avatarState, context.BlockIndex))
+            var slotState = allSlotState.GetSlot(slotIndex);
+            if (!slotState.ValidateV2(context.BlockIndex))
             {
                 throw new CombinationSlotUnlockException(
                     $"{addressesHex}Aborted as the slot state is invalid: {slotState} @ {slotIndex}");
@@ -175,11 +139,10 @@ namespace Nekoyume.Action
             // ~Validate Work
 
             // Remove Required Materials
-            var inventory = avatarState.inventory;
             foreach (var pair in requiredFungibleItems.OrderBy(pair => pair.Key))
             {
                 if (!materialItemSheet.TryGetValue(pair.Key, out var materialRow) ||
-                    !inventory.RemoveFungibleItem(materialRow.ItemId, context.BlockIndex, pair.Value))
+                    !avatarState.inventory.RemoveFungibleItem(materialRow.ItemId, context.BlockIndex, pair.Value))
                 {
                     throw new NotEnoughMaterialException(
                         $"{addressesHex}Aborted as the player has no enough material ({pair.Key} * {pair.Value})");
@@ -188,23 +151,31 @@ namespace Nekoyume.Action
             // ~Remove Required Materials
 
             // Subtract Required ActionPoint
+            // 2024-03-29 기준: 레시피에 CostActionPoint가 포함된 케이스는 없으나 TableSheets 상태에 의해 동작이 변경될 수 있기에 작성해둔다.
             if (costActionPoint > 0)
             {
-                if (avatarState.actionPoint < costActionPoint)
+                if (!states.TryGetActionPoint(avatarAddress, out var actionPoint))
+                {
+                    actionPoint = avatarState.actionPoint;
+                }
+
+                if (actionPoint < costActionPoint)
                 {
                     throw new NotEnoughActionPointException(
-                        $"{addressesHex}Aborted due to insufficient action point: {avatarState.actionPoint} < {costActionPoint}"
+                        $"{addressesHex}Aborted due to insufficient action point: {actionPoint} < {costActionPoint}"
                     );
                 }
 
-                avatarState.actionPoint -= costActionPoint;
+                actionPoint -= costActionPoint;
+                states = states.SetActionPoint(avatarAddress, actionPoint);
             }
             // ~Subtract Required ActionPoint
 
             // Create Consumable
+            var random = context.GetRandom();
             var consumable = (Consumable) ItemFactory.CreateItemUsable(
                 consumableRow,
-                context.Random.GenerateRandomGuid(),
+                random.GenerateRandomGuid(),
                 endBlockIndex
             );
             // ~Create Consumable
@@ -217,7 +188,7 @@ namespace Nekoyume.Action
             // ~Add or Update Consumable
 
             // Update Slot
-            var mailId = context.Random.GenerateRandomGuid();
+            var mailId = random.GenerateRandomGuid();
             var attachmentResult = new CombinationConsumable5.ResultModel
             {
                 id = mailId,
@@ -229,6 +200,7 @@ namespace Nekoyume.Action
                 recipeId = recipeId,
             };
             slotState.Update(attachmentResult, context.BlockIndex, endBlockIndex);
+            allSlotState.SetSlot(slotState);
             // ~Update Slot
 
             // Create Mail
@@ -242,12 +214,10 @@ namespace Nekoyume.Action
 
             var ended = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}Combination Total Executed Time: {Elapsed}", addressesHex, ended - started);
+
             return states
-                .SetState(avatarAddress, avatarState.SerializeV2())
-                .SetState(inventoryAddress, avatarState.inventory.Serialize())
-                .SetState(worldInformationAddress, avatarState.worldInformation.Serialize())
-                .SetState(questListAddress, avatarState.questList.Serialize())
-                .SetState(slotAddress, slotState.Serialize());
+                .SetAvatarState(avatarAddress, avatarState)
+                .SetCombinationSlotState(avatarAddress, allSlotState);
         }
     }
 }

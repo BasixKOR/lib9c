@@ -3,10 +3,10 @@ namespace Lib9c.Tests.Action
     using System;
     using System.Collections.Generic;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Arena;
@@ -14,6 +14,7 @@ namespace Lib9c.Tests.Action
     using Nekoyume.Model.Arena;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Serilog;
     using Xunit;
@@ -22,7 +23,7 @@ namespace Lib9c.Tests.Action
 
     public class ArenaHelperTest
     {
-        private IAccountStateDelta _state;
+        private IWorld _state;
         private Currency _crystal;
         private Address _agent1Address;
         private Address _avatar1Address;
@@ -35,13 +36,13 @@ namespace Lib9c.Tests.Action
                 .WriteTo.TestOutput(outputHelper)
                 .CreateLogger();
 
-            _state = new State();
+            _state = new World(MockUtil.MockModernWorldState);
 
             var sheets = TableSheetsImporter.ImportSheets();
             var tableSheets = new TableSheets(sheets);
             foreach (var (key, value) in sheets)
             {
-                _state = _state.SetState(Addresses.TableSheet.Derive(key), value.Serialize());
+                _state = _state.SetLegacyState(Addresses.TableSheet.Derive(key), value.Serialize());
             }
 
             tableSheets = new TableSheets(sheets);
@@ -53,7 +54,7 @@ namespace Lib9c.Tests.Action
 #pragma warning restore CS0618
             var goldCurrencyState = new GoldCurrencyState(ncg);
 
-            var rankingMapAddress = new PrivateKey().ToAddress();
+            var rankingMapAddress = new PrivateKey().Address;
             var clearStageId = Math.Max(
                 tableSheets.StageSheet.First?.Id ?? 1,
                 GameConfig.RequireClearedStageLevel.ActionsInRankingBoard);
@@ -70,13 +71,10 @@ namespace Lib9c.Tests.Action
             _avatar1Address = avatar1State.address;
 
             _state = _state
-                .SetState(Addresses.GoldCurrency, goldCurrencyState.Serialize())
-                .SetState(_agent1Address, agent1State.Serialize())
-                .SetState(_avatar1Address.Derive(LegacyInventoryKey), _avatar1.inventory.Serialize())
-                .SetState(_avatar1Address.Derive(LegacyWorldInformationKey), _avatar1.worldInformation.Serialize())
-                .SetState(_avatar1Address.Derive(LegacyQuestListKey), _avatar1.questList.Serialize())
-                .SetState(_avatar1Address, _avatar1.Serialize())
-                .SetState(Addresses.GameConfig, new GameConfigState(sheets[nameof(GameConfigSheet)]).Serialize());
+                .SetLegacyState(Addresses.GoldCurrency, goldCurrencyState.Serialize())
+                .SetAgentState(_agent1Address, agent1State)
+                .SetAvatarState(_avatar1Address, _avatar1)
+                .SetLegacyState(Addresses.GameConfig, new GameConfigState(sheets[nameof(GameConfigSheet)]).Serialize());
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
@@ -90,23 +88,21 @@ namespace Lib9c.Tests.Action
             Address rankingMapAddress,
             int clearStageId)
         {
-            var agentAddress = new PrivateKey().ToAddress();
+            var agentAddress = new PrivateKey().Address;
             var agentState = new AgentState(agentAddress);
 
             var avatarAddress = agentAddress.Derive("avatar");
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 avatarAddress,
                 agentAddress,
                 0,
                 tableSheets.GetAvatarSheets(),
-                new GameConfigState(sheets[nameof(GameConfigSheet)]),
-                rankingMapAddress)
-            {
-                worldInformation = new WorldInformation(
-                    0,
-                    tableSheets.WorldSheet,
-                    clearStageId),
-            };
+                rankingMapAddress);
+            avatarState.worldInformation = new WorldInformation(
+                0,
+                tableSheets.WorldSheet,
+                clearStageId);
+
             agentState.avatarAddresses.Add(0, avatarAddress);
 
             return (agentState, avatarState);
@@ -122,7 +118,7 @@ namespace Lib9c.Tests.Action
                 {
                     var arenaInformationAdr =
                         ArenaInformation.DeriveAddress(_avatar1Address, roundData.ChampionshipId, roundData.Round);
-                    if (_state.TryGetState(arenaInformationAdr, out List _))
+                    if (_state.TryGetLegacyState(arenaInformationAdr, out List _))
                     {
                         throw new ArenaInformationAlreadyContainsException(
                             $"[{nameof(JoinArena)}] id({roundData.ChampionshipId}) / round({roundData.Round})");
@@ -160,7 +156,7 @@ namespace Lib9c.Tests.Action
                             additionalTicketPrice = 40;
                         }
 
-                        var sum = ticketPrice + (additionalTicketPrice * arenaInformation.PurchasedTicketCount);
+                        var sum = ticketPrice + additionalTicketPrice * arenaInformation.PurchasedTicketCount;
                         var major = sum / 100;
                         var miner = sum % 100;
                         var expectedPrice = new FungibleAssetValue(_state.GetGoldCurrency(), major, miner);

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Crypto;
 
 namespace Nekoyume.Model.State
 {
@@ -64,7 +64,7 @@ namespace Nekoyume.Model.State
                         kv.Value.Serialize()
                     )
                 ))
-            }.Union((Dictionary) base.Serialize()));
+            }.Union((Dictionary) base.SerializeBase()));
 #pragma warning restore LAA1002
         }
     }

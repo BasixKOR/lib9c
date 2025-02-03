@@ -1,14 +1,13 @@
 namespace Lib9c.Tests.Action
 {
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Action;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
-    using Nekoyume;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume.Action;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Xunit;
 
     public class RequestPledgeTest
@@ -18,10 +17,11 @@ namespace Lib9c.Tests.Action
         [InlineData(100)]
         public void Execute(int contractedMead)
         {
-            Currency mead = Currencies.Mead;
-            Address patron = new PrivateKey().ToAddress();
-            IAccountStateDelta states = new State().MintAsset(patron, 2 * mead);
-            var address = new PrivateKey().ToAddress();
+            var mead = Currencies.Mead;
+            var patron = new PrivateKey().Address;
+            var context = new ActionContext();
+            var states = new World(MockUtil.MockModernWorldState).MintAsset(context, patron, 2 * mead);
+            var address = new PrivateKey().Address;
             var action = new RequestPledge
             {
                 AgentAddress = address,
@@ -31,12 +31,13 @@ namespace Lib9c.Tests.Action
             Assert.Equal(0 * mead, states.GetBalance(address, mead));
             Assert.Equal(2 * mead, states.GetBalance(patron, mead));
 
-            var nextState = action.Execute(new ActionContext
-            {
-                Signer = patron,
-                PreviousStates = states,
-            });
-            var contract = Assert.IsType<List>(nextState.GetState(address.GetPledgeAddress()));
+            var nextState = action.Execute(
+                new ActionContext
+                {
+                    Signer = patron,
+                    PreviousState = states,
+                });
+            var contract = Assert.IsType<List>(nextState.GetLegacyState(address.GetPledgeAddress()));
 
             Assert.Equal(patron, contract[0].ToAddress());
             Assert.False(contract[1].ToBoolean());
@@ -48,21 +49,23 @@ namespace Lib9c.Tests.Action
         [Fact]
         public void Execute_Throw_AlreadyContractedException()
         {
-            Address patron = new PrivateKey().ToAddress();
-            var address = new PrivateKey().ToAddress();
-            Address contractAddress = address.GetPledgeAddress();
-            IAccountStateDelta states = new State().SetState(contractAddress, List.Empty);
+            var patron = new PrivateKey().Address;
+            var address = new PrivateKey().Address;
+            var contractAddress = address.GetPledgeAddress();
+            var states = new World(MockUtil.MockModernWorldState).SetLegacyState(contractAddress, List.Empty);
             var action = new RequestPledge
             {
                 AgentAddress = address,
                 RefillMead = 1,
             };
 
-            Assert.Throws<AlreadyContractedException>(() => action.Execute(new ActionContext
-            {
-                Signer = patron,
-                PreviousStates = states,
-            }));
+            Assert.Throws<AlreadyContractedException>(
+                () => action.Execute(
+                    new ActionContext
+                    {
+                        Signer = patron,
+                        PreviousState = states,
+                    }));
         }
     }
 }

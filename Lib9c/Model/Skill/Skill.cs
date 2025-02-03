@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
+using Nekoyume.Model.Buff;
 using Nekoyume.Model.Elemental;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
@@ -13,7 +14,7 @@ namespace Nekoyume.Model.Skill
     public abstract class Skill : IState, ISkill
     {
         public SkillSheet.Row SkillRow { get; }
-        public int Power { get; private set; }
+        public long Power { get; private set; }
         public int Chance { get; private set; }
         public int StatPowerRatio { get; private set; }
         public StatType ReferencedStatType { get; private set; }
@@ -24,7 +25,7 @@ namespace Nekoyume.Model.Skill
 
         protected Skill(
             SkillSheet.Row skillRow,
-            int power,
+            long power,
             int chance,
             int statPowerRatio,
             StatType referencedStatType)
@@ -36,11 +37,9 @@ namespace Nekoyume.Model.Skill
             ReferencedStatType = referencedStatType;
         }
 
-        public abstract BattleStatus.Skill Use(
-            CharacterBase caster,
+        public abstract BattleStatus.Skill Use(CharacterBase caster,
             int simulatorWaveTurn,
-            IEnumerable<Buff.Buff> buffs
-        );
+            IEnumerable<Buff.Buff> buffs, bool copyCharacter);
 
         protected bool Equals(Skill other)
         {
@@ -62,7 +61,7 @@ namespace Nekoyume.Model.Skill
             unchecked
             {
                 var hashCode = SkillRow.GetHashCode();
-                hashCode = (hashCode * 397) ^ Power;
+                hashCode = (hashCode * 397) ^ Power.GetHashCode();
                 hashCode = (hashCode * 397) ^ Chance.GetHashCode();
                 hashCode = (hashCode * 397) ^ StatPowerRatio.GetHashCode();
                 hashCode = (hashCode * 397) ^ ReferencedStatType.GetHashCode();
@@ -70,33 +69,61 @@ namespace Nekoyume.Model.Skill
             }
         }
 
-        protected IEnumerable<Model.BattleStatus.Skill.SkillInfo> ProcessBuff(
-            CharacterBase caster,
+        protected IEnumerable<BattleStatus.Skill.SkillInfo> ProcessBuff(CharacterBase caster,
             int simulatorWaveTurn,
-            IEnumerable<Buff.Buff> buffs
-        )
+            IEnumerable<Buff.Buff> buffs, bool copyCharacter)
         {
             var infos = new List<Model.BattleStatus.Skill.SkillInfo>();
             foreach (var buff in buffs)
             {
                 var targets = buff.GetTarget(caster);
-                foreach (var target in targets.Where(target => target.GetChance(buff.BuffInfo.Chance)))
+                foreach (var target in targets.Where(target =>
+                             target.GetChance(buff.BuffInfo.Chance)))
                 {
-                    target.AddBuff(buff);
-                    infos.Add(new Model.BattleStatus.Skill.SkillInfo((CharacterBase) target.Clone(), 0, false,
-                        SkillRow.SkillCategory, simulatorWaveTurn, ElementalType.Normal, SkillRow.SkillTargetType,
-                        buff));
+                    var affected = true;
+                    IEnumerable<Buff.Buff> dispelList = null;
+                    var dispel = target.Buffs.Values.FirstOrDefault(bf => bf is Dispel);
+                    // Defence debuff if target has dispel
+                    if (dispel is not null && buff.IsDebuff())
+                    {
+                        if (target.Simulator.Random.Next(0, 100) < dispel.BuffInfo.Chance)
+                        {
+                            affected = false;
+                        }
+                    }
+
+                    if (affected)
+                    {
+                        dispelList = target.AddBuff(buff);
+                    }
+
+                    infos.Add(new Model.BattleStatus.Skill.SkillInfo(target.Id, target.IsDead,
+                        target.Thorn, 0, false,
+                        SkillRow.SkillCategory, simulatorWaveTurn, ElementalType.Normal,
+                        SkillRow.SkillTargetType,
+                        buff, copyCharacter ? (CharacterBase)target.Clone() : target,
+                        affected: affected, dispelList: dispelList));
                 }
             }
 
             return infos;
         }
 
-        public void Update(int chance, int power, int statPowerRatio)
+        public void Update(int chance, long power, int statPowerRatio)
         {
             Chance = chance;
             Power = power;
             StatPowerRatio = statPowerRatio;
+        }
+
+        public bool IsBuff()
+        {
+            return SkillRow.SkillType is SkillType.Buff;
+        }
+
+        public bool IsDebuff()
+        {
+            return SkillRow.SkillType is SkillType.Debuff;
         }
 
         public IValue Serialize()

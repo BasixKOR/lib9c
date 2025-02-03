@@ -4,12 +4,12 @@ using System.Reflection;
 using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
-using Libplanet.Blocks;
-using Libplanet.Tx;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
-using static Libplanet.Blocks.BlockMarshaler;
 
 namespace Nekoyume.Blockchain.Policy
 {
@@ -47,16 +47,23 @@ namespace Nekoyume.Blockchain.Policy
             }
             else
             {
+                Planet? planet = transaction.DeterminePlanet();
                 try
                 {
-                    // Comparison with ObsoleteIndex + 2 is intended to have backward
-                    // compatibility with a bugged original implementation.
                     return rawActions
                         .Select(rawAction => actionLoader.LoadAction(blockIndex, rawAction))
                         .Select(action => action.GetType())
-                        .Any(actionType =>
-                            actionType.GetCustomAttribute<ActionObsoleteAttribute>(false) is { } attribute &&
-                            attribute.ObsoleteIndex + 2 <= blockIndex);
+                        .Any(t =>
+                        {
+                            if (planet is { } planetNotNull)
+                            {
+                                return t.GetCustomAttributes<ActionObsoleteAttribute>(false)
+                                    .IsObsolete(planetNotNull, blockIndex);
+                            }
+
+                            // Exempt obsoleting check against unknown planet
+                            return false;
+                        });
                 }
                 catch (Exception)
                 {
@@ -72,21 +79,17 @@ namespace Nekoyume.Blockchain.Policy
                 && admin.AdminAddress.Equals(transaction.Signer);
         }
 
-        internal static AdminState GetAdminState(BlockChain blockChain)
+        internal static AdminState? GetAdminState(BlockChain blockChain)
         {
-            try
-            {
-                return blockChain.GetState(AdminState.Address) is Dictionary rawAdmin
+            return blockChain
+                .GetWorldState()
+                .GetAccountState(ReservedAddresses.LegacyAccount)
+                .GetState(AdminState.Address) is Dictionary rawAdmin
                     ? new AdminState(rawAdmin)
                     : null;
-            }
-            catch (IncompleteBlockStatesException)
-            {
-                return null;
-            }
         }
 
-        private static InvalidBlockBytesLengthException ValidateTransactionsBytesRaw(
+        private static InvalidBlockBytesLengthException? ValidateTransactionsBytesRaw(
             Block block,
             IVariableSubPolicy<long> maxTransactionsBytesPolicy)
         {
@@ -105,7 +108,7 @@ namespace Nekoyume.Blockchain.Policy
             return null;
         }
 
-        private static BlockPolicyViolationException ValidateTxCountPerBlockRaw(
+        private static BlockPolicyViolationException? ValidateTxCountPerBlockRaw(
             Block block,
             IVariableSubPolicy<int> minTransactionsPerBlockPolicy,
             IVariableSubPolicy<int> maxTransactionsPerBlockPolicy)
@@ -135,7 +138,7 @@ namespace Nekoyume.Blockchain.Policy
             return null;
         }
 
-        private static BlockPolicyViolationException ValidateTxCountPerSignerPerBlockRaw(
+        private static BlockPolicyViolationException? ValidateTxCountPerSignerPerBlockRaw(
             Block block,
             IVariableSubPolicy<int> maxTransactionsPerSignerPerBlockPolicy)
         {

@@ -10,11 +10,10 @@ namespace Lib9c.Tests.Action.Snapshot
         public static IValue GetActionTypeId<T>()
             where T : IAction
         {
-            Type attrType = typeof(ActionTypeAttribute);
-            Type actionType = typeof(T);
-            return actionType.IsDefined(attrType) &&
-                ActionTypeAttribute.ValueOf(actionType) is { } tid
-                ? tid
+            var attrType = typeof(ActionTypeAttribute);
+            var actionType = typeof(T);
+            return actionType.GetCustomAttribute<ActionTypeAttribute>() is { } attr
+                ? attr.TypeIdentifier
                 : throw new ArgumentException(
                     $"The action type attribute is missing for {typeof(T)}.");
         }

@@ -3,48 +3,45 @@ namespace Lib9c.Tests.Util
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using Libplanet;
     using Libplanet.Action;
-    using Libplanet.State;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Model;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using static Lib9c.SerializeKeys;
 
     public static class CraftUtil
     {
-        public static IAccountStateDelta PrepareCombinationSlot(
-            IAccountStateDelta state,
-            Address avatarAddress,
-            int slotIndex
+        public static IWorld PrepareCombinationSlot(
+            IWorld state,
+            Address avatarAddress
         )
         {
-            var slotAddress = avatarAddress.Derive(string.Format(
-                CultureInfo.InvariantCulture,
-                CombinationSlotState.DeriveFormat,
-                slotIndex));
-            var slotState = new CombinationSlotState(
-                slotAddress,
-                // CombinationEquipment: 3
-                // CombinationConsumable: 6
-                // ItemEnhancement: 9
-                GameConfig.RequireClearedStageLevel.ItemEnhancementAction
-            );
-            return state.SetState(slotAddress, slotState.Serialize());
+            var allSlotState = new AllCombinationSlotState();
+            for (var i = 0; i < AvatarState.CombinationSlotCapacity; i++)
+            {
+                var addr = CombinationSlotState.DeriveAddress(avatarAddress, i);
+                var slotState = new CombinationSlotState(addr, i);
+                allSlotState.AddSlot(slotState);
+            }
+
+            return state.SetCombinationSlotState(avatarAddress, allSlotState);
         }
 
-        public static IAccountStateDelta AddMaterialsToInventory(
-            IAccountStateDelta state,
+        public static IWorld AddMaterialsToInventory(
+            IWorld state,
             TableSheets tableSheets,
             Address avatarAddress,
             IEnumerable<EquipmentItemSubRecipeSheet.MaterialInfo> materialList,
             IRandom random
         )
         {
-            var avatarState = state.GetAvatarStateV2(avatarAddress);
+            var avatarState = state.GetAvatarState(avatarAddress);
             foreach (var material in materialList)
             {
                 var materialRow = tableSheets.MaterialItemSheet[material.Id];
@@ -52,25 +49,23 @@ namespace Lib9c.Tests.Util
                 avatarState.inventory.AddItem(materialItem, material.Count);
             }
 
-            return state.SetState(
-                avatarAddress.Derive(LegacyInventoryKey),
-                avatarState.inventory.Serialize()
-            );
+            return state.SetAvatarState(avatarAddress, avatarState);
         }
 
-        public static IAccountStateDelta UnlockStage(
-            IAccountStateDelta state,
+        public static IWorld UnlockStage(
+            IWorld state,
             TableSheets tableSheets,
-            Address worldInformationAddress,
+            Address avatarAddress,
             int stage
         )
         {
-            var worldInformation = new WorldInformation(
+            var avatarState = state.GetAvatarState(avatarAddress);
+            avatarState.worldInformation = new WorldInformation(
                 0,
                 tableSheets.WorldSheet,
                 Math.Max(stage, GameConfig.RequireClearedStageLevel.ItemEnhancementAction)
             );
-            return state.SetState(worldInformationAddress, worldInformation.Serialize());
+            return state.SetAvatarState(avatarAddress, avatarState);
         }
     }
 }

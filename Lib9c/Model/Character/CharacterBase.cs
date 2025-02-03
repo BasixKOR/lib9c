@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Bencodex.Types;
+#if TEST_LOG
+using System.Text;
+using UnityEngine;
+#endif
 using BTAI;
 using Nekoyume.Battle;
 using Nekoyume.Model.BattleStatus;
@@ -49,22 +52,22 @@ namespace Nekoyume.Model
             set => Stats.SetStats(value);
         }
 
-        public int HP => Stats.HP;
-        public int AdditionalHP => Stats.BuffStats.HP;
-        public int ATK => Stats.ATK;
-        public int DEF => Stats.DEF;
-        public int CRI => Stats.CRI;
-        public int HIT => Stats.HIT;
-        public int SPD => Stats.SPD;
-        public int DRV => Stats.DRV;
-        public int DRR => Stats.DRR;
-        public int CDMG => Stats.CDMG;
-        public int ArmorPenetration => Stats.ArmorPenetration;
-        public int Thorn => Stats.Thorn;
+        public long HP => Stats.HP;
+        public long AdditionalHP => Stats.BuffStats.HP;
+        public long ATK => Stats.ATK;
+        public long DEF => Stats.DEF;
+        public long CRI => Stats.CRI;
+        public long HIT => Stats.HIT;
+        public long SPD => Stats.SPD;
+        public long DRV => Stats.DRV;
+        public long DRR => Stats.DRR;
+        public long CDMG => Stats.CDMG;
+        public long ArmorPenetration => Stats.ArmorPenetration;
+        public long Thorn => Stats.Thorn;
 
-        private int _currentHP;
+        private long _currentHP;
 
-        public int CurrentHP
+        public long CurrentHP
         {
             get => _currentHP;
             set => _currentHP = Math.Min(Math.Max(0, value), HP);
@@ -74,6 +77,7 @@ namespace Nekoyume.Model
 
         public int AttackCount { get; set; }
         public int AttackCountMax { get; protected set; }
+        public BattleStatus.Skill usedSkill { get; set; }
 
         protected CharacterBase(Simulator simulator, CharacterSheet characterSheet, int characterId, int level,
             IEnumerable<StatModifier> optionalStatModifiers = null)
@@ -88,7 +92,7 @@ namespace Nekoyume.Model
             Stats = new CharacterStats(RowData, level);
             if (!(optionalStatModifiers is null))
             {
-                Stats.AddOptional(optionalStatModifiers);
+                Stats.AddCostume(optionalStatModifiers);
             }
             ResetCurrentHP();
 
@@ -225,7 +229,7 @@ namespace Nekoyume.Model
                 pair.Value.RemainedDuration--;
             }
         }
-        
+
         protected virtual void ReduceSkillCooldown()
         {
             Skills.ReduceCooldown();
@@ -240,7 +244,8 @@ namespace Nekoyume.Model
         protected virtual BattleStatus.Skill UseSkill()
         {
             var selectedSkill = Skills.Select(Simulator.Random);
-            var usedSkill = selectedSkill.Use(
+            bool log = Simulator.LogEvent;
+            usedSkill = selectedSkill.Use(
                 this,
                 Simulator.WaveTurn,
                 BuffFactory.GetBuffs(
@@ -250,7 +255,8 @@ namespace Nekoyume.Model
                     Simulator.StatBuffSheet,
                     Simulator.SkillActionBuffSheet,
                     Simulator.ActionBuffSheet
-                )
+                ),
+                log
             );
 
             if (!Simulator.SkillSheet.TryGetValue(selectedSkill.SkillRow.Id, out var sheetSkill))
@@ -259,7 +265,10 @@ namespace Nekoyume.Model
             }
 
             Skills.SetCooldown(selectedSkill.SkillRow.Id, sheetSkill.Cooldown);
-            Simulator.Log.Add(usedSkill);
+            if (log)
+            {
+                Simulator.Log.Add(usedSkill);
+            }
             return usedSkill;
         }
 
@@ -268,7 +277,7 @@ namespace Nekoyume.Model
         {
             var selectedSkill = Skills.SelectV1(Simulator.Random);
 
-            var usedSkill = selectedSkill.Use(
+            usedSkill = selectedSkill.Use(
                 this,
                 Simulator.WaveTurn,
                 BuffFactory.GetBuffs(
@@ -278,7 +287,8 @@ namespace Nekoyume.Model
                     Simulator.StatBuffSheet,
                     Simulator.SkillActionBuffSheet,
                     Simulator.ActionBuffSheet
-                )
+                ),
+                Simulator.LogEvent
             );
 
             Skills.SetCooldown(selectedSkill.SkillRow.Id, selectedSkill.SkillRow.Cooldown);
@@ -291,7 +301,7 @@ namespace Nekoyume.Model
         {
             var selectedSkill = Skills.SelectV2(Simulator.Random);
 
-            var usedSkill = selectedSkill.Use(
+            usedSkill = selectedSkill.Use(
                 this,
                 Simulator.WaveTurn,
                 BuffFactory.GetBuffs(
@@ -301,7 +311,8 @@ namespace Nekoyume.Model
                     Simulator.StatBuffSheet,
                     Simulator.SkillActionBuffSheet,
                     Simulator.ActionBuffSheet
-                )
+                ),
+                Simulator.LogEvent
             );
 
             Skills.SetCooldown(selectedSkill.SkillRow.Id, selectedSkill.SkillRow.Cooldown);
@@ -327,8 +338,11 @@ namespace Nekoyume.Model
             if (!isBuffRemoved)
                 return;
 
-            Stats.SetBuffs(StatBuffs);
-            Simulator.Log.Add(new RemoveBuffs((CharacterBase) Clone()));
+            Stats.SetBuffs(StatBuffs, Simulator.BuffLimitSheet);
+            if (Simulator.LogEvent)
+            {
+                Simulator.Log.Add(new RemoveBuffs((CharacterBase) Clone()));
+            }
         }
 
         protected virtual void EndTurn()
@@ -342,23 +356,94 @@ namespace Nekoyume.Model
 
         #region Buff
 
-        public void AddBuff(Buff.Buff buff, bool updateImmediate = true)
+        /// <summary>
+        /// Add buff/debuff to target; it means buff/debuff is used by caster.
+        /// When `Dispel` is used, it can remove prev. debuffs on target.
+        /// All the removed debuffs will be returned and saved in battle log.
+        /// </summary>
+        /// <param name="buff"></param>
+        /// <param name="updateImmediate"></param>
+        /// <returns>An enumerable of removed debuffs from target. `null` will be returned if nothing eliminated.</returns>
+        public IEnumerable<Buff.Buff> AddBuff(Buff.Buff buff, bool updateImmediate = true)
         {
             if (Buffs.TryGetValue(buff.BuffInfo.GroupId, out var outBuff) &&
                 outBuff.BuffInfo.Id > buff.BuffInfo.Id)
-                return;
+                return null;
 
-            if (buff is StatBuff stat)
+            var dispelList = new List<Buff.Buff>();
+            switch (buff)
             {
-                var clone = (StatBuff)stat.Clone();
-                Buffs[stat.RowData.GroupId] = clone;
-                Stats.AddBuff(clone, updateImmediate);
+                // StatBuff Modifies stats
+                case StatBuff stat:
+                {
+                    var clone = (StatBuff)stat.Clone();
+                    if (Buffs.TryGetValue(stat.RowData.GroupId, out var current))
+                    {
+                        var stack = ((StatBuff) current).Stack + 1;
+                        clone.SetStack(stack);
+                    }
+                    Buffs[stat.RowData.GroupId] = clone;
+                    Stats.AddBuff(clone, Simulator.BuffLimitSheet, updateImmediate);
+                    break;
+                }
+                case ActionBuff action:
+                {
+                    var clone = (ActionBuff)action.Clone();
+
+                    switch (action)
+                    {
+                        // Stun freezes target
+                        case Stun stun:
+                        {
+                            Buffs[stun.BuffInfo.GroupId] = clone;
+                            break;
+                        }
+                        // Dispel removes debuffs
+                        case Dispel dispel:
+                        {
+                            Buffs[dispel.BuffInfo.GroupId] = clone;
+
+                            dispelList = Buffs.Values.Where(
+                                            bff => bff.IsDebuff() &&
+                                                Simulator.Random.Next(0, 100) <
+                                                dispel.BuffInfo.Chance).ToList();
+
+                            foreach (var bff in dispelList)
+                            {
+                                switch (bff)
+                                {
+                                    case StatBuff statBuff:
+                                        RemoveStatBuff(statBuff);
+                                        break;
+                                    case ActionBuff actionBuff:
+                                        RemoveActionBuff(actionBuff);
+                                        break;
+                                }
+                            }
+
+                            break;
+                        }
+                        default:
+                            Buffs[action.RowData.GroupId] = clone;
+                            break;
+                    }
+
+                    break;
+                }
             }
-            else if (buff is ActionBuff action)
-            {
-                var clone = (ActionBuff)action.Clone();
-                Buffs[action.RowData.GroupId] = clone;
-            }
+
+            return dispelList;
+        }
+
+        public void RemoveActionBuff(ActionBuff removedBuff)
+        {
+            Buffs.Remove(removedBuff.RowData.GroupId);
+        }
+
+        public void RemoveStatBuff(StatBuff removedBuff)
+        {
+            Stats.RemoveBuff(removedBuff);
+            Buffs.Remove(removedBuff.RowData.GroupId);
         }
 
         public void RemoveRecentStatBuff()
@@ -391,8 +476,7 @@ namespace Nekoyume.Model
 
             if (removedBuff != null)
             {
-                Stats.RemoveBuff(removedBuff);
-                Buffs.Remove(removedBuff.RowData.GroupId);
+                RemoveStatBuff(removedBuff);
             }
         }
 
@@ -410,7 +494,7 @@ namespace Nekoyume.Model
                 return CRI >= chance;
 
             var additionalCriticalChance =
-                (int) AttackCountHelper.GetAdditionalCriticalChance(AttackCount, AttackCountMax);
+                AttackCountHelper.GetAdditionalCriticalChance(AttackCount, AttackCountMax);
             return CRI + additionalCriticalChance >= chance;
         }
 
@@ -423,6 +507,11 @@ namespace Nekoyume.Model
 
         public virtual bool IsHit(CharacterBase caster)
         {
+            if (caster.ActionBuffs.Any(buff => buff is Focus))
+            {
+                return true;
+            }
+
             var isHit = HitHelper.IsHit(caster.Level, caster.HIT, Level, HIT, Simulator.Random.Next(0, 100));
             if (!isHit)
             {
@@ -432,7 +521,7 @@ namespace Nekoyume.Model
             return isHit;
         }
 
-        public int GetDamage(int damage, bool considerAttackCount = true)
+        public long GetDamage(long damage, bool considerAttackCount = true)
         {
             if (!considerAttackCount)
                 return damage;
@@ -443,7 +532,7 @@ namespace Nekoyume.Model
                 AttackCount = 1;
             }
 
-            var damageMultiplier = (int) AttackCountHelper.GetDamageMultiplier(AttackCount, AttackCountMax);
+            var damageMultiplier = AttackCountHelper.GetDamageMultiplier(AttackCount, AttackCountMax);
             damage *= damageMultiplier;
 
 #if TEST_LOG
@@ -465,17 +554,21 @@ namespace Nekoyume.Model
 
         protected virtual void OnDead()
         {
-            var dead = new Dead((CharacterBase) Clone());
-            Simulator.Log.Add(dead);
+            if (Simulator.LogEvent)
+            {
+                var dead = new Dead((CharacterBase) Clone());
+                Simulator.Log.Add(dead);
+            }
         }
 
-        public void Heal(int heal)
+        public void Heal(long heal)
         {
             CurrentHP += heal;
         }
 
         protected virtual void SetSkill()
         {
+            usedSkill = null;
             if (!Simulator.SkillSheet.TryGetValue(GameConfig.DefaultAttackId, out var skillRow))
             {
                 throw new KeyNotFoundException(GameConfig.DefaultAttackId.ToString(CultureInfo.InvariantCulture));
@@ -492,12 +585,21 @@ namespace Nekoyume.Model
 
         private void Act()
         {
+            usedSkill = null;
             if (IsAlive())
             {
                 ReduceDurationOfBuffs();
                 ReduceSkillCooldown();
-                OnPreSkill();
-                var usedSkill = UseSkill();
+                if (OnPreSkill())
+                {
+                    usedSkill = new Tick((CharacterBase)Clone());
+                    Simulator.Log.Add(usedSkill);
+                }
+                else
+                {
+                    usedSkill = UseSkill();
+                }
+
                 if (usedSkill != null)
                 {
                     OnPostSkill(usedSkill);
@@ -515,7 +617,7 @@ namespace Nekoyume.Model
                 ReduceDurationOfBuffs();
                 ReduceSkillCooldownV1();
                 OnPreSkill();
-                var usedSkill = UseSkillV1();
+                usedSkill = UseSkillV1();
                 if (usedSkill != null)
                 {
                     OnPostSkill(usedSkill);
@@ -533,7 +635,7 @@ namespace Nekoyume.Model
                 ReduceDurationOfBuffs();
                 ReduceSkillCooldownV1();
                 OnPreSkill();
-                var usedSkill = UseSkillV2();
+                usedSkill = UseSkillV2();
                 if (usedSkill != null)
                 {
                     OnPostSkill(usedSkill);
@@ -543,33 +645,64 @@ namespace Nekoyume.Model
             EndTurn();
         }
 
-        protected virtual void OnPreSkill()
+        protected virtual bool OnPreSkill()
         {
-
+            return Buffs.Values.Any(buff => buff is Stun);
         }
 
         protected virtual void OnPostSkill(BattleStatus.Skill usedSkill)
         {
+            var log = Simulator.LogEvent;
+            var attackSkills = usedSkill.SkillInfos
+                .Where(skillInfo => skillInfo.SkillCategory
+                    is SkillCategory.NormalAttack
+                    or SkillCategory.BlowAttack
+                    or SkillCategory.DoubleAttack
+                    or SkillCategory.AreaAttack
+                    or SkillCategory.BuffRemovalAttack)
+                .ToList();
+            if (Buffs.Values.OfType<Vampiric>().OrderBy(x => x.BuffInfo.Id) is
+                { } vampirics)
+            {
+                foreach (var vampiric in vampirics)
+                {
+                    foreach (var effect in attackSkills
+                                 .Select(skillInfo =>
+                                     vampiric.GiveEffect(this, skillInfo, Simulator.WaveTurn, log))
+                                 .Where(_ => log))
+                    {
+                        Simulator.Log.Add(effect);
+                    }
+                }
+            }
+
             var bleeds = Buffs.Values.OfType<Bleed>().OrderBy(x => x.BuffInfo.Id);
             foreach (var bleed in bleeds)
             {
-                var effect = bleed.GiveEffect(this, Simulator.WaveTurn);
-                Simulator.Log.Add(effect);
+                var effect = bleed.GiveEffect(this, Simulator.WaveTurn, log);
+                if (log)
+                {
+                    Simulator.Log.Add(effect);
+                }
             }
 
             // Apply thorn damage if target has thorn
-            foreach (var skillInfo in usedSkill.SkillInfos)
+            foreach (var skillInfo in attackSkills)
             {
-                var isAttackSkill =
-                    skillInfo.SkillCategory == SkillCategory.NormalAttack ||
-                    skillInfo.SkillCategory == SkillCategory.BlowAttack ||
-                    skillInfo.SkillCategory == SkillCategory.DoubleAttack ||
-                    skillInfo.SkillCategory == SkillCategory.AreaAttack ||
-                    skillInfo.SkillCategory == SkillCategory.BuffRemovalAttack;
-                if (isAttackSkill && skillInfo.Target.Thorn > 0)
+                if (skillInfo.Thorn > 0)
                 {
-                    var effect = GiveThornDamage(skillInfo.Target.Thorn);
-                    Simulator.Log.Add(effect);
+                    var effect = GiveThornDamage(skillInfo.Thorn);
+                    if (log)
+                    {
+                        Simulator.Log.Add(effect);
+                    }
+                }
+
+                if (skillInfo.IceShield is not null)
+                {
+                    var frostBite = skillInfo.IceShield.FrostBite(Simulator.StatBuffSheet, Simulator.BuffLinkSheet);
+                    AddBuff(frostBite);
+                    Simulator.Log.Add(new Tick(frostBite.RowData.Id, (CharacterBase)Clone(), usedSkill.SkillInfos, usedSkill.BuffInfos));
                 }
             }
 
@@ -582,31 +715,38 @@ namespace Nekoyume.Model
             FinishTargetIfKilled(usedSkill);
         }
 
-        private BattleStatus.Skill GiveThornDamage(int targetThorn)
+        internal BattleStatus.Skill GiveThornDamage(long targetThorn)
         {
-            var clone = (CharacterBase)Clone();
+            bool log = Simulator.LogEvent;
+            // Copy not damaged character
+            var clone = log ? (CharacterBase)Clone() : null;
             // minimum 1 damage
             var thornDamage = Math.Max(1, targetThorn - DEF);
             CurrentHP -= thornDamage;
-            var damageInfos = new List<BattleStatus.Skill.SkillInfo>()
+            if (log)
             {
-                new BattleStatus.Skill.SkillInfo(
-                    (CharacterBase)Clone(),
-                    thornDamage,
-                    false,
-                    SkillCategory.TickDamage,
-                    Simulator.WaveTurn,
-                    ElementalType.Normal,
-                    SkillTargetType.Enemy)
-            };
+                // Copy new damaged character
+                var damageInfos = new List<BattleStatus.Skill.SkillInfo>()
+                {
+                    new BattleStatus.Skill.SkillInfo(
+                        Id,
+                        IsDead,
+                        thornDamage,
+                        thornDamage,
+                        false,
+                        SkillCategory.TickDamage,
+                        Simulator.WaveTurn,
+                        target: (CharacterBase)Clone())
+                };
+                var tickDamage = new TickDamage(
+                    default,
+                    clone,
+                    damageInfos,
+                    null);
+                return tickDamage;
+            }
 
-            var tickDamage = new TickDamage(
-                default,
-                clone,
-                damageInfos,
-                null);
-
-            return tickDamage;
+            return null;
         }
 
         private void FinishTargetIfKilledForBeforeV100310(BattleStatus.Skill usedSkill)
@@ -614,7 +754,7 @@ namespace Nekoyume.Model
             var isFirst = true;
             foreach (var info in usedSkill.SkillInfos)
             {
-                if (!info.Target.IsDead)
+                if (!info.IsDead)
                 {
                     continue;
                 }
@@ -626,7 +766,7 @@ namespace Nekoyume.Model
                 }
 
                 var target = Targets.FirstOrDefault(i =>
-                    i.Id == info.Target.Id);
+                    i.Id == info.CharacterId);
                 switch (target)
                 {
                     case Player player:
@@ -655,12 +795,12 @@ namespace Nekoyume.Model
             var killedTargets = new List<CharacterBase>();
             foreach (var info in usedSkill.SkillInfos)
             {
-                if (!info.Target.IsDead)
+                if (!info.IsDead)
                 {
                     continue;
                 }
 
-                var target = Targets.FirstOrDefault(i => i.Id == info.Target.Id);
+                var target = Targets.FirstOrDefault(i => i.Id == info.CharacterId);
                 if (!killedTargets.Contains(target))
                 {
                     killedTargets.Add(target);

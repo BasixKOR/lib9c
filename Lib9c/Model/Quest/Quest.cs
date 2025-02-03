@@ -5,6 +5,7 @@ using Bencodex.Types;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using Serilog;
+using Boolean = Bencodex.Types.Boolean;
 
 namespace Nekoyume.Model.Quest
 {
@@ -26,7 +27,7 @@ namespace Nekoyume.Model.Quest
 
         public abstract QuestType QuestType { get; }
 
-        private static readonly Dictionary<string, Func<Dictionary, Quest>> Deserializers =
+        private static readonly Dictionary<string, Func<Dictionary, Quest>> DictionaryDeserializers =
             new Dictionary<string, Func<Dictionary, Quest>>
             {
                 ["collectQuest"] = d => new CollectQuest(d),
@@ -42,13 +43,77 @@ namespace Nekoyume.Model.Quest
                 ["combinationEquipmentQuest"] = d => new CombinationEquipmentQuest(d),
             };
 
-        public bool Complete { get; protected set; }
+        private static readonly Dictionary<string, Func<List, Quest>> ListDeserializers =
+            new Dictionary<string, Func<List, Quest>>
+            {
+                ["collectQuest"] = d => new CollectQuest(d),
+                ["combinationQuest"] = d => new CombinationQuest(d),
+                ["monsterQuest"] = d => new MonsterQuest(d),
+                ["tradeQuest"] = d => new TradeQuest(d),
+                ["worldQuest"] = d => new WorldQuest(d),
+                ["itemEnhancementQuest"] = d => new ItemEnhancementQuest(d),
+                ["generalQuest"] = d => new GeneralQuest(d),
+                ["itemGradeQuest"] = d => new ItemGradeQuest(d),
+                ["itemTypeCollectQuest"] = d => new ItemTypeCollectQuest(d),
+                ["GoldQuest"] = d => new GoldQuest(d),
+                ["combinationEquipmentQuest"] = d => new CombinationEquipmentQuest(d),
+            };
 
-        public int Goal { get; set; }
+        public bool Complete
+        {
+            get
+            {
+                if (_serializedComplete.HasValue)
+                {
+                    _complete = _serializedComplete.Value;
+                    _serializedComplete = null;
+                }
 
-        public int Id { get; }
+                return _complete;
+            }
+            protected set => _complete = value;
+        }
 
-        public QuestReward Reward { get; }
+        public int Goal {
+            get
+            {
+                if (_serializedGoal.HasValue)
+                {
+                    _goal = _serializedGoal.Value;
+                    _serializedGoal = null;
+                }
+
+                return _goal;
+            }
+        }
+
+        public int Id
+        {
+            get
+            {
+                if (_serializedId.HasValue)
+                {
+                    _id = _serializedId.Value;
+                    _serializedId = null;
+                }
+
+                return _id;
+            }
+        }
+
+        public QuestReward Reward
+        {
+            get
+            {
+                if (_serializedReward is { })
+                {
+                    _reward = new QuestReward(_serializedReward);
+                    _serializedReward = null;
+                }
+
+                return _reward;
+            }
+        }
 
         /// <summary>
         /// 이미 퀘스트 보상이 액션에서 지급되었는가?
@@ -58,12 +123,20 @@ namespace Nekoyume.Model.Quest
         public virtual float Progress => (float) _current / Goal;
 
         public const string GoalFormat = "({0}/{1})";
+        private Dictionary _serializedReward;
+        private QuestReward _reward;
+        private Bencodex.Types.Boolean? _serializedComplete;
+        private Integer? _serializedGoal;
+        private int _goal;
+        private Integer? _serializedId;
+        private int _id;
+        private bool _complete;
 
         protected Quest(QuestSheet.Row data, QuestReward reward)
         {
-            Id = data.Id;
-            Goal = data.Goal;
-            Reward = reward;
+            _id = data.Id;
+            _goal = data.Goal;
+            _reward = reward;
         }
 
         public abstract void Check();
@@ -71,27 +144,45 @@ namespace Nekoyume.Model.Quest
 
         protected Quest(Dictionary serialized)
         {
-            Complete = ((Bencodex.Types.Boolean) serialized["complete"]).Value;
-            Goal = (int) ((Integer) serialized["goal"]).Value;
-            _current = (int) ((Integer) serialized["current"]).Value;
-            Id = (int) ((Integer) serialized["id"]).Value;
-            Reward = new QuestReward((Dictionary) serialized["reward"]);
+            _serializedComplete = (Bencodex.Types.Boolean) serialized["complete"];
+            _serializedGoal = (Integer) serialized["goal"];
+            _serializedId = (Integer) serialized["id"];
+            _serializedReward = (Dictionary) serialized["reward"];
             IsPaidInAction = serialized["isPaidInAction"].ToNullableBoolean() ?? false;
+            _current = (int) ((Integer) serialized["current"]).Value;
+        }
+
+        protected Quest(List serialized)
+        {
+            _serializedComplete = (Boolean) serialized[1];
+            _serializedGoal = (Integer) serialized[2];
+            _current = (Integer) serialized[3];
+            _serializedId = (Integer) serialized[4];
+            _serializedReward = (Dictionary) serialized[5];
+            IsPaidInAction = (Boolean) serialized[6];
         }
 
         public abstract string GetProgressText();
 
         public virtual IValue Serialize() =>
-            new Dictionary(new Dictionary<IKey, IValue>
-            {
-                [(Text) "typeId"] = (Text) TypeId,
-                [(Text) "complete"] = new Bencodex.Types.Boolean(Complete),
-                [(Text) "goal"] = (Integer) Goal,
-                [(Text) "current"] = (Integer) _current,
-                [(Text) "id"] = (Integer) Id,
-                [(Text) "reward"] = Reward.Serialize(),
-                [(Text) "isPaidInAction"] = new Bencodex.Types.Boolean(IsPaidInAction),
-            });
+            Dictionary.Empty
+                .Add("typeId", (Text) TypeId)
+                .Add("complete", _serializedComplete ?? new Bencodex.Types.Boolean(Complete))
+                .Add("goal", _serializedGoal ?? Goal)
+                .Add("current", (Integer) _current)
+                .Add("id", _serializedId ?? Id)
+                .Add("reward", _serializedReward ?? Reward.Serialize())
+                .Add("isPaidInAction", new Bencodex.Types.Boolean(IsPaidInAction));
+
+        public virtual IValue SerializeList() =>
+            List.Empty
+                .Add((Text)TypeId)
+                .Add(_serializedComplete ?? new Boolean(Complete))
+                .Add(_serializedGoal ?? Goal)
+                .Add(_current)
+                .Add(_serializedId ?? Id)
+                .Add(_serializedReward ?? Reward.Serialize())
+                .Add(new Boolean(IsPaidInAction));
 
         public static Quest Deserialize(Dictionary serialized)
         {
@@ -99,13 +190,47 @@ namespace Nekoyume.Model.Quest
             Func<Dictionary, Quest> deserializer;
             try
             {
-                deserializer = Deserializers[typeId];
+                deserializer = DictionaryDeserializers[typeId];
             }
             catch (KeyNotFoundException)
             {
                 string typeIds = string.Join(
                     ", ",
-                    Deserializers.Keys.OrderBy(k => k, StringComparer.InvariantCulture)
+                    DictionaryDeserializers.Keys.OrderBy(k => k, StringComparer.InvariantCulture)
+                );
+                throw new ArgumentException(
+                    $"Unregistered typeId: {typeId}; available typeIds: {typeIds}"
+                );
+            }
+
+            try
+            {
+                return deserializer(serialized);
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    e,
+                    "{TypeFullName} was raised during deserialize: {Serialized}",
+                    e.GetType().FullName,
+                    serialized);
+                throw;
+            }
+        }
+
+        public static Quest DeserializeList(List serialized)
+        {
+            string typeId = (Text) serialized[0];
+            Func<List, Quest> deserializer;
+            try
+            {
+                deserializer = ListDeserializers[typeId];
+            }
+            catch (KeyNotFoundException)
+            {
+                string typeIds = string.Join(
+                    ", ",
+                    ListDeserializers.Keys.OrderBy(k => k, StringComparer.InvariantCulture)
                 );
                 throw new ArgumentException(
                     $"Unregistered typeId: {typeId}; available typeIds: {typeIds}"
@@ -129,7 +254,17 @@ namespace Nekoyume.Model.Quest
 
         public static Quest Deserialize(IValue arg)
         {
-            return Deserialize((Dictionary) arg);
+            if (arg is Dictionary d)
+            {
+                return Deserialize(d);
+            }
+
+            if (arg is List l)
+            {
+                return DeserializeList(l);
+            }
+
+            throw new ArgumentException();
         }
     }
 }

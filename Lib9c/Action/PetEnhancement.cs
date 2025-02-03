@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Nekoyume.Action.Guild.Migration.LegacyModels;
+using Nekoyume.Arena;
 using Nekoyume.Exceptions;
 using Nekoyume.Extensions;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 
 namespace Nekoyume.Action
@@ -40,18 +42,13 @@ namespace Nekoyume.Action
             TargetLevel = plainValue["t"].ToInteger();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states;
-            }
-
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var addresses = GetSignerAndOtherAddressesHex(context, AvatarAddress);
             // NOTE: The `AvatarAddress` must contained in `Signer`'s `AgentState.avatarAddresses`.
-            if (!Addresses.IsContainedInAgent(context.Signer, AvatarAddress))
+            if (!Addresses.CheckAvatarAddrIsContainedInAgent(context.Signer, AvatarAddress))
             {
                 throw new InvalidActionFieldException(
                     ActionTypeIdentifier,
@@ -79,7 +76,7 @@ namespace Nekoyume.Action
             }
 
             var petStateAddress = PetState.DeriveAddress(AvatarAddress, PetId);
-            var petState = states.TryGetState(petStateAddress, out List rawState)
+            var petState = states.TryGetLegacyState(petStateAddress, out List rawState)
                 ? new PetState(rawState)
                 : new PetState(PetId);
             if (TargetLevel <= petState.Level)
@@ -129,11 +126,6 @@ namespace Nekoyume.Action
                 petState.Level,
                 TargetLevel);
 
-            var arenaSheet = sheets.GetSheet<ArenaSheet>();
-            var arenaData = arenaSheet.GetRoundByBlockIndex(context.BlockIndex);
-            var feeStoreAddress = Addresses.GetBlacksmithFeeAddress(
-                arenaData.ChampionshipId,
-                arenaData.Round);
             if (ncgQuantity > 0)
             {
                 var ncgCost = ncgQuantity * ncgCurrency;
@@ -147,7 +139,9 @@ namespace Nekoyume.Action
                         currentNcg);
                 }
 
-                states = states.TransferAsset(context.Signer, feeStoreAddress, ncgCost);
+                var feeAddress = states.GetFeeAddress(context.BlockIndex);
+
+                states = states.TransferAsset(context, context.Signer, feeAddress, ncgCost);
             }
 
             if (soulStoneQuantity > 0)
@@ -166,8 +160,9 @@ namespace Nekoyume.Action
                 }
 
                 states = states.TransferAsset(
+                    context,
                     AvatarAddress,
-                    feeStoreAddress,
+                    Addresses.RewardPool,
                     soulStoneCost);
             }
 
@@ -176,7 +171,7 @@ namespace Nekoyume.Action
                 petState.LevelUp();
             }
 
-            return states.SetState(petStateAddress, petState.Serialize());
+            return states.SetLegacyState(petStateAddress, petState.Serialize());
         }
     }
 }

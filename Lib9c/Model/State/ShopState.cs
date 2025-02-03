@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Crypto;
 using Nekoyume.Model.Item;
 
 namespace Nekoyume.Model.State
@@ -39,7 +39,7 @@ namespace Nekoyume.Model.State
                         new KeyValuePair<IKey, IValue>(
                             (Binary) kv.Key.Serialize(),
                             kv.Value.Serialize()))),
-            }.Union((Dictionary) base.Serialize()));
+            }.Union((Dictionary) base.SerializeBase()));
 #pragma warning restore LAA1002
 
         #region Register

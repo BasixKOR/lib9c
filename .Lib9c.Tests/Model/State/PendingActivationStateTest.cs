@@ -3,7 +3,7 @@ namespace Lib9c.Tests.Model.State
     using System.IO;
     using System.Runtime.Serialization.Formatters.Binary;
     using Bencodex.Types;
-    using Libplanet;
+    using Libplanet.Common;
     using Libplanet.Crypto;
     using Nekoyume.Model.State;
     using Xunit;
@@ -13,7 +13,7 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void Serialize()
         {
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03, };
             var pubKey = new PublicKey(
                 ByteUtil.ParseHex("02ed49dbe0f2c34d9dff8335d6dd9097f7a3ef17dfb5f048382eebc7f451a50aa1")
             );
@@ -33,7 +33,7 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void SerializeWithDotNetAPI()
         {
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03, };
             var pubKey = new PublicKey(
                 ByteUtil.ParseHex("02ed49dbe0f2c34d9dff8335d6dd9097f7a3ef17dfb5f048382eebc7f451a50aa1")
             );

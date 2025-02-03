@@ -2,19 +2,22 @@ namespace Lib9c.Tests.Action
 {
     using System;
     using System.Collections.Generic;
+    using System.Numerics;
     using Bencodex.Types;
     using Lib9c.Formatters;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using MessagePack;
     using MessagePack.Resolvers;
     using Nekoyume.Action;
     using Nekoyume.Helper;
+    using Nekoyume.Model.Collection;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Xunit;
 
     public class ActionEvaluationTest
@@ -22,20 +25,21 @@ namespace Lib9c.Tests.Action
         private readonly Currency _currency;
         private readonly Address _signer;
         private readonly Address _sender;
-        private readonly IAccountStateDelta _states;
+        private readonly IWorld _states;
 
         public ActionEvaluationTest()
         {
+            var context = new ActionContext();
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
             _currency = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
-            _signer = new PrivateKey().ToAddress();
-            _sender = new PrivateKey().ToAddress();
-            _states = new State()
-                .SetState(_signer, (Text)"ANYTHING")
-                .SetState(default, Dictionary.Empty.Add("key", "value"))
-                .MintAsset(_signer, _currency * 10000);
+            _signer = new PrivateKey().Address;
+            _sender = new PrivateKey().Address;
+            _states = new World(MockUtil.MockModernWorldState)
+                .SetLegacyState(_signer, (Text)"ANYTHING")
+                .SetLegacyState(default, Dictionary.Empty.Add("key", "value"))
+                .MintAsset(context, _signer, _currency * 10000);
             var resolver = MessagePack.Resolvers.CompositeResolver.Create(
                 NineChroniclesResolver.Instance,
                 StandardResolver.Instance
@@ -48,12 +52,9 @@ namespace Lib9c.Tests.Action
         [InlineData(typeof(TransferAsset))]
         [InlineData(typeof(CreateAvatar))]
         [InlineData(typeof(HackAndSlash))]
-        [InlineData(typeof(ActivateAccount))]
-        [InlineData(typeof(AddActivatedAccount))]
         [InlineData(typeof(AddRedeemCode))]
         [InlineData(typeof(Buy))]
         [InlineData(typeof(ChargeActionPoint))]
-        [InlineData(typeof(ClaimMonsterCollectionReward))]
         [InlineData(typeof(CombinationConsumable))]
         [InlineData(typeof(CombinationEquipment))]
         [InlineData(typeof(CreatePendingActivation))]
@@ -61,10 +62,6 @@ namespace Lib9c.Tests.Action
         [InlineData(typeof(InitializeStates))]
         [InlineData(typeof(ItemEnhancement))]
         [InlineData(typeof(MigrationActivatedAccountsState))]
-        [InlineData(typeof(MigrationAvatarState))]
-        [InlineData(typeof(MigrationLegacyShop))]
-        [InlineData(typeof(MimisbrunnrBattle))]
-        [InlineData(typeof(MonsterCollect))]
         [InlineData(typeof(PatchTableSheet))]
         [InlineData(typeof(RankingBattle))]
         [InlineData(typeof(RapidCombination))]
@@ -92,6 +89,10 @@ namespace Lib9c.Tests.Action
         [InlineData(typeof(EndPledge))]
         [InlineData(typeof(CreatePledge))]
         [InlineData(typeof(TransferAssets))]
+        [InlineData(typeof(RuneSummon))]
+        [InlineData(typeof(ActivateCollection))]
+        [InlineData(typeof(RetrieveAvatarAssets))]
+        [InlineData(typeof(MigrateFee))]
         public void Serialize_With_MessagePack(Type actionType)
         {
             var action = GetAction(actionType);
@@ -99,20 +100,20 @@ namespace Lib9c.Tests.Action
                 action,
                 _signer,
                 1234,
-                _states,
+                _states.Trie.Hash,
                 null,
-                _states,
+                _states.Trie.Hash,
                 0,
-                new Dictionary<string, IValue>()
+                new Dictionary<string, IValue>(),
+                null
             );
             var evaluation = ncEval.ToActionEvaluation();
             var b = MessagePackSerializer.Serialize(ncEval);
             var deserialized = MessagePackSerializer.Deserialize<NCActionEvaluation>(b);
             Assert.Equal(evaluation.Signer, deserialized.Signer);
             Assert.Equal(evaluation.BlockIndex, deserialized.BlockIndex);
-            var dict = (Dictionary)deserialized.OutputStates.GetState(default)!;
-            Assert.Equal("value", (Text)dict["key"]);
-            Assert.Equal(_currency * 10000, deserialized.OutputStates.GetBalance(_signer, _currency));
+            Assert.Equal(_states.Trie.Hash, deserialized.OutputState);
+            Assert.Equal(_states.Trie.Hash, deserialized.PreviousState);
             if (actionType == typeof(RewardGold))
             {
                 Assert.Null(deserialized.Action);
@@ -152,38 +153,35 @@ namespace Lib9c.Tests.Action
                     RuneInfos = new List<RuneSlotInfo>(),
                     WorldId = 0,
                     StageId = 0,
-                    AvatarAddress = new PrivateKey().ToAddress(),
+                    AvatarAddress = new PrivateKey().Address,
                 },
-                ActivateAccount _ => new ActivateAccount(new PrivateKey().ToAddress(), new byte[] { 0x0 }),
-                AddActivatedAccount _ => new AddActivatedAccount(),
                 AddRedeemCode _ => new AddRedeemCode
                 {
                     redeemCsv = "csv",
                 },
                 Buy _ => new Buy
                 {
-                    buyerAvatarAddress = new PrivateKey().ToAddress(),
+                    buyerAvatarAddress = new PrivateKey().Address,
                     purchaseInfos = new[]
                     {
                         new PurchaseInfo(
                             Guid.NewGuid(),
                             Guid.NewGuid(),
                             _signer,
-                            new PrivateKey().ToAddress(),
+                            new PrivateKey().Address,
                             ItemSubType.Armor,
 #pragma warning disable CS0618
-                    // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                             Currency.Legacy("NCG", 2, null) * 10
 #pragma warning restore CS0618
                         ),
                     },
                 },
                 ChargeActionPoint _ => new ChargeActionPoint(),
-                ClaimMonsterCollectionReward _ => new ClaimMonsterCollectionReward(),
                 CombinationConsumable _ => new CombinationConsumable(),
                 CombinationEquipment _ => new CombinationEquipment(),
                 CreatePendingActivation _ => new CreatePendingActivation(
-                    new PendingActivationState(new byte[] { 0x0 }, new PrivateKey().PublicKey)
+                    new PendingActivationState(new byte[] { 0x0, }, new PrivateKey().PublicKey)
                 ),
                 DailyReward _ => new DailyReward(),
                 InitializeStates _ => new InitializeStates
@@ -192,25 +190,11 @@ namespace Lib9c.Tests.Action
                     AuthorizedMiners = Dictionary.Empty,
                     Credits = Dictionary.Empty,
                 },
-                ItemEnhancement _ => new ItemEnhancement(),
+                ItemEnhancement _ => new ItemEnhancement
+                {
+                    materialIds = new List<Guid>(),
+                },
                 MigrationActivatedAccountsState _ => new MigrationActivatedAccountsState(),
-                MigrationAvatarState _ => new MigrationAvatarState
-                {
-                    avatarStates = new List<Dictionary>(),
-                },
-                MigrationLegacyShop _ => new MigrationLegacyShop(),
-                MimisbrunnrBattle _ => new MimisbrunnrBattle
-                {
-                    Costumes = new List<Guid>(),
-                    Equipments = new List<Guid>(),
-                    Foods = new List<Guid>(),
-                    RuneInfos = new List<RuneSlotInfo>(),
-                    WorldId = 0,
-                    StageId = 0,
-                    PlayCount = 0,
-                    AvatarAddress = default,
-                },
-                MonsterCollect _ => new MonsterCollect(),
                 PatchTableSheet _ => new PatchTableSheet
                 {
                     TableCsv = "table",
@@ -218,9 +202,9 @@ namespace Lib9c.Tests.Action
                 },
                 RankingBattle _ => new RankingBattle
                 {
-                    avatarAddress = new PrivateKey().ToAddress(),
-                    enemyAddress = new PrivateKey().ToAddress(),
-                    weeklyArenaAddress = new PrivateKey().ToAddress(),
+                    avatarAddress = new PrivateKey().Address,
+                    enemyAddress = new PrivateKey().Address,
+                    weeklyArenaAddress = new PrivateKey().Address,
                     costumeIds = new List<Guid>(),
                     equipmentIds = new List<Guid>(),
                 },
@@ -228,7 +212,7 @@ namespace Lib9c.Tests.Action
                 RedeemCode _ => new RedeemCode
                 {
                     Code = "code",
-                    AvatarAddress = new PrivateKey().ToAddress(),
+                    AvatarAddress = new PrivateKey().Address,
                 },
                 RewardGold _ => null,
                 Sell _ => new Sell
@@ -238,7 +222,7 @@ namespace Lib9c.Tests.Action
                 SellCancellation _ => new SellCancellation(),
                 UpdateSell _ => new UpdateSell
                 {
-                    sellerAvatarAddress = new PrivateKey().ToAddress(),
+                    sellerAvatarAddress = new PrivateKey().Address,
                     updateSellInfos = new[]
                     {
                         new UpdateSellInfo(
@@ -260,12 +244,12 @@ namespace Lib9c.Tests.Action
                 },
                 Grinding _ => new Grinding
                 {
-                    AvatarAddress = new PrivateKey().ToAddress(),
+                    AvatarAddress = new PrivateKey().Address,
                     EquipmentIds = new List<Guid>(),
                 },
                 UnlockEquipmentRecipe _ => new UnlockEquipmentRecipe
                 {
-                    AvatarAddress = new PrivateKey().ToAddress(),
+                    AvatarAddress = new PrivateKey().Address,
                     RecipeIds = new List<int>
                     {
                         2,
@@ -274,7 +258,7 @@ namespace Lib9c.Tests.Action
                 },
                 UnlockWorld _ => new UnlockWorld
                 {
-                    AvatarAddress = new PrivateKey().ToAddress(),
+                    AvatarAddress = new PrivateKey().Address,
                     WorldIds = new List<int>()
                     {
                         2,
@@ -301,7 +285,7 @@ namespace Lib9c.Tests.Action
                 },
                 Raid _ => new Raid
                 {
-                    AvatarAddress = new PrivateKey().ToAddress(),
+                    AvatarAddress = new PrivateKey().Address,
                     CostumeIds = new List<Guid>(),
                     EquipmentIds = new List<Guid>(),
                     FoodIds = new List<Guid>(),
@@ -327,7 +311,7 @@ namespace Lib9c.Tests.Action
                     {
                         new RegisterInfo
                         {
-                            AvatarAddress = new PrivateKey().ToAddress(),
+                            AvatarAddress = new PrivateKey().Address,
                             ItemCount = 1,
                             Price = 1 * _currency,
                             TradableId = Guid.NewGuid(),
@@ -335,7 +319,7 @@ namespace Lib9c.Tests.Action
                         },
                         new AssetInfo
                         {
-                            AvatarAddress = new PrivateKey().ToAddress(),
+                            AvatarAddress = new PrivateKey().Address,
                             Price = 1 * _currency,
                             Asset = 1 * RuneHelper.StakeRune,
                             Type = ProductType.FungibleAssetValue,
@@ -346,21 +330,21 @@ namespace Lib9c.Tests.Action
                 },
                 ReRegisterProduct _ => new ReRegisterProduct
                 {
-                    AvatarAddress = new PrivateKey().ToAddress(),
+                    AvatarAddress = new PrivateKey().Address,
                     ReRegisterInfos = new List<(IProductInfo, IRegisterInfo)>
                     {
                         (
                             new ItemProductInfo
                             {
-                                AvatarAddress = new PrivateKey().ToAddress(),
-                                AgentAddress = new PrivateKey().ToAddress(),
+                                AvatarAddress = new PrivateKey().Address,
+                                AgentAddress = new PrivateKey().Address,
                                 Price = 1 * _currency,
                                 ProductId = Guid.NewGuid(),
                                 Type = ProductType.Fungible,
                             },
                             new RegisterInfo
                             {
-                                AvatarAddress = new PrivateKey().ToAddress(),
+                                AvatarAddress = new PrivateKey().Address,
                                 ItemCount = 1,
                                 Price = 1 * _currency,
                                 TradableId = Guid.NewGuid(),
@@ -370,15 +354,15 @@ namespace Lib9c.Tests.Action
                         (
                             new ItemProductInfo
                             {
-                                AvatarAddress = new PrivateKey().ToAddress(),
-                                AgentAddress = new PrivateKey().ToAddress(),
+                                AvatarAddress = new PrivateKey().Address,
+                                AgentAddress = new PrivateKey().Address,
                                 Price = 1 * _currency,
                                 ProductId = Guid.NewGuid(),
                                 Type = ProductType.NonFungible,
                             },
                             new RegisterInfo
                             {
-                                AvatarAddress = new PrivateKey().ToAddress(),
+                                AvatarAddress = new PrivateKey().Address,
                                 ItemCount = 1,
                                 Price = 1 * _currency,
                                 TradableId = Guid.NewGuid(),
@@ -388,15 +372,15 @@ namespace Lib9c.Tests.Action
                         (
                             new FavProductInfo
                             {
-                                AvatarAddress = new PrivateKey().ToAddress(),
-                                AgentAddress = new PrivateKey().ToAddress(),
+                                AvatarAddress = new PrivateKey().Address,
+                                AgentAddress = new PrivateKey().Address,
                                 Price = 1 * _currency,
                                 ProductId = Guid.NewGuid(),
                                 Type = ProductType.FungibleAssetValue,
                             },
                             new AssetInfo
                             {
-                                AvatarAddress = new PrivateKey().ToAddress(),
+                                AvatarAddress = new PrivateKey().Address,
                                 Price = 1 * _currency,
                                 Asset = 1 * RuneHelper.StakeRune,
                                 Type = ProductType.FungibleAssetValue,
@@ -407,13 +391,13 @@ namespace Lib9c.Tests.Action
                 },
                 CancelProductRegistration _ => new CancelProductRegistration
                 {
-                    AvatarAddress = new PrivateKey().ToAddress(),
+                    AvatarAddress = new PrivateKey().Address,
                     ProductInfos = new List<IProductInfo>
                     {
                         new FavProductInfo
                         {
-                            AvatarAddress = new PrivateKey().ToAddress(),
-                            AgentAddress = new PrivateKey().ToAddress(),
+                            AvatarAddress = new PrivateKey().Address,
+                            AgentAddress = new PrivateKey().Address,
                             Price = 1 * _currency,
                             ProductId = Guid.NewGuid(),
                             Type = ProductType.FungibleAssetValue,
@@ -423,13 +407,13 @@ namespace Lib9c.Tests.Action
                 },
                 BuyProduct _ => new BuyProduct
                 {
-                    AvatarAddress = new PrivateKey().ToAddress(),
+                    AvatarAddress = new PrivateKey().Address,
                     ProductInfos = new List<IProductInfo>
                     {
                         new ItemProductInfo
                         {
-                            AvatarAddress = new PrivateKey().ToAddress(),
-                            AgentAddress = new PrivateKey().ToAddress(),
+                            AvatarAddress = new PrivateKey().Address,
+                            AgentAddress = new PrivateKey().Address,
                             Price = 1 * _currency,
                             ProductId = Guid.NewGuid(),
                             Type = ProductType.Fungible,
@@ -440,25 +424,69 @@ namespace Lib9c.Tests.Action
                 },
                 RequestPledge _ => new RequestPledge
                 {
-                    AgentAddress = new PrivateKey().ToAddress(),
+                    AgentAddress = new PrivateKey().Address,
                 },
                 ApprovePledge _ => new ApprovePledge
                 {
-                    PatronAddress = new PrivateKey().ToAddress(),
+                    PatronAddress = new PrivateKey().Address,
                 },
                 EndPledge _ => new EndPledge
                 {
-                    AgentAddress = new PrivateKey().ToAddress(),
+                    AgentAddress = new PrivateKey().Address,
                 },
                 CreatePledge _ => new CreatePledge
                 {
-                    PatronAddress = new PrivateKey().ToAddress(),
-                    AgentAddresses = new[] { (new PrivateKey().ToAddress(), new PrivateKey().ToAddress()) },
+                    PatronAddress = new PrivateKey().Address,
+                    AgentAddresses = new[] { (new PrivateKey().Address, new PrivateKey().Address), },
+                    Mead = 4,
                 },
-                TransferAssets _ => new TransferAssets(_sender, new List<(Address, FungibleAssetValue)>
+                TransferAssets _ => new TransferAssets(
+                    _sender,
+                    new List<(Address, FungibleAssetValue)>
+                    {
+                        (_signer, 1 * _currency),
+                    }),
+                RuneSummon _ => new RuneSummon
                 {
-                    (_signer, 1 * _currency),
-                }),
+                    AvatarAddress = _sender,
+                    GroupId = 20001,
+                    SummonCount = 10,
+                },
+                ActivateCollection _ => new ActivateCollection
+                {
+                    AvatarAddress = _sender,
+                    CollectionData =
+                    {
+                        (
+                            1,
+                            new List<ICollectionMaterial>
+                            {
+                                new FungibleCollectionMaterial
+                                {
+                                    ItemId = 1,
+                                    ItemCount = 2,
+                                },
+                                new NonFungibleCollectionMaterial
+                                {
+                                    ItemId = 2,
+                                    ItemCount = 3,
+                                    NonFungibleId = Guid.NewGuid(),
+                                    Level = 1,
+                                    SkillContains = true,
+                                },
+                            }
+                        ),
+                    },
+                },
+                RetrieveAvatarAssets _ => new RetrieveAvatarAssets(new PrivateKey().Address),
+                MigrateFee _ => new MigrateFee
+                {
+                    TransferData = new List<(Address sender, Address recipient, BigInteger amount)>
+                    {
+                        (new PrivateKey().Address, new PrivateKey().Address, 1),
+                        (new PrivateKey().Address, new PrivateKey().Address, 2),
+                    },
+                },
                 _ => throw new InvalidCastException(),
             };
         }

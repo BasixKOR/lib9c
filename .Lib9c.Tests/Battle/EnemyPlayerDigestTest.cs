@@ -3,7 +3,6 @@ namespace Lib9c.Tests
     using System.Linq;
     using Bencodex.Types;
     using Lib9c.Tests.Action;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Battle;
     using Nekoyume.Model;
@@ -20,13 +19,12 @@ namespace Lib9c.Tests
         public EnemyPlayerDigestTest()
         {
             _tableSheets = new TableSheets(TableSheetsImporter.ImportSheets());
-            var avatarState = new AvatarState(
-                new PrivateKey().ToAddress(),
-                new PrivateKey().ToAddress(),
+            var avatarState = AvatarState.Create(
+                new PrivateKey().Address,
+                new PrivateKey().Address,
                 1234,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
-                new PrivateKey().ToAddress(),
+                new PrivateKey().Address,
                 "test"
             );
             avatarState.hair = 2;

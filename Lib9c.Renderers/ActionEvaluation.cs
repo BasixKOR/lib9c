@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.State;
-using Libplanet.Tx;
+using Libplanet.Common;
+using Libplanet.Crypto;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 
 namespace Lib9c.Renderers
@@ -20,11 +20,11 @@ namespace Lib9c.Renderers
 
         public TxId? TxId { get; set; }
 
-        public IAccountStateDelta OutputStates { get; set; }
+        public HashDigest<SHA256> OutputState { get; set; }
 
         public Exception? Exception { get; set; }
 
-        public IAccountStateDelta PreviousStates { get; set; }
+        public HashDigest<SHA256> PreviousState { get; set; }
 
         public int RandomSeed { get; set; }
 

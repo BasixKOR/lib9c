@@ -5,13 +5,14 @@ using System.Diagnostics;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Extensions;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Event;
 using Serilog;
@@ -19,11 +20,14 @@ using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.Action
 {
+    /// <summary>
+    /// Hard forked at https://github.com/planetarium/lib9c/pull/2195
+    /// </summary>
     [Serializable]
     [ActionType(ActionTypeText)]
     public class EventMaterialItemCrafts : GameAction, IEventMaterialItemCraftsV1
     {
-        private const string ActionTypeText = "event_material_item_crafts";
+        private const string ActionTypeText = "event_material_item_crafts2";
         public Address AvatarAddress;
         public int EventScheduleId;
         public int EventMaterialItemRecipeId;
@@ -83,15 +87,10 @@ namespace Nekoyume.Action
             MaterialsToUse = deserialized;
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states;
-            }
-
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var addressesHex = GetSignerAndOtherAddressesHex(context, AvatarAddress);
             var started = DateTimeOffset.UtcNow;
             Log.Debug(
@@ -103,11 +102,10 @@ namespace Nekoyume.Action
 
             // Get AvatarState
             sw.Start();
-            if (!states.TryGetAvatarStateV2(
+            if (!states.TryGetAvatarState(
                     context.Signer,
                     AvatarAddress,
-                    out var avatarState,
-                    out var migrationRequired))
+                    out var avatarState))
             {
                 throw new FailedLoadStateException(
                     ActionTypeText,
@@ -141,21 +139,6 @@ namespace Nekoyume.Action
                 sw.Elapsed);
             // ~Get sheets
 
-            // Validate Requirements
-            sw.Restart();
-            avatarState.worldInformation.ValidateFromAction(
-                GameConfig.RequireClearedStageLevel.CombinationConsumableAction,
-                ActionTypeText,
-                addressesHex);
-            sw.Stop();
-
-            Log.Verbose(
-                "[{ActionTypeString}][{AddressesHex}] Validate requirements: {Elapsed}",
-                ActionTypeText,
-                addressesHex,
-                sw.Elapsed);
-            // ~Validate Requirements
-
             // Validate fields
             sw.Restart();
             var scheduleSheet = sheets.GetSheet<EventScheduleSheet>();
@@ -186,7 +169,7 @@ namespace Nekoyume.Action
             var materialItemSheet = states.GetSheet<MaterialItemSheet>();
             if (!materialItemSheet.TryGetValue(
                     recipeRow.ResultMaterialItemId,
-                    out var resulMaterialRow))
+                    out var resultMaterialRow))
             {
                 throw new SheetRowNotFoundException(
                     addressesHex,
@@ -227,7 +210,7 @@ namespace Nekoyume.Action
             // ~Remove Required Materials
 
             // Create Material
-            var materialResult = ItemFactory.CreateMaterial(resulMaterialRow);
+            var materialResult = ItemFactory.CreateMaterial(resultMaterialRow);
             avatarState.inventory.AddItem(materialResult, recipeRow.ResultMaterialItemCount);
             // ~Create Material
 
@@ -243,17 +226,7 @@ namespace Nekoyume.Action
 
             // Set states
             sw.Restart();
-            states = states
-                .SetState(AvatarAddress, avatarState.SerializeV2())
-                .SetState(
-                    AvatarAddress.Derive(LegacyInventoryKey),
-                    avatarState.inventory.Serialize())
-                .SetState(
-                    AvatarAddress.Derive(LegacyWorldInformationKey),
-                    avatarState.worldInformation.Serialize())
-                .SetState(
-                    AvatarAddress.Derive(LegacyQuestListKey),
-                    avatarState.questList.Serialize());
+            states = states.SetAvatarState(AvatarAddress, avatarState);
             sw.Stop();
             Log.Verbose(
                 "[{ActionTypeString}][{AddressesHex}] Set states: {Elapsed}",

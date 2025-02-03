@@ -1,8 +1,10 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Linq;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.TableData;
 
 namespace Lib9c
@@ -41,13 +43,49 @@ namespace Lib9c
             0,
             minters: null);
 
+        public static readonly Currency FreyaLiberationRune = Currency.Legacy(
+            "RUNESTONE_FREYA_LIBERATION",
+            0,
+            minters: null);
+
+        public static readonly Currency FreyaBlessingRune = Currency.Legacy(
+            "RUNESTONE_FREYA_BLESSING",
+            0,
+            minters: null);
+
+        public static readonly Currency OdinWeaknessRune = Currency.Legacy(
+            "RUNESTONE_ODIN_WEAKNESS",
+            decimalPlaces: 0,
+            minters: null);
+
+        public static readonly Currency OdinWisdomRune = Currency.Legacy(
+            "RUNESTONE_ODIN_WISDOM",
+            decimalPlaces: 0,
+            minters: null);
+
         public static readonly Currency Mead = Currency.Legacy("Mead", 18, null);
 
+        public static readonly Currency GuildGold = Currency.Uncapped(
+            "GUILD_GOLD", 18, null);
+
+        /// <summary>
+        /// Covers the reward.CurrencyTicker is following cases:
+        ///     - Currencies.Crystal.Ticker
+        ///     - Currencies.Garage.Ticker
+        ///     - lower case is starting with "rune_" or "runestone_"
+        ///     - lower case is starting with "soulstone_"
+        /// </summary>
+        /// <param name="ticker"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public static Currency GetMinterlessCurrency(string? ticker)
         {
             if (string.IsNullOrEmpty(ticker))
             {
-                throw new ArgumentNullException(nameof(ticker));
+                throw new ArgumentNullException(
+                    nameof(ticker),
+                    "ticker should not be null or empty.");
             }
 
             switch (ticker)
@@ -58,17 +96,23 @@ namespace Lib9c
                     return Garage;
             }
 
-            if (ticker.StartsWith("RUNE_"))
+            if (IsRuneTicker(ticker))
             {
                 return GetRune(ticker);
             }
 
-            if (ticker.StartsWith("SOULSTONE_"))
+            if (IsSoulstoneTicker(ticker))
             {
                 return GetSoulStone(ticker);
             }
 
             throw new ArgumentException($"Invalid ticker: {ticker}", nameof(ticker));
+        }
+
+        public static bool IsRuneTicker(string ticker)
+        {
+            ticker = ticker.ToLower(CultureInfo.InvariantCulture);
+            return ticker.StartsWith("rune_") || ticker.StartsWith("runestone_");
         }
 
         public static Currency GetRune(string? ticker) =>
@@ -92,6 +136,9 @@ namespace Lib9c
                     .Select(GetRune)
                     .OrderBy(rune => rune.Hash.GetHashCode());
 
+        public static bool IsSoulstoneTicker(string ticker) =>
+            ticker.ToLower(CultureInfo.InvariantCulture).StartsWith("soulstone_");
+
         public static Currency GetSoulStone(string? ticker) =>
             string.IsNullOrEmpty(ticker)
                 ? throw new ArgumentNullException(nameof(ticker))
@@ -112,5 +159,74 @@ namespace Lib9c
                     .Select(row => row.SoulStoneTicker)
                     .Select(GetSoulStone)
                     .OrderBy(soulStone => soulStone.Hash.GetHashCode());
+
+        /// <summary>
+        /// pick address by currency ticker
+        /// </summary>
+        /// <param name="currency"><see cref="Currency"/></param>
+        /// <param name="agentAddress"><see cref="Address"/></param>
+        /// <param name="avatarAddress"><see cref="Address"/></param>
+        /// <returns>agentAddress when ticker is NCG or Crystal or Garage or Mead else avatarAddress</returns>
+        public static Address PickAddress(Currency currency, Address agentAddress,
+            Address avatarAddress)
+        {
+            var agentCurrencies = new[]
+            {
+                Crystal,
+                Garage,
+                Mead,
+            };
+            return agentCurrencies.Contains(currency) || currency.Ticker == "NCG" ? agentAddress : avatarAddress;
+        }
+
+        public static Currency GetWrappedCurrency(Currency currency)
+        {
+            return Currency.Legacy($"FAV__{currency.Ticker}", currency.DecimalPlaces, minters: null);
+        }
+
+        public static bool IsWrappedCurrency(Currency currency)
+        {
+            return currency.Ticker.StartsWith("FAV");
+        }
+
+        public static Currency GetUnwrappedCurrency(Currency currency)
+        {
+            if (!IsWrappedCurrency(currency))
+            {
+                throw new ArgumentException("{Ticker} is not wrapped currency", currency.Ticker);
+            }
+
+            var wrappedTicker = currency.Ticker;
+            var parsedTicker = wrappedTicker.Split("__");
+            var ticker = parsedTicker[1];
+            return GetMinterlessCurrency(ticker);
+        }
+
+        public static (bool tradable, int itemId) ParseItemCurrency(Currency currency)
+        {
+            if (currency.DecimalPlaces != 0)
+            {
+                throw new ArgumentException(
+                    $"DecimalPlaces of currency are not 0: {currency.Ticker}");
+            }
+
+            var parsedTicker = currency.Ticker.Split("_");
+            if (parsedTicker.Length != 3
+                || parsedTicker[0] != "Item"
+                || (parsedTicker[1] != "NT" && parsedTicker[1] != "T")
+                || !int.TryParse(parsedTicker[2], out var itemId))
+            {
+                throw new ArgumentException(
+                    $"Format of Amount currency's ticker is invalid");
+            }
+
+            return (parsedTicker[1] == "T", itemId);
+        }
+
+        public static Currency GetItemCurrency(int itemId, bool tradable)
+        {
+            var type = tradable ? "T" : "NT";
+            return Currency.Legacy($"Item_{type}_{itemId}", decimalPlaces: 0, minters: null);
+        }
     }
 }
