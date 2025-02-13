@@ -2,13 +2,20 @@ namespace Lib9c.Tests.Action
 {
     using System;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Action;
+    using Lib9c.Tests.Util;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
+    using Nekoyume.Action.Guild;
+    using Nekoyume.Action.ValidatorDelegation;
+    using Nekoyume.Model.Guild;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
+    using Nekoyume.Module.Guild;
+    using Nekoyume.TypedAddress;
     using Xunit;
 
     public class ApprovePledgeTest
@@ -18,11 +25,11 @@ namespace Lib9c.Tests.Action
         [InlineData(100)]
         public void Execute(int mead)
         {
-            var address = new PrivateKey().ToAddress();
-            var patron = new PrivateKey().ToAddress();
+            var address = new PrivateKey().Address;
+            var patron = new PrivateKey().Address;
             var contractAddress = address.Derive(nameof(RequestPledge));
-            IAccountStateDelta states = new State()
-                .SetState(
+            var states = new World(MockUtil.MockModernWorldState)
+                .SetLegacyState(
                     contractAddress,
                     List.Empty.Add(patron.Serialize()).Add(false.Serialize()).Add(mead.Serialize())
                 );
@@ -31,16 +38,68 @@ namespace Lib9c.Tests.Action
             {
                 PatronAddress = patron,
             };
-            var nextState = action.Execute(new ActionContext
-            {
-                Signer = address,
-                PreviousStates = states,
-            });
+            var nextState = action.Execute(
+                new ActionContext
+                {
+                    Signer = address,
+                    PreviousState = states,
+                });
 
-            var contract = Assert.IsType<List>(nextState.GetState(contractAddress));
+            var contract = Assert.IsType<List>(nextState.GetLegacyState(contractAddress));
             Assert.Equal(patron, contract[0].ToAddress());
             Assert.True(contract[1].ToBoolean());
             Assert.Equal(mead, contract[2].ToInteger());
+            Assert.Null(new GuildRepository(nextState, new ActionContext())
+                .GetJoinedGuild(new AgentAddress(address)));
+        }
+
+        [Theory]
+        [InlineData(RequestPledge.DefaultRefillMead)]
+        [InlineData(100)]
+        public void Execute_JoinGuild(int mead)
+        {
+            var address = new PrivateKey().Address;
+            var validatorKey = new PrivateKey();
+            var patron = MeadConfig.PatronAddress;
+            var contractAddress = address.Derive(nameof(RequestPledge));
+            var guildAddress = AddressUtil.CreateGuildAddress();
+            var (tables, agentAddr, avatarAddr, states) = InitializeUtil.InitializeStates();
+            states = states
+                .SetLegacyState(
+                    contractAddress,
+                    List.Empty.Add(patron.Serialize()).Add(false.Serialize()).Add(mead.Serialize())
+                );
+
+            states = DelegationUtil.EnsureValidatorPromotionReady(
+                states, validatorKey.PublicKey, 0L);
+
+            states = new GuildRepository(
+                states,
+                new ActionContext
+                {
+                    Signer = GuildConfig.PlanetariumGuildOwner,
+                })
+                .MakeGuild(guildAddress, validatorKey.Address).World;
+
+            var action = new ApprovePledge
+            {
+                PatronAddress = patron,
+            };
+            var nextState = action.Execute(
+                new ActionContext
+                {
+                    Signer = address,
+                    PreviousState = states,
+                });
+
+            var contract = Assert.IsType<List>(nextState.GetLegacyState(contractAddress));
+            Assert.Equal(patron, contract[0].ToAddress());
+            Assert.True(contract[1].ToBoolean());
+            Assert.Equal(mead, contract[2].ToInteger());
+            var joinedGuildAddress = new GuildRepository(nextState, new ActionContext())
+                .GetJoinedGuild(new AgentAddress(address));
+            Assert.NotNull(joinedGuildAddress);
+            Assert.Equal(guildAddress, joinedGuildAddress);
         }
 
         [Theory]
@@ -49,13 +108,13 @@ namespace Lib9c.Tests.Action
         [InlineData(false, true, typeof(AlreadyContractedException))]
         public void Execute_Throw_Exception(bool invalidPatron, bool alreadyContract, Type exc)
         {
-            var address = new PrivateKey().ToAddress();
-            var patron = new PrivateKey().ToAddress();
+            var address = new PrivateKey().Address;
+            var patron = new PrivateKey().Address;
             var contractAddress = address.Derive(nameof(RequestPledge));
             IValue contract = Null.Value;
             if (invalidPatron)
             {
-                contract = List.Empty.Add(new PrivateKey().ToAddress().Serialize());
+                contract = List.Empty.Add(new PrivateKey().Address.Serialize());
             }
 
             if (alreadyContract)
@@ -63,17 +122,20 @@ namespace Lib9c.Tests.Action
                 contract = List.Empty.Add(patron.Serialize()).Add(true.Serialize());
             }
 
-            IAccountStateDelta states = new State().SetState(contractAddress, contract);
+            var states = new World(MockUtil.MockModernWorldState).SetLegacyState(contractAddress, contract);
 
             var action = new ApprovePledge
             {
                 PatronAddress = patron,
             };
-            Assert.Throws(exc, () => action.Execute(new ActionContext
-            {
-                Signer = address,
-                PreviousStates = states,
-            }));
+            Assert.Throws(
+                exc,
+                () => action.Execute(
+                    new ActionContext
+                    {
+                        Signer = address,
+                        PreviousState = states,
+                    }));
         }
     }
 }

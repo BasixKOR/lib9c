@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Rune;
-using Nekoyume.TableData;
+using Nekoyume.TableData.Rune;
 
 namespace Nekoyume.Model.State
 {
@@ -17,7 +17,7 @@ namespace Nekoyume.Model.State
 
         public BattleType BattleType { get; }
 
-        private readonly List<RuneSlot> _slots = new List<RuneSlot>();
+        private readonly List<RuneSlot> _slots = new();
 
         public RuneSlotState(BattleType battleType)
         {
@@ -28,12 +28,19 @@ namespace Nekoyume.Model.State
             _slots.Add(new RuneSlot(3, RuneSlotType.Default, RuneType.Skill, false));
             _slots.Add(new RuneSlot(4, RuneSlotType.Ncg, RuneType.Skill, true));
             _slots.Add(new RuneSlot(5, RuneSlotType.Stake, RuneType.Skill,true));
+            _slots.Add(new RuneSlot(6, RuneSlotType.Crystal, RuneType.Stat, true));
+            _slots.Add(new RuneSlot(7, RuneSlotType.Crystal, RuneType.Skill,true));
         }
 
         public RuneSlotState(List serialized)
         {
             BattleType = serialized[0].ToEnum<BattleType>();
             _slots = ((List)serialized[1]).Select(x => new RuneSlot((List)x)).ToList();
+            if (_slots.Count == 6)
+            {
+                _slots.Add(new RuneSlot(6, RuneSlotType.Crystal, RuneType.Stat, true));
+                _slots.Add(new RuneSlot(7, RuneSlotType.Crystal, RuneType.Skill,true));
+            }
         }
 
         public IValue Serialize()

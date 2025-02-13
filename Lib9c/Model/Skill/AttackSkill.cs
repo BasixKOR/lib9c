@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Nekoyume.Battle;
+using Nekoyume.Model.Buff;
 using Nekoyume.Model.Elemental;
 using Nekoyume.Model.Stat;
 using Nekoyume.TableData;
@@ -13,7 +14,7 @@ namespace Nekoyume.Model.Skill
     {
         protected AttackSkill(
             SkillSheet.Row skillRow,
-            int power,
+            long power,
             int chance,
             int statPowerRatio,
             StatType referencedStatType) : base(skillRow, power, chance, statPowerRatio, referencedStatType)
@@ -27,9 +28,10 @@ namespace Nekoyume.Model.Skill
         /// <param name="caster"></param>
         /// <param name="simulatorWaveTurn"></param>
         /// <param name="isNormalAttack"></param>
+        /// <param name="copyCharacter"></param>
         /// <returns></returns>
         protected IEnumerable<BattleStatus.Skill.SkillInfo> ProcessDamage(CharacterBase caster, int simulatorWaveTurn,
-            bool isNormalAttack = false)
+            bool isNormalAttack = false, bool copyCharacter = true)
         {
             var infos = new List<BattleStatus.Skill.SkillInfo>();
             var targets = SkillRow.SkillTargetType.GetTarget(caster).ToList();
@@ -40,7 +42,7 @@ namespace Nekoyume.Model.Skill
             var statAdditionalPower = ReferencedStatType != StatType.NONE ?
                 (int)(caster.Stats.GetStat(ReferencedStatType) * powerMultiplier) : default;
 
-            var totalDamage = caster.ATK + Power + statAdditionalPower;
+            long totalDamage = caster.ATK + Power + statAdditionalPower;
             var multipliers = GetMultiplier(SkillRow.HitCount, 1m);
             for (var i = 0; i < SkillRow.HitCount; i++)
             {
@@ -48,7 +50,12 @@ namespace Nekoyume.Model.Skill
 
                 foreach (var target in targets)
                 {
-                    var damage = 0;
+                    if (SkillRow.SkillCategory is SkillCategory.ShatterStrike)
+                    {
+                        totalDamage = (long)(target.HP * powerMultiplier);
+                    }
+
+                    long damage = 0;
                     var isCritical = false;
                     // Skill or when normal attack hit.
                     if (!isNormalAttack ||
@@ -58,9 +65,9 @@ namespace Nekoyume.Model.Skill
                         var finalDEF = Math.Clamp(target.DEF - caster.ArmorPenetration, 0, int.MaxValue);
                         damage = totalDamage - finalDEF;
                         // Apply multiple hits
-                        damage = (int) (damage * multiplier);
+                        damage = (long) (damage * multiplier);
                         // Apply damage reduction
-                        damage = (int) ((damage - target.DRV) * (1 - target.DRR / 10000m));
+                        damage = (long) ((damage - target.DRV) * DamageHelper.GetDamageReductionRate(target.DRR));
 
                         if (damage < 1)
                         {
@@ -69,26 +76,40 @@ namespace Nekoyume.Model.Skill
                         else
                         {
                             // 모션 배율 적용.
-                            damage = caster.GetDamage(damage, isNormalAttack);
+                            damage = caster.GetDamage(
+                                damage,
+                                isNormalAttack || SkillRow.Combo
+                            );
                             // 속성 적용.
                             damage = elementalType.GetDamage(target.defElementType, damage);
                             // 치명 적용.
-                            isCritical = caster.IsCritical(isNormalAttack);
+                            isCritical =
+                                SkillRow.SkillCategory is not SkillCategory.ShatterStrike &&
+                                caster.IsCritical(isNormalAttack || SkillRow.Combo);
                             if (isCritical)
                             {
                                 damage = CriticalHelper.GetCriticalDamage(caster, damage);
                             }
 
                             // double attack must be shown as critical attack
-                            isCritical |= SkillRow.SkillCategory == SkillCategory.DoubleAttack;
+                            isCritical |= SkillRow.SkillCategory is SkillCategory.DoubleAttack;
+
+                            // ShatterStrike has max damage limitation
+                            if (SkillRow.SkillCategory is SkillCategory.ShatterStrike)
+                            {
+                                damage = Math.Clamp(damage,
+                                    1, caster.Simulator.ShatterStrikeMaxDamage);
+                            }
                         }
 
                         target.CurrentHP -= damage;
                     }
 
-                    infos.Add(new BattleStatus.Skill.SkillInfo((CharacterBase) target.Clone(), damage, isCritical,
+                    var iceShield = target.Buffs.Values.OfType<IceShield>().FirstOrDefault();
+                    var clone = copyCharacter ? (CharacterBase) target.Clone() : null;
+                    infos.Add(new BattleStatus.Skill.SkillInfo(target.Id, target.IsDead, target.Thorn, damage, isCritical,
                         SkillRow.SkillCategory, simulatorWaveTurn, SkillRow.ElementalType,
-                        SkillRow.SkillTargetType));
+                        SkillRow.SkillTargetType, target: clone, iceShield: iceShield));
                 }
             }
 

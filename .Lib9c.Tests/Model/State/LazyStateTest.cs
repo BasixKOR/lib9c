@@ -3,7 +3,7 @@ namespace Lib9c.Tests.Model.State
     using System.Collections.Generic;
     using Bencodex.Types;
     using Lib9c.Tests.TestHelper;
-    using Libplanet;
+    using Libplanet.Crypto;
     using Nekoyume.Model.State;
     using Xunit;
     using LazySampleState = Nekoyume.Model.State.LazyState<
@@ -55,7 +55,7 @@ namespace Lib9c.Tests.Model.State
             _unloaded.State.Foo = 456L;
             Assert.Equal(
                 456L,
-                (long)((Dictionary)_unloaded.Serialize()).GetValue<Integer>("foo")
+                (long)(Integer)((Dictionary)_unloaded.Serialize())["foo"]
             );
             Assert.True(_unloaded.GetStateOrSerializedEncoding(out _, out _));
         }
@@ -107,8 +107,8 @@ namespace Lib9c.Tests.Model.State
             public SampleState(Dictionary serialized)
                 : base(serialized)
             {
-                Foo = serialized.GetValue<Integer>("foo");
-                Bar = serialized.GetValue<Text>("bar");
+                Foo = (Integer)serialized["foo"];
+                Bar = (Text)serialized["bar"];
             }
 
             public SampleState(IValue iValue)
@@ -120,9 +120,12 @@ namespace Lib9c.Tests.Model.State
 
             public string Bar { get; set; }
 
-            public override IValue Serialize() => ((Dictionary)base.Serialize())
-                .Add("foo", Foo)
-                .Add("bar", Bar);
+            public override IValue Serialize()
+            {
+                return ((Dictionary)SerializeBase())
+                    .Add("foo", Foo)
+                    .Add("bar", Bar);
+            }
         }
     }
 }

@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Action;
-using Nekoyume.Battle;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -76,6 +75,7 @@ namespace Lib9c.Model.Order
             }
         }
 
+        [Obsolete("Not Used")]
         public override ITradableItem Sell(AvatarState avatarState)
         {
             if (!avatarState.inventory.TryGetTradableItems(
@@ -142,7 +142,7 @@ namespace Lib9c.Model.Order
                 }
                 // Lock item.
                 copy.RequiredBlockIndex = ExpiredBlockIndex;
-                avatarState.inventory.AddItem2((ItemBase) copy, ItemCount);
+                avatarState.inventory.AddItem((ItemBase) copy, ItemCount);
                 return copy;
             }
 
@@ -171,7 +171,7 @@ namespace Lib9c.Model.Order
                 }
                 // Lock item.
                 copy.RequiredBlockIndex = ExpiredBlockIndex;
-                avatarState.inventory.AddItem2((ItemBase) copy, ItemCount, new OrderLock(OrderId));
+                avatarState.inventory.AddItem((ItemBase) copy, ItemCount, new OrderLock(OrderId));
                 return copy;
             }
 
@@ -213,7 +213,7 @@ namespace Lib9c.Model.Order
             if (avatarState.inventory.TryGetLockedItem(new OrderLock(OrderId), out Inventory.Item inventoryItem))
             {
                 ItemBase item = inventoryItem.item;
-                int cp = CPHelper.GetCP((ITradableItem) item, costumeStatSheet);
+                int cp = 0;
                 int level = item is Equipment equipment ? equipment.level : 0;
                 return new OrderDigest(
                     SellerAgentAddress,
@@ -260,7 +260,7 @@ namespace Lib9c.Model.Order
                 seller.inventory.RemoveTradableItemV1(tradableItem, ItemCount);
                 TradableMaterial copy = (TradableMaterial) tradableItem.Clone();
                 copy.RequiredBlockIndex = blockIndex;
-                buyer.UpdateFromAddItem2(copy, ItemCount, false);
+                buyer.UpdateFromAddItem(copy, ItemCount, false);
                 return new OrderReceipt(OrderId, buyer.agentAddress, buyer.address, blockIndex);
             }
             throw new ItemDoesNotExistException(
@@ -277,7 +277,7 @@ namespace Lib9c.Model.Order
 
                 var copy = (TradableMaterial) tradableItem.Clone();
                 copy.RequiredBlockIndex = blockIndex;
-                buyer.UpdateFromAddItem2(copy, ItemCount, false);
+                buyer.UpdateFromAddItem(copy, ItemCount, false);
                 return new OrderReceipt(OrderId, buyer.agentAddress, buyer.address, blockIndex);
             }
 
@@ -368,7 +368,7 @@ namespace Lib9c.Model.Order
                 out Inventory.Item inventoryItem))
             {
                 ItemBase item = inventoryItem.item;
-                int cp = CPHelper.GetCP((ITradableItem) item, costumeStatSheet);
+                int cp = 0;
                 int level = item is Equipment equipment ? equipment.level : 0;
                 return new OrderDigest(
                     SellerAgentAddress,
@@ -418,7 +418,7 @@ namespace Lib9c.Model.Order
                 ITradableFungibleItem copy = (ITradableFungibleItem) ((ITradableFungibleItem) inventoryItem.item).Clone();
                 avatarState.inventory.RemoveTradableItemV1(TradableId, ExpiredBlockIndex, ItemCount);
                 copy.RequiredBlockIndex = blockIndex;
-                avatarState.inventory.AddItem2((ItemBase) copy, ItemCount);
+                avatarState.inventory.AddItem((ItemBase) copy, ItemCount);
                 return copy;
             }
             throw new ItemDoesNotExistException(

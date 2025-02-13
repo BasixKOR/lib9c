@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using Libplanet.Blocks;
 
 namespace Nekoyume.Blockchain.Policy
 {
@@ -83,7 +82,7 @@ namespace Nekoyume.Blockchain.Policy
                         BindingFlags.Instance | BindingFlags.NonPublic,
                         null,
                         new object[] { this, spannedSubPolicy },
-                        null);
+                        null)!;
             }
             catch (TargetInvocationException tie)
             {
@@ -136,7 +135,7 @@ namespace Nekoyume.Blockchain.Policy
         /// </remarks>
         private void Validate()
         {
-            SpannedSubPolicy<T> prev = null;
+            SpannedSubPolicy<T>? prev = null;
             foreach (SpannedSubPolicy<T> next in SpannedSubPolicies)
             {
                 if (prev is SpannedSubPolicy<T> _prev)

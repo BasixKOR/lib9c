@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using Bencodex.Types;
 using Lib9c.Abstractions;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 
 namespace Nekoyume.Action
 {
@@ -42,19 +43,14 @@ namespace Nekoyume.Action
             PendingActivation = activationKey;
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            if (context.Rehearsal)
-            {
-                return context.PreviousStates.SetState(PendingActivation.address, MarkChanged);
-            }
+            GasTracer.UseGas(1);
 
-            context.UseGas(1);
             CheckObsolete(ActionObsoleteConfig.V200030ObsoleteIndex, context);
             CheckPermission(context);
 
-            return context.PreviousStates.SetState(
+            return context.PreviousState.SetLegacyState(
                 PendingActivation.address,
                 PendingActivation.Serialize()
             );

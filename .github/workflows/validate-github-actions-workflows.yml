@@ -1,0 +1,22 @@
+name: validate GitHub Actions workflows
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * *"
+  pull_request:
+    paths:
+      - .github/workflows/*
+
+jobs:
+  validate-github-actions-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          set -ev
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          args=()
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            args+=("-ignore" "the runner of \".+\" action is too old to run on GitHub Actions.")
+          fi
+          ./actionlint "${args[@]}"

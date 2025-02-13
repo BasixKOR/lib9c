@@ -15,7 +15,7 @@ namespace Nekoyume.Model.Quest
         public readonly ItemType ItemType;
         public readonly List<int> ItemIds = new List<int>();
 
-        public ItemTypeCollectQuest(ItemTypeCollectQuestSheet.Row data, QuestReward reward) 
+        public ItemTypeCollectQuest(ItemTypeCollectQuestSheet.Row data, QuestReward reward)
             : base(data, reward)
         {
             ItemType = data.ItemType;
@@ -25,6 +25,12 @@ namespace Nekoyume.Model.Quest
         {
             ItemIds = serialized["itemIds"].ToList(i => i.ToInteger());
             ItemType = serialized["itemType"].ToEnum<ItemType>();
+        }
+
+        public ItemTypeCollectQuest(List serialized) : base(serialized)
+        {
+            ItemIds = serialized[7].ToList(i => (int)(Integer)i);
+            ItemType = serialized[8].ToEnum<ItemType>();
         }
 
         public void Update(ItemBase item)
@@ -64,13 +70,13 @@ namespace Nekoyume.Model.Quest
         protected override string TypeId => "itemTypeCollectQuest";
 
         public override IValue Serialize() =>
-#pragma warning disable LAA1002
-            new Dictionary(new Dictionary<IKey, IValue>
-            {
-                [(Text)"itemType"] = ItemType.Serialize(),
-                [(Text)"itemIds"] = new List(ItemIds.OrderBy(i => i).Select(i => i.Serialize())),
-            }.Union((Dictionary)base.Serialize()));
-#pragma warning restore LAA1002
+            ((Dictionary) base.Serialize())
+            .Add("itemType", ItemType.Serialize())
+            .Add("itemIds", new List(ItemIds.OrderBy(i => i).Select(i => i.Serialize())));
 
+        public override IValue SerializeList() =>
+            ((List) base.SerializeList())
+            .Add(new List(ItemIds.OrderBy(i => i)))
+            .Add(ItemType.Serialize());
     }
 }

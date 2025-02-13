@@ -1,12 +1,13 @@
 namespace Lib9c.Tests.Action
 {
-    using System.Collections.Immutable;
     using System.Linq;
     using Bencodex.Types;
-    using Libplanet;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
+    using Libplanet.Mocks;
     using Nekoyume.Action;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Xunit;
 
     public class CreatePendingActivationsTest
@@ -16,35 +17,35 @@ namespace Lib9c.Tests.Action
         {
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
+
             PendingActivationState CreatePendingActivation()
             {
-                var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+                var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03, };
                 var pubKey = new PrivateKey().PublicKey;
                 return new PendingActivationState(nonce, pubKey);
             }
 
-            PendingActivationState[] activations =
+            var activations =
                 Enumerable.Range(0, 5000).Select(_ => CreatePendingActivation()).ToArray();
             var action = new CreatePendingActivations(activations);
             var adminAddress = new Address("399bddF9F7B6d902ea27037B907B2486C9910730");
             var adminState = new AdminState(adminAddress, 100);
-            var state = new State(ImmutableDictionary<Address, IValue>.Empty
-                .Add(AdminState.Address, adminState.Serialize())
-            );
+            var state = new World(MockUtil.MockModernWorldState)
+                .SetLegacyState(AdminState.Address, adminState.Serialize());
             var actionContext = new ActionContext()
             {
                 BlockIndex = 1,
-                PreviousStates = state,
+                PreviousState = state,
                 Signer = adminAddress,
             };
 
             var nextState = action.Execute(actionContext);
 
-            foreach (PendingActivationState pa in activations)
+            foreach (var pa in activations)
             {
                 Assert.Equal(
                     pa.Serialize(),
-                    nextState.GetState(pa.address)
+                    nextState.GetLegacyState(pa.address)
                 );
             }
         }
@@ -52,13 +53,15 @@ namespace Lib9c.Tests.Action
         [Fact]
         public void PlainValue()
         {
-            byte[] nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-            PublicKey pubKey = new PrivateKey().PublicKey;
-            Address address = PendingActivationState.DeriveAddress(nonce, pubKey);
+            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03, };
+            var pubKey = new PrivateKey().PublicKey;
+            var address = PendingActivationState.DeriveAddress(nonce, pubKey);
             var plainValue = Dictionary.Empty
                 .Add("type_id", "create_pending_activations")
-                .Add("values", new List()
-                    .Add(new List(address.Serialize(), (Binary)nonce, pubKey.Serialize())));
+                .Add(
+                    "values",
+                    new List()
+                        .Add(new List(address.Serialize(), (Binary)nonce, pubKey.Serialize())));
 
             var action = new CreatePendingActivations();
             action.LoadPlainValue(plainValue);
@@ -79,26 +82,27 @@ namespace Lib9c.Tests.Action
             var action = new CreatePendingActivations();
             var adminAddress = new Address("399bddF9F7B6d902ea27037B907B2486C9910730");
             var adminState = new AdminState(adminAddress, 100);
-            var state = new State(ImmutableDictionary<Address, IValue>.Empty
-                .Add(AdminState.Address, adminState.Serialize())
-            );
+            var state = new World(MockUtil.MockModernWorldState)
+                .SetLegacyState(AdminState.Address, adminState.Serialize());
 
             Assert.Throws<PolicyExpiredException>(
-                () => action.Execute(new ActionContext()
-                {
-                    BlockIndex = 101,
-                    PreviousStates = state,
-                    Signer = adminAddress,
-                })
+                () => action.Execute(
+                    new ActionContext()
+                    {
+                        BlockIndex = 101,
+                        PreviousState = state,
+                        Signer = adminAddress,
+                    })
             );
 
             Assert.Throws<PermissionDeniedException>(
-                () => action.Execute(new ActionContext()
-                {
-                    BlockIndex = 1,
-                    PreviousStates = state,
-                    Signer = default,
-                })
+                () => action.Execute(
+                    new ActionContext()
+                    {
+                        BlockIndex = 1,
+                        PreviousState = state,
+                        Signer = default,
+                    })
             );
         }
     }

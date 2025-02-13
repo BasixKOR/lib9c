@@ -1,15 +1,16 @@
 namespace Lib9c.Tests.Action
 {
     using System.Collections.Generic;
-    using System.Collections.Immutable;
     using System.Linq;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
+    using Libplanet.Common;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Xunit;
     using static Lib9c.SerializeKeys;
@@ -17,21 +18,23 @@ namespace Lib9c.Tests.Action
 
     public class RedeemCodeTest
     {
-        private readonly Address _agentAddress = new Address(new byte[]
-        {
-            0x10, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x02,
-        });
+        private readonly Address _agentAddress = new (
+            new byte[]
+            {
+                0x10, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x02,
+            });
 
-        private readonly Address _avatarAddress = new Address(new byte[]
-        {
-            0x10, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x01,
-        });
+        private readonly Address _avatarAddress = new (
+            new byte[]
+            {
+                0x10, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x01,
+            });
 
         private readonly Dictionary<string, string> _sheets;
         private readonly TableSheets _tableSheets;
@@ -42,26 +45,24 @@ namespace Lib9c.Tests.Action
             _tableSheets = new TableSheets(_sheets);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void Execute(bool backward)
+        [Fact]
+        public void Execute()
         {
             var privateKey = new PrivateKey();
-            PublicKey publicKey = privateKey.PublicKey;
-            var prevRedeemCodesState = new RedeemCodeState(new Dictionary<PublicKey, Reward>()
-            {
-                [publicKey] = new Reward(1),
-            });
+            var publicKey = privateKey.PublicKey;
+            var prevRedeemCodesState = new RedeemCodeState(
+                new Dictionary<PublicKey, Reward>()
+                {
+                    [publicKey] = new (1),
+                });
             var gameConfigState = new GameConfigState();
             var agentState = new AgentState(_agentAddress);
             agentState.avatarAddresses[0] = _avatarAddress;
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 _avatarAddress,
                 _agentAddress,
                 1,
                 _tableSheets.GetAvatarSheets(),
-                gameConfigState,
                 default
             );
 
@@ -70,28 +71,17 @@ namespace Lib9c.Tests.Action
             var goldState = new GoldCurrencyState(Currency.Legacy("NCG", 2, null));
 #pragma warning restore CS0618
 
-            var initialState = new State()
-                .SetState(_agentAddress, agentState.Serialize())
-                .SetState(RedeemCodeState.Address, prevRedeemCodesState.Serialize())
-                .SetState(GoldCurrencyState.Address, goldState.Serialize())
-                .MintAsset(GoldCurrencyState.Address, goldState.Currency * 100000000);
-
-            if (backward)
-            {
-                initialState = initialState.SetState(_avatarAddress, avatarState.Serialize());
-            }
-            else
-            {
-                initialState = initialState
-                    .SetState(_avatarAddress.Derive(LegacyInventoryKey), avatarState.inventory.Serialize())
-                    .SetState(_avatarAddress.Derive(LegacyWorldInformationKey), avatarState.worldInformation.Serialize())
-                    .SetState(_avatarAddress.Derive(LegacyQuestListKey), avatarState.questList.Serialize())
-                    .SetState(_avatarAddress, avatarState.SerializeV2());
-            }
+            var context = new ActionContext();
+            var initialState = new World(MockUtil.MockModernWorldState)
+                .SetAgentState(_agentAddress, agentState)
+                .SetLegacyState(RedeemCodeState.Address, prevRedeemCodesState.Serialize())
+                .SetLegacyState(GoldCurrencyState.Address, goldState.Serialize())
+                .MintAsset(context, GoldCurrencyState.Address, goldState.Currency * 100000000)
+                .SetAvatarState(_avatarAddress, avatarState);
 
             foreach (var (key, value) in _sheets)
             {
-                initialState = initialState.SetState(
+                initialState = initialState.SetLegacyState(
                     Addresses.TableSheet.Derive(key),
                     value.Serialize()
                 );
@@ -102,61 +92,26 @@ namespace Lib9c.Tests.Action
                 _avatarAddress
             );
 
-            IAccountStateDelta nextState = redeemCode.Execute(new ActionContext()
-            {
-                BlockIndex = 1,
-                Miner = default,
-                PreviousStates = initialState,
-                Rehearsal = false,
-                Signer = _agentAddress,
-                Random = new TestRandom(),
-            });
+            var nextState = redeemCode.Execute(
+                new ActionContext()
+                {
+                    BlockIndex = 1,
+                    Miner = default,
+                    PreviousState = initialState,
+                    Signer = _agentAddress,
+                    RandomSeed = 0,
+                });
 
             // Check target avatar & agent
-            AvatarState nextAvatarState = nextState.GetAvatarStateV2(_avatarAddress);
+            var nextAvatarState = nextState.GetAvatarState(_avatarAddress);
             // See also Data/TableCSV/RedeemRewardSheet.csv
-            ItemSheet itemSheet = initialState.GetItemSheet();
-            HashSet<int> expectedItems = new[] { 302006, 302004, 302001, 302002 }.ToHashSet();
+            var itemSheet = initialState.GetItemSheet();
+            var expectedItems = new[] { 302006, 302004, 302001, 302002, }.ToHashSet();
             Assert.Subset(nextAvatarState.inventory.Items.Select(i => i.item.Id).ToHashSet(), expectedItems);
 
             // Check the code redeemed properly
-            RedeemCodeState nextRedeemCodeState = nextState.GetRedeemCodeState();
-            Assert.Throws<DuplicateRedeemException>(() =>
-            {
-                nextRedeemCodeState.Redeem(redeemCode.Code, redeemCode.AvatarAddress);
-            });
-        }
-
-        [Fact]
-        public void Rehearsal()
-        {
-            var redeemCode = new RedeemCode(
-                string.Empty,
-                _avatarAddress
-            );
-
-            IAccountStateDelta nextState = redeemCode.Execute(new ActionContext()
-            {
-                BlockIndex = 1,
-                Miner = default,
-                PreviousStates = new State(),
-                Rehearsal = true,
-                Signer = _agentAddress,
-            });
-
-            Assert.Equal(
-                new[]
-                {
-                    _avatarAddress,
-                    _agentAddress,
-                    RedeemCodeState.Address,
-                    GoldCurrencyState.Address,
-                    _avatarAddress.Derive(LegacyInventoryKey),
-                    _avatarAddress.Derive(LegacyWorldInformationKey),
-                    _avatarAddress.Derive(LegacyQuestListKey),
-                }.ToImmutableHashSet(),
-                nextState.UpdatedAddresses
-            );
+            var nextRedeemCodeState = nextState.GetRedeemCodeState();
+            Assert.Throws<DuplicateRedeemException>(() => { nextRedeemCodeState.Redeem(redeemCode.Code, redeemCode.AvatarAddress); });
         }
     }
 }

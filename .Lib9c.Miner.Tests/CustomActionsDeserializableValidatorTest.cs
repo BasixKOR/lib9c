@@ -1,13 +1,12 @@
 using System.Collections.Immutable;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
-using Libplanet.Assets;
-using Libplanet.Blocks;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
-using Libplanet.State;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Nekoyume.Blockchain;
 
 namespace Lib9c.Proposer.Tests;
@@ -45,38 +44,55 @@ public class CustomActionsDeserializableValidatorTest
 
         public void LoadPlainValue(IValue plainValue)
         {
-            AvatarAddress = new Address(((Binary)((Dictionary)plainValue)["a"]).ByteArray);
+            AvatarAddress = new Address(((Dictionary)plainValue)["a"]);
         }
 
-        public IAccountStateDelta Execute(IActionContext context)
+        public IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            return context.PreviousStates;
+            GasTracer.UseGas(1);
+            return context.PreviousState;
         }
     }
 
     private class MockTransaction : ITransaction
     {
+        private IImmutableSet<Address>? _updatedAddresses;
+        private PublicKey? _publicKey;
+        private byte[]? _signature;
+
         public long Nonce { get; init; }
         public Address Signer { get; init; }
-        public IImmutableSet<Address> UpdatedAddresses { get; init; }
+        public IImmutableSet<Address> UpdatedAddresses
+        {
+            get => _updatedAddresses
+                ?? throw new InvalidOperationException("UpdatedAddresses is not set.");
+            init => _updatedAddresses = value;
+        }
         public DateTimeOffset Timestamp { get; init; }
-        public PublicKey PublicKey { get; init; }
+        public PublicKey PublicKey
+        {
+            get => _publicKey ?? throw new InvalidOperationException("PublicKey is not set.");
+            init => _publicKey = value;
+        }
         public BlockHash? GenesisHash { get; init; }
         public TxActionList Actions =>
-            new(SystemAction is { } sa ? new List(sa) : new List(CustomActions!));
+            new(SystemAction is { } sa ? new IValue[]{ sa } : CustomActions!);
 
         public FungibleAssetValue? MaxGasPrice => null;
 
         public long? GasLimit => null;
 
         public TxId Id { get; init; }
-        public byte[] Signature { get; init; }
+        public byte[] Signature
+        {
+            get => _signature ?? throw new InvalidOperationException("Signature is not set.");
+            init => _signature = value;
+        }
         public IValue? SystemAction { get; init; }
         public IImmutableList<IValue>? CustomActions { get; init; }
         public bool Equals(ITxInvoice? other)
         {
-            return UpdatedAddresses.Equals(other.UpdatedAddresses) &&
+            return UpdatedAddresses.Equals(other?.UpdatedAddresses) &&
                    Timestamp.Equals(other.Timestamp) &&
                    Nullable.Equals(GenesisHash, other.GenesisHash) &&
                    Actions.Equals(other.Actions);
@@ -84,7 +100,7 @@ public class CustomActionsDeserializableValidatorTest
 
         public bool Equals(ITxSigningMetadata? other)
         {
-            return Nonce == other.Nonce &&
+            return Nonce == other?.Nonce &&
                    Signer.Equals(other.Signer) &&
                    PublicKey.Equals(other.PublicKey);
         }

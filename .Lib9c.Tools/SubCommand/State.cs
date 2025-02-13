@@ -4,23 +4,20 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
 using Lib9c.DevExtensions;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
-using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
-using Libplanet.State;
+using Libplanet.Common;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Libplanet.Types.Blocks;
 using Nekoyume.Action;
 using Serilog.Core;
 
@@ -105,7 +102,7 @@ namespace Lib9c.Tools.SubCommand
                 Block block =
                     store.GetBlock(blockHash);
                 var preEvalBlock = new PreEvaluationBlock(
-                    block, block.Transactions
+                    block, block.Transactions, block.Evidence
                 );
                 stderr.WriteLine(
                     "[{0}/{1}] Executing block #{2} {3}...",
@@ -114,42 +111,29 @@ namespace Lib9c.Tools.SubCommand
                     block.Index,
                     block.Hash
                 );
-                IReadOnlyList<IActionEvaluation> delta;
+
                 var actionLoader = TypedActionLoader.Create(
                     typeof(ActionBase).Assembly, typeof(ActionBase));
                 var actionEvaluator = new ActionEvaluator(
-                    _ => policy.BlockAction,
-                    new BlockChainStates(store, stateStore),
-                    actionLoader,
-                    null);
-                HashDigest<SHA256> stateRootHash = block.Index < 1
-                    ? BlockChain.DetermineGenesisStateRootHash(
-                        actionEvaluator,
-                        preEvalBlock,
-                        out delta)
-                    : chain.DetermineBlockStateRootHash(
-                        preEvalBlock,
-                        out delta);
+                    policy.PolicyActionsRegistry,
+                    stateStore,
+                    actionLoader);
+
+                HashDigest<SHA256>? refSrh = block.ProtocolVersion < BlockMetadata.SlothProtocolVersion
+                   ? store.GetStateRootHash(block.PreviousHash)
+                   : store.GetStateRootHash(block.Hash);
+
+                IReadOnlyList<ICommittedActionEvaluation> evals = actionEvaluator.Evaluate(block, refSrh);
+                HashDigest<SHA256> stateRootHash = evals.Count > 0
+                    ? evals[evals.Count - 1].OutputState
+                    : refSrh is { } prevSrh ? prevSrh : MerkleTrie.EmptyRootHash;
+
                 DateTimeOffset now = DateTimeOffset.Now;
                 if (invalidStateRootHashBlock is null && !stateRootHash.Equals(block.StateRootHash))
                 {
-                    string blockDump = DumpBencodexToFile(
-                        block.MarshalBlock(),
-                        $"block_{block.Index}_{block.Hash}"
-                    );
-                    string deltaDump = DumpBencodexToFile(
-                        new Dictionary(GetTotalDelta(
-                            delta,
-                            ToStateKey,
-                            ToFungibleAssetKey,
-                            ToTotalSupplyKey,
-                            ValidatorSetKey)),
-                        $"delta_{block.Index}_{block.Hash}"
-                    );
                     string message =
                         $"Unexpected state root hash for block #{block.Index} {block.Hash}.\n" +
-                        $"  Expected: {block.StateRootHash}\n  Actual:   {stateRootHash}\n" +
-                        $"  Block file: {blockDump}\n  Evaluated delta file: {deltaDump}\n";
+                        $"  Expected: {block.StateRootHash}\n  Actual:   {stateRootHash}\n";
                     if (!bypassStateRootHashCheck)
                     {
                         throw new CommandExitedException(message, 1);
@@ -432,77 +416,5 @@ namespace Lib9c.Tools.SubCommand
             IEnumerable<KeyBytes> IKeyValueStore.ListKeys() =>
                 _dictionary.Keys;
         }
-
-        private static ImmutableDictionary<string, IValue> GetTotalDelta(
-            IReadOnlyList<IActionEvaluation> actionEvaluations,
-            Func<Address, string> toStateKey,
-            Func<(Address, Currency), string> toFungibleAssetKey,
-            Func<Currency, string> toTotalSupplyKey,
-            string validatorSetKey)
-        {
-            IImmutableSet<Address> stateUpdatedAddresses = actionEvaluations
-                .SelectMany(a => a.OutputStates.StateUpdatedAddresses)
-                .ToImmutableHashSet();
-            IImmutableSet<(Address, Currency)> updatedFungibleAssets = actionEvaluations
-                .SelectMany(a => a.OutputStates.UpdatedFungibleAssets
-                    .SelectMany(kv => kv.Value.Select(c => (kv.Key, c))))
-                .ToImmutableHashSet();
-            IImmutableSet<Currency> updatedTotalSupplies = actionEvaluations
-                .SelectMany(a => a.OutputStates.TotalSupplyUpdatedCurrencies)
-                .ToImmutableHashSet();
-
-            IAccountStateDelta lastStates = actionEvaluations.Count > 0
-                ? actionEvaluations[actionEvaluations.Count - 1].OutputStates
-                : null;
-            ImmutableDictionary<string, IValue> totalDelta =
-                stateUpdatedAddresses.ToImmutableDictionary(
-                    toStateKey,
-                    a => lastStates?.GetState(a)
-                ).SetItems(
-                    updatedFungibleAssets.Select(pair =>
-                        new KeyValuePair<string, IValue>(
-                            toFungibleAssetKey(pair),
-                            new Bencodex.Types.Integer(
-                                lastStates?.GetBalance(pair.Item1, pair.Item2).RawValue ?? 0
-                            )
-                        )
-                    )
-                );
-
-            foreach (var currency in updatedTotalSupplies)
-            {
-                if (lastStates?.GetTotalSupply(currency).RawValue is { } rawValue)
-                {
-                    totalDelta = totalDelta.SetItem(
-                        toTotalSupplyKey(currency),
-                        new Bencodex.Types.Integer(rawValue)
-                    );
-                }
-            }
-
-            if (lastStates?.GetValidatorSet() is { } validatorSet && validatorSet.Validators.Any())
-            {
-                totalDelta = totalDelta.SetItem(
-                    validatorSetKey,
-                    validatorSet.Bencoded
-                );
-            }
-
-            return totalDelta;
-        }
-
-        private const string ValidatorSetKey = "___";
-
-        private static string ToStateKey(Address address) => ByteUtil.Hex(address.ByteArray);
-
-        private static string ToFungibleAssetKey(Address address, Currency currency) =>
-            "_" + ByteUtil.Hex(address.ByteArray) +
-            "_" + ByteUtil.Hex(currency.Hash.ByteArray);
-
-        private static string ToFungibleAssetKey((Address, Currency) pair) =>
-            ToFungibleAssetKey(pair.Item1, pair.Item2);
-
-        private static string ToTotalSupplyKey(Currency currency) =>
-            "__" + ByteUtil.Hex(currency.Hash.ByteArray);
     }
 }

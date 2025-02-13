@@ -1,3 +1,5 @@
+using Serilog;
+
 namespace Nekoyume.Blockchain
 {
     using System;
@@ -5,38 +7,22 @@ namespace Nekoyume.Blockchain
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
-    using Libplanet;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
-    using Libplanet.Tx;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Tx;
 
     public class NCStagePolicy : IStagePolicy
     {
         private readonly VolatileStagePolicy _impl;
         private readonly ConcurrentDictionary<Address, SortedList<Transaction, TxId>> _txs;
         private readonly int _quotaPerSigner;
+        private readonly ConcurrentDictionary<Address, int> _quotaPerSignerList;
+        private IAccessControlService? _accessControlService;
 
-        private static readonly ImmutableHashSet<Address> _bannedAccounts = new[]
+        public NCStagePolicy(TimeSpan txLifeTime, int quotaPerSigner, IAccessControlService? accessControlService = null)
         {
-            new Address("de96aa7702a7a1fd18ee0f84a5a0c7a2c28ec840"),
-            new Address("153281c93274bEB9726A03C33d3F19a8D78ad805"),
-            new Address("7035AA8B7F9fB5db026fb843CbB21C03dd278502"),
-            new Address("52393Ea89DF0E58152cbFE673d415159aa7B9dBd"),
-            new Address("2D1Db6dBF1a013D648Efd16d85B4079dCF88B4CC"),
-            new Address("dE30E00917B583305f14aD21Eafc70f1b183b779"),
-            new Address("B892052f1E10bf700143dd9bEcd81E31CD7f7095"),
-
-            new Address("C0a90FC489738A1153F793A3272A91913aF3956b"),
-            new Address("b8D7bD4394980dcc2579019C39bA6b41cb6424E1"),
-            new Address("555221D1CEA826C55929b8A559CA929574f7C6B3"),
-            new Address("B892052f1E10bf700143dd9bEcd81E31CD7f7095"),
-            // v100351
-            new Address("0xd7e1b90dea34108fb2d3a6ac7dbf3f33bae2c77d"),
-        }.ToImmutableHashSet();
-
-        public NCStagePolicy(TimeSpan txLifeTime, int quotaPerSigner)
-        {
-            if (quotaPerSigner < 1)
+            if (quotaPerSigner < 0)
             {
                 throw new ArgumentOutOfRangeException(
                     $"{nameof(quotaPerSigner)} must be positive: ${quotaPerSigner}");
@@ -47,9 +33,12 @@ namespace Nekoyume.Blockchain
             _impl = (txLifeTime == default)
                 ? new VolatileStagePolicy()
                 : new VolatileStagePolicy(txLifeTime);
+
+            _quotaPerSignerList = new ConcurrentDictionary<Address, int>();
+            _accessControlService = accessControlService;
         }
 
-        public Transaction Get(BlockChain blockChain, TxId id, bool filtered = true)
+        public Transaction? Get(BlockChain blockChain, TxId id, bool filtered = true)
             => _impl.Get(blockChain, id, filtered);
 
         public long GetNextTxNonce(BlockChain blockChain, Address address)
@@ -65,7 +54,7 @@ namespace Nekoyume.Blockchain
         {
             if (filtered)
             {
-                var txsPerSigner = new Dictionary<Address, SortedSet<Transaction>>();
+                var txsPerSigner = new ConcurrentDictionary<Address, SortedSet<Transaction>>();
                 foreach (Transaction tx in _impl.Iterate(blockChain, filtered))
                 {
                     if (!txsPerSigner.TryGetValue(tx.Signer, out var s))
@@ -74,9 +63,25 @@ namespace Nekoyume.Blockchain
                     }
 
                     s.Add(tx);
-                    if (s.Count > _quotaPerSigner)
+                    int txQuotaPerSigner = _quotaPerSigner;
+
+                    // update txQuotaPerSigner if signer is in the list
+                    try
                     {
-                        s.Remove(s.Max);
+                        if (_accessControlService?.GetTxQuotaAsync(tx.Signer).Result is { } acsTxQuota)
+                        {
+                            txQuotaPerSigner = acsTxQuota;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("[NCStagePolicy-ACS] {0} {1}", ex.Message, ex.StackTrace);
+                        txQuotaPerSigner = _quotaPerSigner;
+                    }
+
+                    if (s.Count > txQuotaPerSigner && s.Max is { } max)
+                    {
+                        s.Remove(max);
                     }
                 }
 
@@ -92,24 +97,43 @@ namespace Nekoyume.Blockchain
 
         public bool Stage(BlockChain blockChain, Transaction transaction)
         {
-            if (_bannedAccounts.Contains(transaction.Signer))
+            try
             {
-                return false;
-            }
+                if (_accessControlService?.GetTxQuotaAsync(transaction.Signer).Result is { } acsTxQuota)
+                {
+                    _quotaPerSignerList[transaction.Signer] = acsTxQuota;
 
-            var deniedTxs = new[]
-            {
-                // CreatePledge Transaction with 50000 addresses
-                TxId.FromHex("300826da62b595d8cd663dadf04995a7411534d1cdc17dac75ce88754472f774"),
-                // CreatePledge Transaction with 5000 addresses
-                TxId.FromHex("210d1374d8f068de657de6b991e63888da9cadbc68e505ac917b35568b5340f8"),
-            };
-            if (deniedTxs.Contains(transaction.Id))
-            {
-                return false;
-            }
+                    if (acsTxQuota == 0)
+                    {
+                        return false;
+                    }
+                }
+                else if (_quotaPerSigner < 1)
+                {
+                    return false;
+                }
 
-            return _impl.Stage(blockChain, transaction);
+                var deniedTxs = new[]
+                {
+                    // CreatePledge Transaction with 50000 addresses
+                    TxId.FromHex(
+                        "300826da62b595d8cd663dadf04995a7411534d1cdc17dac75ce88754472f774"),
+                    // CreatePledge Transaction with 5000 addresses
+                    TxId.FromHex(
+                        "210d1374d8f068de657de6b991e63888da9cadbc68e505ac917b35568b5340f8"),
+                };
+                if (deniedTxs.Contains(transaction.Id))
+                {
+                    return false;
+                }
+
+                return _impl.Stage(blockChain, transaction);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("[NCStagePolicy-ACS] {0} {1}", ex.Message, ex.StackTrace);
+                return _impl.Stage(blockChain, transaction);
+            }
         }
 
         public bool Unstage(BlockChain blockChain, TxId id)
@@ -117,8 +141,23 @@ namespace Nekoyume.Blockchain
 
         private class TxComparer : IComparer<Transaction>
         {
-            public int Compare(Transaction x, Transaction y)
+            public int Compare(Transaction? x, Transaction? y)
             {
+                if (x == null && y == null)
+                {
+                    return 0;
+                }
+
+                if (x == null)
+                {
+                    return -1;
+                }
+
+                if (y == null)
+                {
+                    return 1;
+                }
+
                 if (x.Nonce < y.Nonce)
                 {
                     return -1;

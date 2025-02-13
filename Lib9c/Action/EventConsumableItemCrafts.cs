@@ -1,17 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Extensions;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Event;
 using Serilog;
@@ -19,11 +20,14 @@ using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.Action
 {
+    /// <summary>
+    /// Hard forked at https://github.com/planetarium/lib9c/pull/2195
+    /// </summary>
     [Serializable]
     [ActionType(ActionTypeText)]
     public class EventConsumableItemCrafts : GameAction, IEventConsumableItemCraftsV1
     {
-        private const string ActionTypeText = "event_consumable_item_crafts";
+        private const string ActionTypeText = "event_consumable_item_crafts2";
 
         public Address AvatarAddress;
         public int EventScheduleId;
@@ -75,15 +79,10 @@ namespace Nekoyume.Action
             SlotIndex = list[3].ToInteger();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states;
-            }
-
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var addressesHex = GetSignerAndOtherAddressesHex(context, AvatarAddress);
             var started = DateTimeOffset.UtcNow;
             Log.Verbose(
@@ -94,11 +93,10 @@ namespace Nekoyume.Action
             var sw = new Stopwatch();
             // Get AvatarState
             sw.Start();
-            if (!states.TryGetAvatarStateV2(
+            if (!states.TryGetAvatarState(
                     context.Signer,
                     AvatarAddress,
-                    out var avatarState,
-                    out var migrationRequired))
+                    out var avatarState))
             {
                 throw new FailedLoadStateException(
                     ActionTypeText,
@@ -131,20 +129,6 @@ namespace Nekoyume.Action
                 sw.Elapsed);
             // ~Get sheets
 
-            // Validate Requirements.
-            sw.Restart();
-            avatarState.worldInformation.ValidateFromAction(
-                GameConfig.RequireClearedStageLevel.CombinationConsumableAction,
-                ActionTypeText,
-                addressesHex);
-            sw.Stop();
-            Log.Verbose(
-                "[{ActionTypeString}][{AddressesHex}] Validate requirements: {Elapsed}",
-                ActionTypeText,
-                addressesHex,
-                sw.Elapsed);
-            // ~Validate Requirements.
-
             // Validate fields.
             sw.Restart();
             var scheduleSheet = sheets.GetSheet<EventScheduleSheet>();
@@ -161,18 +145,20 @@ namespace Nekoyume.Action
                 ActionTypeText,
                 addressesHex);
 
-            var slotState = states.GetCombinationSlotState(AvatarAddress, SlotIndex);
-            if (slotState is null)
+            var allSlotState = states.GetAllCombinationSlotState(AvatarAddress);
+            if (allSlotState is null)
             {
-                throw new FailedLoadStateException(
-                    $"{addressesHex}Aborted as the slot state is failed to load: # {SlotIndex}");
+                throw new FailedLoadStateException($"Aborted as the allSlotState was failed to load.");
             }
 
-            if (!slotState.Validate(avatarState, context.BlockIndex))
+            // Validate SlotIndex
+            var slotState = allSlotState.GetSlot(SlotIndex);
+            if (!slotState.ValidateV2(context.BlockIndex))
             {
                 throw new CombinationSlotUnlockException(
                     $"{addressesHex}Aborted as the slot state is invalid: {slotState} @ {SlotIndex}");
             }
+            // ~Validate SlotIndex
 
             sw.Stop();
             Log.Verbose(
@@ -237,28 +223,35 @@ namespace Nekoyume.Action
             // Subtract Required ActionPoint
             if (costActionPoint > 0)
             {
-                if (avatarState.actionPoint < costActionPoint)
+                if (!states.TryGetActionPoint(AvatarAddress, out var actionPoint))
+                {
+                    actionPoint = avatarState.actionPoint;
+                }
+
+                if (actionPoint < costActionPoint)
                 {
                     throw new NotEnoughActionPointException(
-                        $"{addressesHex}Aborted due to insufficient action point: {avatarState.actionPoint} < {costActionPoint}"
+                        $"{addressesHex}Aborted due to insufficient action point: {actionPoint} < {costActionPoint}"
                     );
                 }
 
-                avatarState.actionPoint -= costActionPoint;
+                actionPoint -= costActionPoint;
+                states = states.SetActionPoint(AvatarAddress, actionPoint);
             }
             // ~Subtract Required ActionPoint
 
             // Create and Add Consumable
+            var random = context.GetRandom();
             var consumable = ItemFactory.CreateItemUsable(
                 consumableRow,
-                context.Random.GenerateRandomGuid(),
+                random.GenerateRandomGuid(),
                 endBlockIndex
             );
             avatarState.inventory.AddItem(consumable);
             // ~Create and Add Consumable
 
             // Update Slot
-            var mailId = context.Random.GenerateRandomGuid();
+            var mailId = random.GenerateRandomGuid();
             var attachmentResult = new CombinationConsumable5.ResultModel
             {
                 id = mailId,
@@ -270,6 +263,7 @@ namespace Nekoyume.Action
                 recipeId = EventConsumableItemRecipeId,
             };
             slotState.Update(attachmentResult, context.BlockIndex, endBlockIndex);
+            allSlotState.SetSlot(slotState);
             // ~Update Slot
 
             // Create Mail
@@ -281,35 +275,9 @@ namespace Nekoyume.Action
             avatarState.Update(mail);
             // ~Create Mail
 
-            // Set states
-            if (migrationRequired)
-            {
-                states = states
-                    .SetState(AvatarAddress, avatarState.SerializeV2())
-                    .SetState(
-                        AvatarAddress.Derive(LegacyInventoryKey),
-                        avatarState.inventory.Serialize())
-                    .SetState(
-                        AvatarAddress.Derive(LegacyWorldInformationKey),
-                        avatarState.worldInformation.Serialize())
-                    .SetState(
-                        AvatarAddress.Derive(LegacyQuestListKey),
-                        avatarState.questList.Serialize())
-                    .SetState(
-                        CombinationSlotState.DeriveAddress(AvatarAddress, SlotIndex),
-                        slotState.Serialize());
-            }
-            else
-            {
-                states = states
-                    .SetState(AvatarAddress, avatarState.SerializeV2())
-                    .SetState(
-                        AvatarAddress.Derive(LegacyInventoryKey),
-                        avatarState.inventory.Serialize())
-                    .SetState(
-                        CombinationSlotState.DeriveAddress(AvatarAddress, SlotIndex),
-                        slotState.Serialize());
-            }
+            states = states
+                .SetAvatarState(AvatarAddress, avatarState)
+                .SetCombinationSlotState(AvatarAddress, allSlotState);
 
             sw.Stop();
             Log.Verbose(

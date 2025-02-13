@@ -4,29 +4,32 @@ using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Battle;
 using Nekoyume.Extensions;
 using Nekoyume.Helper;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
+using Nekoyume.Module.Guild;
 using Nekoyume.TableData;
+using Nekoyume.TableData.Rune;
 using Serilog;
-using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.Action
 {
     /// <summary>
-    /// Hard forked at https://github.com/planetarium/lib9c/pull/1663
+    /// Hard forked at https://github.com/planetarium/lib9c/pull/2195
     /// </summary>
     [Serializable]
-    [ActionType("hack_and_slash_sweep9")]
+    [ActionType("hack_and_slash_sweep10")]
     public class HackAndSlashSweep : GameAction, IHackAndSlashSweepV3
     {
-        public const int UsableApStoneCount = 10;
+        public const int UsableApStoneCount = 20;
 
         public List<Guid> costumes;
         public List<Guid> equipments;
@@ -39,8 +42,10 @@ namespace Nekoyume.Action
 
         IEnumerable<Guid> IHackAndSlashSweepV3.Costumes => costumes;
         IEnumerable<Guid> IHackAndSlashSweepV3.Equipments => equipments;
+
         IEnumerable<IValue> IHackAndSlashSweepV3.RuneSlotInfos =>
             runeInfos.Select(x => x.Serialize());
+
         Address IHackAndSlashSweepV3.AvatarAddress => avatarAddress;
         int IHackAndSlashSweepV3.ApStoneCount => apStoneCount;
         int IHackAndSlashSweepV3.ActionPoint => actionPoint;
@@ -52,7 +57,8 @@ namespace Nekoyume.Action
             {
                 ["costumes"] = new List(costumes.OrderBy(i => i).Select(e => e.Serialize())),
                 ["equipments"] = new List(equipments.OrderBy(i => i).Select(e => e.Serialize())),
-                ["runeInfos"] = runeInfos.OrderBy(x => x.SlotIndex).Select(x=> x.Serialize()).Serialize(),
+                ["runeInfos"] = runeInfos.OrderBy(x => x.SlotIndex)
+                    .Select(x => x.Serialize()).Serialize(),
                 ["avatarAddress"] = avatarAddress.Serialize(),
                 ["apStoneCount"] = apStoneCount.Serialize(),
                 ["actionPoint"] = actionPoint.Serialize(),
@@ -73,15 +79,10 @@ namespace Nekoyume.Action
             stageId = plainValue["stageId"].ToInteger();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states;
-            }
-
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var addressesHex = GetSignerAndOtherAddressesHex(context, avatarAddress);
             var started = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}HackAndSlashSweep exec started", addressesHex);
@@ -93,37 +94,53 @@ namespace Nekoyume.Action
                     $"apStoneCount : {apStoneCount} > UsableApStoneCount : {UsableApStoneCount}");
             }
 
+            if (apStoneCount < 0 || actionPoint < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    $"{addressesHex} Aborted as the player give negative value ({actionPoint} AP & {apStoneCount} potions)"
+                );
+            }
+
             states.ValidateWorldId(avatarAddress, worldId);
 
-            if (!states.TryGetAvatarStateV2(
+            if (!states.TryGetAvatarState(
                     context.Signer,
                     avatarAddress,
-                    out var avatarState,
-                    out var migrationRequired))
+                    out var avatarState))
             {
                 throw new FailedLoadStateException(
                     $"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
             }
 
+            var collectionExist =
+                states.TryGetCollectionState(avatarAddress, out var collectionState) &&
+                collectionState.Ids.Any();
+            var sheetTypes = new List<Type>
+            {
+                typeof(WorldSheet),
+                typeof(StageSheet),
+                typeof(MaterialItemSheet),
+                typeof(StageWaveSheet),
+                typeof(CharacterLevelSheet),
+                typeof(ItemRequirementSheet),
+                typeof(EquipmentItemRecipeSheet),
+                typeof(EquipmentItemSubRecipeSheetV2),
+                typeof(EquipmentItemOptionSheet),
+                typeof(CharacterSheet),
+                typeof(CostumeStatSheet),
+                typeof(SweepRequiredCPSheet),
+                typeof(StakeActionPointCoefficientSheet),
+                typeof(RuneListSheet),
+                typeof(RuneOptionSheet),
+                typeof(RuneLevelBonusSheet),
+            };
+            if (collectionExist)
+            {
+                sheetTypes.Add(typeof(CollectionSheet));
+            }
+
             var sheets = states.GetSheets(
-                sheetTypes: new[]
-                {
-                    typeof(WorldSheet),
-                    typeof(StageSheet),
-                    typeof(MaterialItemSheet),
-                    typeof(StageWaveSheet),
-                    typeof(CharacterLevelSheet),
-                    typeof(ItemRequirementSheet),
-                    typeof(EquipmentItemRecipeSheet),
-                    typeof(EquipmentItemSubRecipeSheetV2),
-                    typeof(EquipmentItemOptionSheet),
-                    typeof(CharacterSheet),
-                    typeof(CostumeStatSheet),
-                    typeof(SweepRequiredCPSheet),
-                    typeof(StakeActionPointCoefficientSheet),
-                    typeof(RuneListSheet),
-                    typeof(RuneOptionSheet),
-                });
+                sheetTypes: sheetTypes);
 
             var worldSheet = sheets.GetSheet<WorldSheet>();
             if (!worldSheet.TryGetValue(worldId, out var worldRow, false))
@@ -163,12 +180,20 @@ namespace Nekoyume.Action
                 );
             }
 
-            var equipmentList = avatarState.ValidateEquipmentsV2(equipments, context.BlockIndex);
-            var costumeIds = avatarState.ValidateCostume(costumes);
+            var gameConfigState = states.GetGameConfigState();
+            if (gameConfigState is null)
+            {
+                throw new FailedLoadStateException(
+                    $"{addressesHex}Aborted as the game config state was failed to load.");
+            }
+
+            var equipmentList = avatarState.ValidateEquipmentsV3(
+                equipments, context.BlockIndex, gameConfigState);
+            var costumeList = avatarState.ValidateCostumeV2(costumes, gameConfigState);
             var items = equipments.Concat(costumes);
             avatarState.EquipItems(items);
             avatarState.ValidateItemRequirement(
-                costumeIds,
+                costumeList.Select(e => e.Id).ToList(),
                 equipmentList,
                 sheets.GetSheet<ItemRequirementSheet>(),
                 sheets.GetSheet<EquipmentItemRecipeSheet>(),
@@ -183,45 +208,53 @@ namespace Nekoyume.Action
                     $"{addressesHex}There is no row in SweepRequiredCPSheet: {stageId}");
             }
 
-            var costumeList = new List<Costume>();
-            foreach (var guid in costumes)
-            {
-                var costume = avatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid);
-                if (costume != null)
-                {
-                    costumeList.Add(costume);
-                }
-            }
-
             // update rune slot
-            var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
-            var runeSlotState = states.TryGetState(runeSlotStateAddress, out List rawRuneSlotState)
-                ? new RuneSlotState(rawRuneSlotState)
-                : new RuneSlotState(BattleType.Adventure);
+            var runeSlotStateAddress =
+                RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
+            var runeSlotState =
+                states.TryGetLegacyState(runeSlotStateAddress, out List rawRuneSlotState)
+                    ? new RuneSlotState(rawRuneSlotState)
+                    : new RuneSlotState(BattleType.Adventure);
             var runeListSheet = sheets.GetSheet<RuneListSheet>();
             runeSlotState.UpdateSlot(runeInfos, runeListSheet);
-            states = states.SetState(runeSlotStateAddress, runeSlotState.Serialize());
+            states = states.SetLegacyState(runeSlotStateAddress, runeSlotState.Serialize());
 
             // update item slot
-            var itemSlotStateAddress = ItemSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
-            var itemSlotState = states.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
-                ? new ItemSlotState(rawItemSlotState)
-                : new ItemSlotState(BattleType.Adventure);
+            var itemSlotStateAddress =
+                ItemSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
+            var itemSlotState =
+                states.TryGetLegacyState(itemSlotStateAddress, out List rawItemSlotState)
+                    ? new ItemSlotState(rawItemSlotState)
+                    : new ItemSlotState(BattleType.Adventure);
             itemSlotState.UpdateEquipment(equipments);
             itemSlotState.UpdateCostumes(costumes);
-            states = states.SetState(itemSlotStateAddress, itemSlotState.Serialize());
+            states = states.SetLegacyState(itemSlotStateAddress, itemSlotState.Serialize());
 
-            var runeStates = new List<RuneState>();
-            foreach (var address in runeInfos.Select(info => RuneState.DeriveAddress(avatarAddress, info.RuneId)))
+            var runeStates = states.GetRuneState(avatarAddress, out var migrateRequired);
+            // Passive migrate runeStates
+            if (migrateRequired)
             {
-                if (states.TryGetState(address, out List rawRuneState))
+                states = states.SetRuneState(avatarAddress, runeStates);
+            }
+
+            // just validate
+            foreach (var runeSlotInfo in runeInfos)
+            {
+                runeStates.GetRuneState(runeSlotInfo.RuneId);
+            }
+
+            var equippedRune = new List<RuneState>();
+            foreach (var runeInfo in runeSlotState.GetEquippedRuneSlotInfos())
+            {
+                if (runeStates.TryGetRuneState(runeInfo.RuneId, out var runeState))
                 {
-                    runeStates.Add(new RuneState(rawRuneState));
+                    equippedRune.Add(runeState);
                 }
             }
+
             var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
             var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
-            foreach (var runeState in runeStates)
+            foreach (var runeState in equippedRune)
             {
                 if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var optionRow))
                 {
@@ -236,17 +269,28 @@ namespace Nekoyume.Action
                 runeOptions.Add(option);
             }
 
+            var runeLevelBonusSheet = sheets.GetSheet<RuneLevelBonusSheet>();
+            var runeLevelBonus =
+                RuneHelper.CalculateRuneLevelBonus(runeStates, runeListSheet, runeLevelBonusSheet);
+
             var characterSheet = sheets.GetSheet<CharacterSheet>();
             if (!characterSheet.TryGetValue(avatarState.characterId, out var characterRow))
             {
                 throw new SheetRowNotFoundException("CharacterSheet", avatarState.characterId);
             }
 
+            var collectionModifiers = new List<StatModifier>();
+            if (collectionExist)
+            {
+                var collectionSheet = sheets.GetSheet<CollectionSheet>();
+                collectionModifiers = collectionState.GetModifiers(collectionSheet);
+            }
+
             var costumeStatSheet = sheets.GetSheet<CostumeStatSheet>();
             var cp = CPHelper.TotalCP(
                 equipmentList, costumeList,
                 runeOptions, avatarState.level,
-                characterRow, costumeStatSheet);
+                characterRow, costumeStatSheet, collectionModifiers, runeLevelBonus);
             if (cp < cpRow.RequiredCP)
             {
                 throw new NotEnoughCombatPointException(
@@ -266,28 +310,26 @@ namespace Nekoyume.Action
                 }
             }
 
-            var gameConfigState = states.GetGameConfigState();
-            if (gameConfigState is null)
+            if (!states.TryGetActionPoint(avatarAddress, out var hasActionPoint))
             {
-                throw new FailedLoadStateException(
-                    $"{addressesHex}Aborted as the game config state was failed to load.");
+                hasActionPoint = avatarState.actionPoint;
             }
 
-            if (actionPoint > avatarState.actionPoint)
+            if (actionPoint > hasActionPoint)
             {
                 throw new NotEnoughActionPointException(
                     $"{addressesHex}Aborted due to insufficient action point: " +
-                    $"use AP({actionPoint}) > current AP({avatarState.actionPoint})"
+                    $"use AP({actionPoint}) > current AP({hasActionPoint})"
                 );
             }
 
             // burn ap
-            avatarState.actionPoint -= actionPoint;
+            states = states.SetActionPoint(avatarAddress, hasActionPoint - actionPoint);
             var costAp = sheets.GetSheet<StageSheet>()[stageId].CostAP;
-            if (states.TryGetStakeState(context.Signer, out var stakeState))
+            var goldCurrency = states.GetGoldCurrency();
+            var stakedAmount = states.GetStaked(context.Signer);
+            if (stakedAmount > goldCurrency * 0)
             {
-                var currency = states.GetGoldCurrency();
-                var stakedAmount = states.GetBalance(stakeState.address, currency);
                 var actionPointCoefficientSheet =
                     sheets.GetSheet<StakeActionPointCoefficientSheet>();
                 var stakingLevel =
@@ -313,8 +355,9 @@ namespace Nekoyume.Action
             var stageWaveSheet = sheets.GetSheet<StageWaveSheet>();
             avatarState.UpdateMonsterMap(stageWaveSheet, stageId);
 
-            var rewardItems = HackAndSlashSweep6.GetRewardItems(
-                context.Random,
+            var random = context.GetRandom();
+            var rewardItems = GetRewardItems(
+                random,
                 playCount,
                 stageRow,
                 materialItemSheet);
@@ -324,23 +367,31 @@ namespace Nekoyume.Action
             var (level, exp) = avatarState.GetLevelAndExp(levelSheet, stageId, playCount);
             avatarState.UpdateExp(level, exp);
 
-            if (migrationRequired)
+            var ended = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "{AddressesHex}HackAndSlashSweep Total Executed Time: {Elapsed}",
+                addressesHex, ended - started
+            );
+            return states.SetAvatarState(avatarAddress, avatarState);
+        }
+
+        public static List<ItemBase> GetRewardItems(IRandom random,
+            int playCount,
+            StageSheet.Row stageRow,
+            MaterialItemSheet materialItemSheet)
+        {
+            var rewardItems = new List<ItemBase>();
+            var maxCount = random.Next(stageRow.DropItemMin, stageRow.DropItemMax + 1);
+            for (var i = 0; i < playCount; i++)
             {
-                states = states.SetState(
-                    avatarAddress.Derive(LegacyWorldInformationKey),
-                    avatarState.worldInformation.Serialize());
+                var selector = StageSimulatorV1.SetItemSelector(stageRow, random);
+                var rewards = Simulator.SetRewardV2(selector, maxCount, random,
+                    materialItemSheet);
+                rewardItems.AddRange(rewards);
             }
 
-            var ended = DateTimeOffset.UtcNow;
-            Log.Debug("{AddressesHex}HackAndSlashSweep Total Executed Time: {Elapsed}", addressesHex, ended - started);
-            return states
-                .SetState(avatarAddress, avatarState.SerializeV2())
-                .SetState(
-                    avatarAddress.Derive(LegacyInventoryKey),
-                    avatarState.inventory.Serialize())
-                .SetState(
-                    avatarAddress.Derive(LegacyQuestListKey),
-                    avatarState.questList.Serialize());
+            rewardItems = rewardItems.OrderBy(x => x.Id).ToList();
+            return rewardItems;
         }
     }
 }

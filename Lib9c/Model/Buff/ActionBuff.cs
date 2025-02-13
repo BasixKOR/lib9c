@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Nekoyume.Model.Skill;
 using Nekoyume.TableData;
 
@@ -7,6 +9,12 @@ namespace Nekoyume.Model.Buff
     [Serializable]
     public abstract class ActionBuff : Buff
     {
+        private readonly IEnumerable<ActionBuffType> _debuffTypes = new List<ActionBuffType>
+        {
+            ActionBuffType.Bleed,
+            ActionBuffType.Stun,
+        };
+
         public ActionBuffSheet.Row RowData { get; }
         public SkillCustomField? CustomField { get; }
 
@@ -28,12 +36,14 @@ namespace Nekoyume.Model.Buff
             CustomField = value.CustomField;
         }
 
-        public abstract BattleStatus.Skill GiveEffect(
-            CharacterBase affectedCharacter,
-            int simulatorWaveTurn);
+        public override bool IsBuff()
+        {
+            return !IsDebuff();
+        }
 
-        public abstract BattleStatus.Arena.ArenaSkill GiveEffectForArena(
-            ArenaCharacter affectedCharacter,
-            int simulatorWaveTurn);
+        public override bool IsDebuff()
+        {
+            return _debuffTypes.Contains(RowData.ActionBuffType);
+        }
     }
 }

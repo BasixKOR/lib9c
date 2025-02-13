@@ -1,9 +1,7 @@
 namespace Lib9c.Tests.Model.State
 {
-    using System.IO;
-    using System.Runtime.Serialization.Formatters.Binary;
     using Bencodex.Types;
-    using Libplanet;
+    using Libplanet.Crypto;
     using Nekoyume.Model.State;
     using Xunit;
 
@@ -14,9 +12,9 @@ namespace Lib9c.Tests.Model.State
         {
             var miners = GetNewMiners();
             var state = new AuthorizedMinersState(
-                miners: miners,
-                interval: 50,
-                validUntil: 1000
+                miners,
+                50,
+                1000
             );
 
             var serialized = (Dictionary)state.Serialize();

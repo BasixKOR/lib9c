@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using Bencodex.Types;
 using Nekoyume.Model.EnumType;
 using Nekoyume.TableData;
@@ -12,17 +10,37 @@ namespace Nekoyume.Model.Quest
     public class TradeQuest : Quest
     {
         public override QuestType QuestType => QuestType.Exchange;
-        public readonly TradeType Type;
 
-        public TradeQuest(TradeQuestSheet.Row data, QuestReward reward) 
+        public TradeType Type
+        {
+            get
+            {
+                if (_serializedType is { })
+                {
+                    _type = (TradeType) (int) _serializedType;
+                    _serializedType = null;
+                }
+
+                return _type;
+            }
+        }
+        private TradeType _type;
+        private Integer? _serializedType;
+
+        public TradeQuest(TradeQuestSheet.Row data, QuestReward reward)
             : base(data, reward)
         {
-            Type = data.Type;
+            _type = data.Type;
         }
 
         public TradeQuest(Dictionary serialized) : base(serialized)
         {
-            Type = (TradeType)(int)((Integer)serialized["type"]).Value;
+            _serializedType = (Integer) serialized["type"];
+        }
+
+        public TradeQuest(List serialized) : base(serialized)
+        {
+            _serializedType = (Integer) serialized[7];
         }
 
         public override void Check()
@@ -45,11 +63,10 @@ namespace Nekoyume.Model.Quest
 
         protected override string TypeId => "tradeQuest";
         public override IValue Serialize() =>
-#pragma warning disable LAA1002
-            new Dictionary(new Dictionary<IKey, IValue>
-            {
-                [(Text)"type"] = (Integer)(int)Type,
-            }.Union((Dictionary)base.Serialize()));
-#pragma warning restore LAA1002
+            ((Dictionary) base.Serialize())
+            .Add("type", _serializedType ?? (int) Type);
+
+        public override IValue SerializeList() =>
+            ((List) base.SerializeList()).Add(_serializedType ?? (int) Type);
     }
 }

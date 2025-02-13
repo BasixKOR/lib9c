@@ -1,14 +1,14 @@
-﻿namespace Lib9c.Tests.TestHelper
+namespace Lib9c.Tests.TestHelper
 {
     using Lib9c.DevExtensions.Action;
-    using Libplanet;
-    using Libplanet.Assets;
-    using Libplanet.State;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Assets;
     using Nekoyume.Model.State;
 
     public class MakeInitialStateResult
     {
-        private readonly IAccountStateDelta _state;
+        private readonly IWorld _state;
         private readonly CreateTestbed _testbed;
         private readonly AgentState _agentState;
         private readonly AvatarState _avatarState;
@@ -19,7 +19,7 @@
         private readonly FungibleAssetValue _currencyGold;
 
         public MakeInitialStateResult(
-            IAccountStateDelta state,
+            IWorld state,
             CreateTestbed testbed,
             AgentState agentState,
             AvatarState avatarState,
@@ -40,7 +40,7 @@
             _agentCurrencyGold = agentCurrencyGold;
         }
 
-        public IAccountStateDelta GetState()
+        public IWorld GetState()
         {
             return _state;
         }

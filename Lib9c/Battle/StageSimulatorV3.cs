@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Libplanet.Action;
-using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.BattleStatus;
 using Nekoyume.Model.Item;
@@ -128,7 +127,7 @@ namespace Nekoyume.Battle
                         ActionBuffSheet
                     );
 
-                    var usedSkill = skill.Use(Player, 0, buffs);
+                    var usedSkill = skill.Use(Player, 0, buffs, LogEvent);
                     Log.Add(usedSkill);
                 }
 

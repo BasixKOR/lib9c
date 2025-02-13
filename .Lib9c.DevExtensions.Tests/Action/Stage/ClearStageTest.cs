@@ -3,9 +3,9 @@ using Lib9c.DevExtensions.Action.Stage;
 using Lib9c.Tests;
 using Lib9c.Tests.Action;
 using Lib9c.Tests.Util;
-using Libplanet;
-using Libplanet.State;
-using Nekoyume.Action;
+using Libplanet.Crypto;
+using Libplanet.Action.State;
+using Nekoyume.Module;
 using Xunit;
 
 namespace Lib9c.DevExtensions.Tests.Action.Stage
@@ -15,14 +15,12 @@ namespace Lib9c.DevExtensions.Tests.Action.Stage
         private readonly TableSheets _tableSheets;
         private readonly Address _agentAddress;
         private readonly Address _avatarAddress;
-        private readonly IAccountStateDelta _initialStateV2;
-        private readonly Address _worldInfoAddress;
+        private readonly IWorld _initialStateV2;
 
         public ClearStageTest()
         {
-            (_tableSheets, _agentAddress, _avatarAddress, _, _initialStateV2) =
+            (_tableSheets, _agentAddress, _avatarAddress, _initialStateV2) =
                 InitializeUtil.InitializeStates(isDevEx: true);
-            _worldInfoAddress = _avatarAddress.Derive(SerializeKeys.LegacyWorldInformationKey);
         }
 
         [Fact]
@@ -39,12 +37,12 @@ namespace Lib9c.DevExtensions.Tests.Action.Stage
 
             var state = action.Execute(new ActionContext
             {
-                PreviousStates = _initialStateV2,
+                PreviousState = _initialStateV2,
                 Signer = _agentAddress,
                 BlockIndex = 0L,
             });
 
-            var avatarState = state.GetAvatarStateV2(_avatarAddress);
+            var avatarState = state.GetAvatarState(_avatarAddress);
             for (var i = 1; i <= targetStage; i++)
             {
                 Assert.True(avatarState.worldInformation.IsStageCleared(i));

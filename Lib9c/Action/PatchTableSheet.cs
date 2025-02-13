@@ -2,10 +2,11 @@ using System;
 using System.Collections.Immutable;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Serilog;
 
@@ -35,19 +36,12 @@ namespace Nekoyume.Action
         string IPatchTableSheetV1.TableName => TableName;
         string IPatchTableSheetV1.TableCsv => TableCsv;
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
+            GasTracer.UseGas(1);
             IActionContext ctx = context;
-            var states = ctx.PreviousStates;
+            var states = ctx.PreviousState;
             var sheetAddress = Addresses.TableSheet.Derive(TableName);
-            if (ctx.Rehearsal)
-            {
-                return states
-                    .SetState(sheetAddress, MarkChanged)
-                    .SetState(GameConfigState.Address, MarkChanged);
-            }
-
             var addressesHex = GetSignerAndOtherAddressesHex(context);
 
 #if !LIB9C_DEV_EXTENSIONS && !UNITY_EDITOR
@@ -65,8 +59,8 @@ namespace Nekoyume.Action
             }
 #endif
 
-            var sheets = states.GetState(sheetAddress);
-            var value = sheets is null ? string.Empty : sheets.ToDotnetString();
+            var sheet = states.GetLegacyState(sheetAddress);
+            var value = sheet is null ? string.Empty : sheet.ToDotnetString();
 
             Log.Verbose(
                 "{AddressesHex}{TableName} was patched\n" +
@@ -80,12 +74,12 @@ namespace Nekoyume.Action
                 TableCsv
             );
 
-            states = states.SetState(sheetAddress, TableCsv.Serialize());
+            states = states.SetLegacyState(sheetAddress, TableCsv.Serialize());
 
             if (TableName == nameof(GameConfigSheet))
             {
                 var gameConfigState = new GameConfigState(TableCsv);
-                states = states.SetState(GameConfigState.Address, gameConfigState.Serialize());
+                states = states.SetLegacyState(GameConfigState.Address, gameConfigState.Serialize());
             }
 
             return states;

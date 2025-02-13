@@ -1,8 +1,8 @@
-using Libplanet;
 using Nekoyume.Model.State;
 using System;
 using System.Runtime.Serialization;
-using Libplanet.Serialization;
+using Libplanet.Common.Serialization;
+using Libplanet.Crypto;
 
 namespace Nekoyume.Action
 {
@@ -11,12 +11,14 @@ namespace Nekoyume.Action
     {
         public Address Signer { get; }
 
-        public PermissionDeniedException(AdminState policy, Address signer)
-            : base(policy)
+        public PermissionDeniedException(AdminState policy, Address signer) : base(policy)
         {
             Signer = signer;
         }
 
+        public PermissionDeniedException(string message) : base(message)
+        {
+        }
 
         public PermissionDeniedException(SerializationInfo info, StreamingContext context) : base(info, context)
         {

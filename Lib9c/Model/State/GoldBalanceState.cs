@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Immutable;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 
 namespace Nekoyume.Model.State
 {
@@ -36,7 +36,7 @@ namespace Nekoyume.Model.State
             // - Add(string, IValue)
             // 그래서 아래처럼 온몸비틀기. 그냥 Bencodex.Types.Dictionary에 Add(string, BigInteger) 하나 넣는 게 좋을 듯...
             // -> https://github.com/planetarium/bencodex.net/issues/21
-            var @base = (Bencodex.Types.Dictionary) base.Serialize();
+            var @base = (Bencodex.Types.Dictionary) base.SerializeBase();
             var serialized = ((IImmutableDictionary<IKey, IValue>) @base)
                 .SetItem((Text) nameof(Gold), Gold.Serialize());
             return (Bencodex.Types.Dictionary) serialized;

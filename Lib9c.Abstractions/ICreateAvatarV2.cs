@@ -1,5 +1,3 @@
-using Libplanet;
-
 namespace Lib9c.Abstractions
 {
     public interface ICreateAvatarV2

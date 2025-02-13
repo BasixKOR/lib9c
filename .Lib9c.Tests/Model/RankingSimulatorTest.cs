@@ -36,17 +36,15 @@ namespace Lib9c.Tests.Model
             var rewardSheet = new WeeklyArenaRewardSheet();
             rewardSheet.Set($"id,item_id,ratio,min,max,required_level\n1,302000,0.1,1,1,{requiredLevel}");
             _tableSheets.WeeklyArenaRewardSheet = rewardSheet;
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 default,
                 default,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
                 default
-            )
-            {
-                level = level,
-            };
+            );
+            avatarState.level = level;
+
             avatarState.worldInformation.ClearStage(
                 1,
                 GameConfig.RequireClearedStageLevel.ActionsInRankingBoard,
@@ -89,12 +87,11 @@ namespace Lib9c.Tests.Model
         [InlineData(1900, 6)]
         public void SimulateRankingScore(int score, int expected)
         {
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 default,
                 default,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
                 default
             );
             avatarState.worldInformation.ClearStage(
@@ -135,12 +132,11 @@ namespace Lib9c.Tests.Model
         [Fact]
         public void ConstructorWithCostume()
         {
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 default,
                 default,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
                 default
             );
             avatarState.worldInformation.ClearStage(
@@ -174,14 +170,14 @@ namespace Lib9c.Tests.Model
             );
 
             var player = simulator.Player;
-            Assert.Equal(row.Stat, player.Stats.OptionalStats.ATK);
+            Assert.Equal(row.Stat, player.Stats.CostumeStats.ATK);
 
             var player2 = simulator.Simulate();
-            Assert.Equal(row.Stat, player2.Stats.OptionalStats.ATK);
+            Assert.Equal(row.Stat, player2.Stats.CostumeStats.ATK);
 
             var e = simulator.Log.OfType<SpawnEnemyPlayer>().First();
             var enemyPlayer = (EnemyPlayer)e.Character;
-            Assert.Equal(row2.Stat, enemyPlayer.Stats.OptionalStats.DEF);
+            Assert.Equal(row2.Stat, enemyPlayer.Stats.CostumeStats.DEF);
         }
 
         [Theory]
@@ -194,20 +190,17 @@ namespace Lib9c.Tests.Model
         public void CheckToReceiveAllRewardItems(int level, int simulationCount)
         {
             _tableSheets.WeeklyArenaRewardSheet = _tableSheets.WeeklyArenaRewardSheet;
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 default,
                 default,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
-                default)
-            {
-                level = level,
-                worldInformation = new WorldInformation(
-                    0,
-                    _tableSheets.WorldSheet,
-                    GameConfig.RequireClearedStageLevel.ActionsInRankingBoard),
-            };
+                default);
+            avatarState.level = level;
+            avatarState.worldInformation = new WorldInformation(
+                0,
+                _tableSheets.WorldSheet,
+                GameConfig.RequireClearedStageLevel.ActionsInRankingBoard);
 
             var arenaInfo = new ArenaInfo(avatarState, _tableSheets.CharacterSheet, false);
             var enemyInfo = new ArenaInfo(avatarState, _tableSheets.CharacterSheet, false);

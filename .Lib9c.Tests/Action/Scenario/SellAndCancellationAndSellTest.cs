@@ -3,15 +3,16 @@ namespace Lib9c.Tests.Action.Scenario
     using System;
     using System.Linq;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Model;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Serilog;
     using Xunit;
@@ -23,7 +24,7 @@ namespace Lib9c.Tests.Action.Scenario
         private readonly TableSheets _tableSheets;
         private readonly Address _agentAddress;
         private readonly Address _avatarAddress;
-        private readonly IAccountStateDelta _initialState;
+        private readonly IWorld _initialState;
 
         public SellAndCancellationAndSellTest(ITestOutputHelper outputHelper)
         {
@@ -41,44 +42,32 @@ namespace Lib9c.Tests.Action.Scenario
 #pragma warning restore CS0618
             var gameConfigState = new GameConfigState(sheets[nameof(GameConfigSheet)]);
 
-            _agentAddress = new PrivateKey().ToAddress();
+            _agentAddress = new PrivateKey().Address;
             _avatarAddress = _agentAddress.Derive("avatar");
             var agentState = new AgentState(_agentAddress);
             agentState.avatarAddresses[0] = _avatarAddress;
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 _avatarAddress,
                 _agentAddress,
                 1,
                 _tableSheets.GetAvatarSheets(),
-                gameConfigState,
                 default
-            )
-            {
-                worldInformation = new WorldInformation(
-                    0,
-                    _tableSheets.WorldSheet,
-                    GameConfig.RequireClearedStageLevel.ActionsInShop),
-            };
+            );
+            avatarState.worldInformation = new WorldInformation(
+                0,
+                _tableSheets.WorldSheet,
+                GameConfig.RequireClearedStageLevel.ActionsInShop);
 
-            _initialState = new Tests.Action.State()
-                .SetState(GoldCurrencyState.Address, gold.Serialize())
-                .SetState(gameConfigState.address, gameConfigState.Serialize())
-                .SetState(_agentAddress, agentState.Serialize())
-                .SetState(_avatarAddress, avatarState.SerializeV2())
-                .SetState(
-                    _avatarAddress.Derive(LegacyInventoryKey),
-                    avatarState.inventory.Serialize())
-                .SetState(
-                    _avatarAddress.Derive(LegacyWorldInformationKey),
-                    avatarState.worldInformation.Serialize())
-                .SetState(
-                    _avatarAddress.Derive(LegacyQuestListKey),
-                    avatarState.questList.Serialize());
+            _initialState = new World(MockUtil.MockModernWorldState)
+                .SetLegacyState(GoldCurrencyState.Address, gold.Serialize())
+                .SetLegacyState(gameConfigState.address, gameConfigState.Serialize())
+                .SetAgentState(_agentAddress, agentState)
+                .SetAvatarState(_avatarAddress, avatarState);
 
             foreach (var (key, value) in sheets)
             {
                 _initialState = _initialState
-                    .SetState(Addresses.TableSheet.Derive(key), value.Serialize());
+                    .SetLegacyState(Addresses.TableSheet.Derive(key), value.Serialize());
             }
         }
 
@@ -86,14 +75,14 @@ namespace Lib9c.Tests.Action.Scenario
         public void Execute_With_TradableMaterial()
         {
             var previousStates = _initialState;
-            var apStoneRow = _tableSheets.MaterialItemSheet.OrderedList!.First(row =>
-                row.ItemSubType == ItemSubType.ApStone);
+            var apStoneRow = _tableSheets.MaterialItemSheet.OrderedList!.First(
+                row =>
+                    row.ItemSubType == ItemSubType.ApStone);
             var apStone = ItemFactory.CreateTradableMaterial(apStoneRow);
-            var inventoryAddr = _avatarAddress.Derive(LegacyInventoryKey);
-            var inventory = new Inventory((List)previousStates.GetState(inventoryAddr));
+            var avatarState = previousStates.GetAvatarState(_avatarAddress);
             // Add 10 ap stones to inventory.
-            inventory.AddFungibleItem(apStone, 10);
-            previousStates = previousStates.SetState(inventoryAddr, inventory.Serialize());
+            avatarState.inventory.AddFungibleItem(apStone, 10);
+            previousStates = previousStates.SetAvatarState(_avatarAddress, avatarState);
 
             // sell ap stones with count 1, 2, 3, 4.
             var sellBlockIndex = 1L;
@@ -109,23 +98,24 @@ namespace Lib9c.Tests.Action.Scenario
             var nextStates = previousStates;
             foreach (var sellAction in sellActions)
             {
-                nextStates = sellAction.Execute(new ActionContext
-                {
-                    Signer = _agentAddress,
-                    PreviousStates = nextStates,
-                    BlockIndex = sellBlockIndex,
-                    Random = random,
-                    Rehearsal = false,
-                });
+                nextStates = sellAction.Execute(
+                    new ActionContext
+                    {
+                        Signer = _agentAddress,
+                        PreviousState = nextStates,
+                        BlockIndex = sellBlockIndex,
+                        RandomSeed = random.Seed,
+                    });
                 // TODO: Check state.. inventory, orders..
             }
 
             // Check inventory does not have ap stones.
-            var nextInventory = new Inventory((List)nextStates.GetState(inventoryAddr));
-            Assert.False(nextInventory.RemoveFungibleItem(
-                apStone.FungibleId,
-                sellBlockIndex,
-                1));
+            var nextAvatarState = nextStates.GetAvatarState(_avatarAddress);
+            Assert.False(
+                nextAvatarState.inventory.RemoveFungibleItem(
+                    apStone.FungibleId,
+                    sellBlockIndex,
+                    1));
 
             // Cancel sell orders.
             var sellCancellationActions = new[]
@@ -137,46 +127,48 @@ namespace Lib9c.Tests.Action.Scenario
             };
             foreach (var sellCancellationAction in sellCancellationActions)
             {
-                nextStates = sellCancellationAction.Execute(new ActionContext
-                {
-                    Signer = _agentAddress,
-                    PreviousStates = nextStates,
-                    BlockIndex = sellBlockIndex + 1L,
-                    Random = random,
-                    Rehearsal = false,
-                });
+                nextStates = sellCancellationAction.Execute(
+                    new ActionContext
+                    {
+                        Signer = _agentAddress,
+                        PreviousState = nextStates,
+                        BlockIndex = sellBlockIndex + 1L,
+                        RandomSeed = random.Seed,
+                    });
                 // TODO: Check state.. inventory, orders..
             }
 
             // Check inventory has 10 ap stones.
-            nextInventory = new Inventory((List)nextStates.GetState(inventoryAddr));
-            Assert.True(nextInventory.RemoveFungibleItem(
-                apStone.FungibleId,
-                sellBlockIndex + 1L,
-                10));
+            nextAvatarState = nextStates.GetAvatarState(_avatarAddress);
+            Assert.True(
+                nextAvatarState.inventory.RemoveFungibleItem(
+                    apStone.FungibleId,
+                    sellBlockIndex + 1L,
+                    10));
 
             // Sell 10 ap stones at once.
             var newSellOrderId = Guid.NewGuid();
             var newSellAction = GetSell(apStone, 10, newSellOrderId);
-            nextStates = newSellAction.Execute(new ActionContext
-            {
-                Signer = _agentAddress,
-                PreviousStates = nextStates,
-                BlockIndex = sellBlockIndex + 2L,
-                Random = random,
-                Rehearsal = false,
-            });
+            nextStates = newSellAction.Execute(
+                new ActionContext
+                {
+                    Signer = _agentAddress,
+                    PreviousState = nextStates,
+                    BlockIndex = sellBlockIndex + 2L,
+                    RandomSeed = random.Seed,
+                });
 
             // Check inventory does not have ap stones.
-            nextInventory = new Inventory((List)nextStates.GetState(inventoryAddr));
-            Assert.False(nextInventory.RemoveFungibleItem(
-                apStone.FungibleId,
-                sellBlockIndex + 2L,
-                1));
+            nextAvatarState = nextStates.GetAvatarState(_avatarAddress);
+            Assert.False(
+                nextAvatarState.inventory.RemoveFungibleItem(
+                    apStone.FungibleId,
+                    sellBlockIndex + 2L,
+                    1));
         }
 
         private Sell GetSell(ITradableItem tradableItem, int count, Guid orderId) =>
-            new Sell
+            new ()
             {
                 sellerAvatarAddress = _avatarAddress,
                 tradableId = tradableItem.TradableId,
@@ -192,13 +184,15 @@ namespace Lib9c.Tests.Action.Scenario
                 orderId = orderId,
             };
 
-        private SellCancellation GetSellCancellation(Guid orderId, ITradableItem tradableItem) =>
-            new SellCancellation
+        private SellCancellation GetSellCancellation(Guid orderId, ITradableItem tradableItem)
+        {
+            return new SellCancellation()
             {
                 orderId = orderId,
                 tradableId = tradableItem.TradableId,
                 sellerAvatarAddress = _avatarAddress,
                 itemSubType = tradableItem.ItemSubType,
             };
+        }
     }
 }

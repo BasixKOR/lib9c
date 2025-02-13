@@ -4,11 +4,12 @@ using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Serilog;
 using static Lib9c.SerializeKeys;
@@ -41,31 +42,15 @@ namespace Nekoyume.Action
             AvatarAddress = avatarAddress;
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            var inventoryAddress = AvatarAddress.Derive(LegacyInventoryKey);
-            var worldInformationAddress = AvatarAddress.Derive(LegacyWorldInformationKey);
-            var questListAddress = AvatarAddress.Derive(LegacyQuestListKey);
-            if (context.Rehearsal)
-            {
-                return states
-                    .SetState(RedeemCodeState.Address, MarkChanged)
-                    .SetState(inventoryAddress, MarkChanged)
-                    .SetState(worldInformationAddress, MarkChanged)
-                    .SetState(questListAddress, MarkChanged)
-                    .SetState(AvatarAddress, MarkChanged)
-                    .SetState(context.Signer, MarkChanged)
-                    .MarkBalanceChanged(GoldCurrencyMock, GoldCurrencyState.Address)
-                    .MarkBalanceChanged(GoldCurrencyMock, context.Signer);
-            }
-
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var addressesHex = GetSignerAndOtherAddressesHex(context, AvatarAddress);
             var started = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}RedeemCode exec started", addressesHex);
 
-            if (!states.TryGetAvatarStateV2(context.Signer, AvatarAddress, out AvatarState avatarState, out _))
+            if (!states.TryGetAvatarState(context.Signer, AvatarAddress, out AvatarState avatarState))
             {
                 return states;
             }
@@ -95,6 +80,7 @@ namespace Nekoyume.Action
             var row = states.GetSheet<RedeemRewardSheet>().Values.First(r => r.Id == redeemId);
             var itemSheets = states.GetItemSheet();
 
+            var random = context.GetRandom();
             foreach (RedeemRewardSheet.RewardInfo info in row.Rewards)
             {
                 switch (info.Type)
@@ -104,7 +90,7 @@ namespace Nekoyume.Action
                         {
                             if (info.ItemId is int itemId)
                             {
-                                ItemBase item = ItemFactory.CreateItem(itemSheets[itemId], context.Random);
+                                ItemBase item = ItemFactory.CreateItem(itemSheets[itemId], random);
                                 // We should fix count as 1 because ItemFactory.CreateItem
                                 // will create a new item every time.
                                 avatarState.inventory.AddItem(item, count: 1);
@@ -113,6 +99,7 @@ namespace Nekoyume.Action
                         break;
                     case RewardType.Gold:
                         states = states.TransferAsset(
+                            context,
                             GoldCurrencyState.Address,
                             context.Signer,
                             states.GetGoldCurrency() * info.Quantity
@@ -126,11 +113,8 @@ namespace Nekoyume.Action
             var ended = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}RedeemCode Total Executed Time: {Elapsed}", addressesHex, ended - started);
             return states
-                .SetState(AvatarAddress, avatarState.SerializeV2())
-                .SetState(inventoryAddress, avatarState.inventory.Serialize())
-                .SetState(worldInformationAddress, avatarState.worldInformation.Serialize())
-                .SetState(questListAddress, avatarState.questList.Serialize())
-                .SetState(RedeemCodeState.Address, redeemState.Serialize());
+                .SetAvatarState(AvatarAddress, avatarState)
+                .SetLegacyState(RedeemCodeState.Address, redeemState.Serialize());
         }
 
         protected override IImmutableDictionary<string, IValue> PlainValueInternal =>

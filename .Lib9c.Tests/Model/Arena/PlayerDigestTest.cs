@@ -5,10 +5,9 @@ namespace Lib9c.Tests.Model.Arena
     using System.Linq;
     using Bencodex.Types;
     using Lib9c.Tests.Action;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Model;
-    using Nekoyume.Model.Arena;
+    using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Stat;
     using Nekoyume.Model.State;
@@ -23,13 +22,12 @@ namespace Lib9c.Tests.Model.Arena
         public PlayerDigestTest()
         {
             _tableSheets = new TableSheets(TableSheetsImporter.ImportSheets());
-            var avatarState = new AvatarState(
-                new PrivateKey().ToAddress(),
-                new PrivateKey().ToAddress(),
+            var avatarState = AvatarState.Create(
+                new PrivateKey().Address,
+                new PrivateKey().Address,
                 1234,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(),
-                new PrivateKey().ToAddress(),
+                new PrivateKey().Address,
                 "test"
             );
             avatarState.hair = 2;
@@ -59,8 +57,8 @@ namespace Lib9c.Tests.Model.Arena
             _avatarState = avatarState;
 
             _arenaAvatarState = new ArenaAvatarState(_avatarState);
-            _arenaAvatarState.UpdateEquipment(new List<Guid>() { weapon.ItemId, armor.ItemId });
-            _arenaAvatarState.UpdateCostumes(new List<Guid>() { costume.ItemId, costume2.ItemId });
+            _arenaAvatarState.UpdateEquipment(new List<Guid>() { weapon.ItemId, armor.ItemId, });
+            _arenaAvatarState.UpdateCostumes(new List<Guid>() { costume.ItemId, costume2.ItemId, });
         }
 
         [Fact]
@@ -98,14 +96,25 @@ namespace Lib9c.Tests.Model.Arena
             Assert.Equal(serialized, deserialized.Serialize());
         }
 
-        [Fact]
-        public void Serialize()
+        [Theory]
+        [InlineData(new int[] { })]
+        [InlineData(new[] { 10001, })]
+        [InlineData(new[] { 10001, 10002, })]
+        public void SerializeWithRune(int[] runeIds)
         {
+            var runes = new AllRuneState();
+            foreach (var runeId in runeIds)
+            {
+                runes.AddRuneState(runeId);
+            }
+
             var digest = new ArenaPlayerDigest(
                 _avatarState,
                 _arenaAvatarState.Equipments,
                 _arenaAvatarState.Costumes,
-                new List<RuneState>());
+                runes,
+                new RuneSlotState(BattleType.Arena)
+            );
             var serialized = digest.Serialize();
             var deserialized = new ArenaPlayerDigest((List)serialized);
 

@@ -4,12 +4,13 @@ using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 
 namespace Nekoyume.Action
@@ -26,21 +27,22 @@ namespace Nekoyume.Action
 
         Address IDailyRewardV1.AvatarAddress => avatarAddress;
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
+            GasTracer.UseGas(1);
             IActionContext ctx = context;
-            var states = ctx.PreviousStates;
-            if (ctx.Rehearsal)
-            {
-                return states.SetState(avatarAddress, MarkChanged);
-            }
+            var states = ctx.PreviousState;
 
             CheckObsolete(ActionObsoleteConfig.V100080ObsoleteIndex, context);
 
             var addressesHex = GetSignerAndOtherAddressesHex(context, avatarAddress);
 
-            if (!states.TryGetAgentAvatarStates(ctx.Signer, avatarAddress, out _, out AvatarState avatarState))
+            if (states.GetAgentState(context.Signer) is null)
+            {
+                throw new FailedLoadStateException($"{addressesHex}Aborted as the agent state of the signer was failed to load.");
+            }
+
+            if (!states.TryGetAvatarState(ctx.Signer, avatarAddress, out AvatarState avatarState))
             {
                 throw new FailedLoadStateException($"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
             }
@@ -69,16 +71,17 @@ namespace Nekoyume.Action
             };
 
             // create mail
+            var random = ctx.GetRandom();
             var mail = new DailyRewardMail(result,
                                            ctx.BlockIndex,
-                                           ctx.Random.GenerateRandomGuid(),
+                                           random.GenerateRandomGuid(),
                                            ctx.BlockIndex);
 
             result.id = mail.id;
             dailyRewardResult = result;
             avatarState.Update(mail);
-            avatarState.UpdateFromAddItem2(material, rewardItemCount, false);
-            return states.SetState(avatarAddress, avatarState.Serialize());
+            avatarState.UpdateFromAddItem(material, rewardItemCount, false);
+            return states.SetAvatarState(avatarAddress, avatarState);
         }
 
         protected override IImmutableDictionary<string, IValue> PlainValueInternal => new Dictionary<string, IValue>

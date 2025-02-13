@@ -2,8 +2,8 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 
 namespace Nekoyume
 {
@@ -40,7 +40,7 @@ namespace Nekoyume
             IImmutableSet<Address> minters = null;
             if (serialized["minters"] is Bencodex.Types.List mintersAsList)
             {
-                minters = mintersAsList.Select(b => new Address(((Binary) b).ByteArray)).ToImmutableHashSet();
+                minters = mintersAsList.Select(b => new Address(b)).ToImmutableHashSet();
             }
 
             if (serialized.ContainsKey("totalSupplyTrackable"))

@@ -2,7 +2,6 @@ namespace Lib9c.Tests.Model.State
 {
     using System.IO;
     using System.Runtime.Serialization.Formatters.Binary;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Model.State;
     using Xunit;
@@ -12,11 +11,11 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void Serialize()
         {
-            var agentStateAddress = new PrivateKey().ToAddress();
+            var agentStateAddress = new PrivateKey().Address;
             var agentState = new AgentState(agentStateAddress);
 
-            var serialized = agentState.Serialize();
-            var deserialized = new AgentState((Bencodex.Types.Dictionary)serialized);
+            var serialized = agentState.SerializeList();
+            var deserialized = new AgentState((Bencodex.Types.List)serialized);
 
             Assert.Equal(agentStateAddress, deserialized.address);
         }
@@ -24,7 +23,7 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void SerializeWithDotNetAPI()
         {
-            var agentStateAddress = new PrivateKey().ToAddress();
+            var agentStateAddress = new PrivateKey().Address;
             var agentState = new AgentState(agentStateAddress);
 
             var formatter = new BinaryFormatter();

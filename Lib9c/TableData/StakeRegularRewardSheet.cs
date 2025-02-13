@@ -20,7 +20,16 @@ namespace Nekoyume.TableData
         public class RewardInfo
         {
             public readonly int ItemId;
+
+            /// <summary>
+            /// The rate of reward.
+            /// </summary>
+            [Obsolete(
+                "This field is used from `ClaimStakeReward.V2` or earlier." +
+                " Use `DecimalRate` instead." +
+                " Deprecated this field because we need to support decimal rate.")]
             public readonly int Rate;
+
             public readonly StakeRewardType Type;
 
             /// <summary>
@@ -29,13 +38,31 @@ namespace Nekoyume.TableData
             /// </summary>
             public readonly string CurrencyTicker;
 
+            /// <summary>
+            /// The decimal places of currency.
+            /// This field is only used when <see cref="Type"/> is <see cref="StakeRewardType.Currency"/>.
+            /// </summary>
+            public readonly int? CurrencyDecimalPlaces;
+
+            /// <summary>
+            /// The decimal rate of reward.
+            /// This field is used from `V3`(in blockchain state) or later.
+            /// This field is set to `Rate` when `ClaimStakeReward.V2` or earlier.
+            /// </summary>
+            public readonly decimal DecimalRate;
+
+            public readonly bool Tradable;
             public RewardInfo(params string[] fields)
             {
                 ItemId = ParseInt(fields[0], 0);
-                Rate = ParseInt(fields[1]);
+                Rate = ParseInt(fields[1], 0);
+                Tradable = true;
                 if (fields.Length == 2)
                 {
                     Type = StakeRewardType.Item;
+                    CurrencyTicker = null;
+                    CurrencyDecimalPlaces = null;
+                    DecimalRate = Rate;
                     return;
                 }
 
@@ -43,22 +70,57 @@ namespace Nekoyume.TableData
                 if (fields.Length == 3)
                 {
                     CurrencyTicker = null;
+                    CurrencyDecimalPlaces = null;
+                    DecimalRate = Rate;
                     return;
                 }
 
                 CurrencyTicker = fields[3];
+
+                if (fields.Length == 4)
+                {
+                    CurrencyDecimalPlaces = null;
+                    DecimalRate = Rate;
+                    return;
+                }
+
+                CurrencyDecimalPlaces = TryParseInt(fields[4], out var currencyDecimalPlaces)
+                    ? currencyDecimalPlaces
+                    : null;
+
+                if (fields.Length == 5)
+                {
+                    DecimalRate = Rate;
+                    return;
+                }
+
+                DecimalRate = ParseDecimal(fields[5], 0m);
+
+                if (fields.Length == 6)
+                {
+                    return;
+                }
+
+                if (fields.Length == 7)
+                {
+                    Tradable = ParseBool(fields[6], true);
+                }
             }
 
             public RewardInfo(
                 int itemId,
-                int rate,
+                int rate = 0,
                 StakeRewardType type = StakeRewardType.Item,
-                string currencyTicker = null)
+                string currencyTicker = null,
+                int? currencyDecimalPlaces = null,
+                decimal decimalRate = 0m)
             {
                 ItemId = itemId;
                 Rate = rate;
                 Type = type;
                 CurrencyTicker = currencyTicker;
+                CurrencyDecimalPlaces = currencyDecimalPlaces;
+                DecimalRate = decimalRate;
             }
 
             protected bool Equals(RewardInfo other)
@@ -68,7 +130,11 @@ namespace Nekoyume.TableData
                        Type == other.Type &&
                        (CurrencyTicker is null
                            ? other.CurrencyTicker is null
-                           : CurrencyTicker == other.CurrencyTicker);
+                           : CurrencyTicker == other.CurrencyTicker) &&
+                       (CurrencyDecimalPlaces is null
+                           ? other.CurrencyDecimalPlaces is null
+                           : CurrencyDecimalPlaces == other.CurrencyDecimalPlaces) &&
+                       DecimalRate == other.DecimalRate;
             }
 
             public override bool Equals(object obj)
@@ -84,7 +150,9 @@ namespace Nekoyume.TableData
                 return (ItemId * 397) ^
                        Rate ^
                        (int)Type ^
-                       (CurrencyTicker?.GetHashCode() ?? 0);
+                       (CurrencyTicker?.GetHashCode() ?? 0) ^
+                       (CurrencyDecimalPlaces?.GetHashCode() ?? 0) ^
+                       DecimalRate.GetHashCode();
             }
         }
 

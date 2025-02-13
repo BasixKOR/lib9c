@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using Bencodex;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Crypto;
 using Nekoyume.Action;
 
 namespace Nekoyume.Model.State
@@ -79,7 +79,7 @@ namespace Nekoyume.Model.State
         }
 
         public override IValue Serialize() => _serialized ??
-            ((Dictionary)base.Serialize()).Add(
+            ((Dictionary)base.SerializeBase()).Add(
                 "ranking_map",
 #pragma warning disable LAA1002
                 new Dictionary(RankingMap.Select(kv =>

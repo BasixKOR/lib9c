@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Model.Order;
-using Libplanet;
+using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Model.Item;
 using static Lib9c.SerializeKeys;
@@ -95,7 +95,7 @@ namespace Nekoyume.Model.State
             new Dictionary(new Dictionary<IKey, IValue>
             {
                 [(Text) OrderDigestListKey] = new List(OrderDigestList.Select(o => o.Serialize()))
-            }.Union((Dictionary) base.Serialize()));
+            }.Union((Dictionary) base.SerializeBase()));
 #pragma warning restore LAA1002
     }
 }

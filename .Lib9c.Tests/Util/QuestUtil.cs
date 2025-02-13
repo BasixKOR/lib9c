@@ -1,16 +1,15 @@
 namespace Lib9c.Tests.Util
 {
-    using Libplanet;
-    using Libplanet.State;
-    using Nekoyume.Action;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
     using Nekoyume.Model.Quest;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
 
     public static class QuestUtil
     {
-        public static (IAccountStateDelta, IAccountStateDelta) DisableQuestList(
-            IAccountStateDelta stateV1,
-            IAccountStateDelta stateV2,
+        public static IWorld DisableQuestList(
+            IWorld stateV2,
             Address avatarAddress
         )
         {
@@ -21,14 +20,10 @@ namespace Lib9c.Tests.Util
                 new EquipmentItemRecipeSheet(),
                 new EquipmentItemSubRecipeSheet()
             );
-            var avatarState = stateV1.GetAvatarState(avatarAddress);
-            avatarState.questList = emptyQuestList;
-            var newStateV1 = stateV1.SetState(avatarAddress, avatarState.Serialize());
-            var newStateV2 = stateV2.SetState(
-                avatarAddress.Derive(SerializeKeys.LegacyQuestListKey),
-                emptyQuestList.Serialize()
-            );
-            return (newStateV1, newStateV2);
+            var avatarState2 = stateV2.GetAvatarState(avatarAddress);
+            avatarState2.questList = emptyQuestList;
+            var newStateV2 = stateV2.SetAvatarState(avatarAddress, avatarState2);
+            return newStateV2;
         }
     }
 }

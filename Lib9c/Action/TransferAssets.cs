@@ -1,16 +1,16 @@
 using Bencodex;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Model.State;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Lib9c.Abstractions;
-using Nekoyume.Model;
+using Nekoyume.Module;
 using Serilog;
 
 namespace Nekoyume.Action
@@ -23,7 +23,7 @@ namespace Nekoyume.Action
     [ActionType(TypeIdentifier)]
     public class TransferAssets : ActionBase, ISerializable, ITransferAssets, ITransferAssetsV1
     {
-        public const string TypeIdentifier = "transfer_assets2";
+        public const string TypeIdentifier = "transfer_assets3";
         public const int RecipientsCapacity = 100;
         private const int MemoMaxLength = 80;
 
@@ -79,14 +79,10 @@ namespace Nekoyume.Action
             }
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(4);
-            var state = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return Recipients.Aggregate(state, (current, t) => current.MarkBalanceChanged(t.amount.Currency, new[] {Sender, t.recipient}));
-            }
+            GasTracer.UseGas(4);
+            var state = context.PreviousState;
 
             if (Recipients.Count > RecipientsCapacity)
             {
@@ -96,7 +92,7 @@ namespace Nekoyume.Action
             var started = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}{ActionName} exec started", addressesHex, TypeIdentifier);
 
-            state = Recipients.Aggregate(state, (current, t) => Transfer(current, context.Signer, t.recipient, t.amount, context.BlockIndex));
+            state = Recipients.Aggregate(state, (current, t) => Transfer(context, current, context.Signer, t.recipient, t.amount, context.BlockIndex));
             var ended = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}{ActionName} Total Executed Time: {Elapsed}", addressesHex, TypeIdentifier, ended - started);
 
@@ -135,7 +131,8 @@ namespace Nekoyume.Action
             }
         }
 
-        private IAccountStateDelta Transfer(IAccountStateDelta state, Address signer, Address recipient, FungibleAssetValue amount, long blockIndex)
+        private IWorld Transfer(
+            IActionContext context, IWorld state, Address signer, Address recipient, FungibleAssetValue amount, long blockIndex)
         {
             if (Sender != signer)
             {
@@ -159,7 +156,8 @@ namespace Nekoyume.Action
             }
 
             TransferAsset3.CheckCrystalSender(currency, blockIndex, Sender);
-            return state.TransferAsset(Sender, recipient, amount);
+            TransferAsset.ThrowIfStakeState(state, recipient);
+            return state.TransferAsset(context, Sender, recipient, amount);
         }
     }
 }

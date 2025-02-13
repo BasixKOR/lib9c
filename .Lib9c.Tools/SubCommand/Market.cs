@@ -6,13 +6,14 @@ using Bencodex.Types;
 using Cocona;
 using Lib9c.DevExtensions;
 using Lib9c.Model.Order;
-using Libplanet;
 using Libplanet.Action.Loader;
-using Libplanet.Assets;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
-using Libplanet.Blocks;
+using Libplanet.Crypto;
 using Libplanet.Store;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Nekoyume.Model.Item;
@@ -42,8 +43,8 @@ namespace Lib9c.Tools.SubCommand
             [Option(
                 'T',
                 Description = "Filter by item type.  This implicitly filters out transactions " +
-                    "made with " + nameof(Buy) + " action version prior to " + nameof(Buy5) +
-                    ".  This can be applied multiple times (meaning: match any of them).  " +
+                    "made with " + nameof(Buy) + "." +
+                    "This can be applied multiple times (meaning: match any of them).  " +
                     "The list of available types can be found in " + nameof(ItemSubType) +
                     " enum declared in Lib9c/Model/Item/ItemType.cs file.")]
             string[] itemType = null,
@@ -102,7 +103,7 @@ namespace Lib9c.Tools.SubCommand
                     .Reverse()
                     .Where(tx => includeFails ||
                         !(chain.GetTxExecution(block.Hash, tx.Id) is { } e) ||
-                        e is TxSuccess)
+                        !e.Fail)
                     .SelectMany(tx => tx.Actions is { } actions
                         ? actions.Reverse().Select(a => (tx, (ActionBase)actionLoader.LoadAction(block.Index, a)))
                         : Enumerable.Empty<(Transaction, ActionBase)>());
@@ -129,10 +130,12 @@ namespace Lib9c.Tools.SubCommand
                             Price = p.Price,
                             ItemSubType = p.ItemSubType,
                             Quantity = p.OrderId is {} oid
-                                ? chain.GetState(GetOrderAddress(oid)) is Dictionary rawOrder
-                                    ? OrderFactory.Deserialize(rawOrder) is FungibleOrder fo
-                                        ? fo.ItemCount
-                                        : 1
+                                ? chain.GetWorldState()
+                                    .GetAccountState(ReservedAddresses.LegacyAccount)
+                                    .GetState(GetOrderAddress(oid)) is Dictionary rawOrder
+                                        ? OrderFactory.Deserialize(rawOrder) is FungibleOrder fo
+                                            ? fo.ItemCount
+                                            : 1
                                     : (int?)null
                                 : (int?)null,
                         }),

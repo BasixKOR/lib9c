@@ -1,5 +1,5 @@
 using Libplanet.Action;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.BattleStatus;
@@ -16,7 +16,7 @@ namespace Nekoyume.Battle
     public class RaidSimulatorV1 : Simulator
     {
         public int BossId { get; private set; }
-        public int DamageDealt { get; private set; }
+        public long DamageDealt { get; private set; }
         public List<FungibleAssetValue> AssetReward { get; private set; } = new List<FungibleAssetValue>();
         public override IEnumerable<ItemBase> Reward => new List<ItemBase>();
         private readonly List<RaidBoss> _waves;
@@ -24,6 +24,7 @@ namespace Nekoyume.Battle
         private WorldBossBattleRewardSheet _worldBossBattleRewardSheet;
         private RuneWeightSheet _runeWeightSheet;
         private RuneSheet _runeSheet;
+        private MaterialItemSheet _materialItemSheet;
         private WorldBossCharacterSheet.Row _currentBossRow;
 
         public RaidSimulatorV1(
@@ -47,6 +48,7 @@ namespace Nekoyume.Battle
             _worldBossBattleRewardSheet = simulatorSheets.WorldBossBattleRewardSheet;
             _runeWeightSheet = simulatorSheets.RuneWeightSheet;
             _runeSheet = simulatorSheets.RuneSheet;
+            _materialItemSheet = simulatorSheets.MaterialItemSheet;
 
             SetEnemies(_currentBossRow, patternRow);
         }
@@ -173,13 +175,15 @@ namespace Nekoyume.Battle
             }
 
             var rank =  WorldBossHelper.CalculateRank(_currentBossRow, DamageDealt);
-            AssetReward = RuneHelper.CalculateReward(
+            var rewards = WorldBossHelper.CalculateReward(
                 rank,
                 BossId,
                 _runeWeightSheet,
                 _worldBossBattleRewardSheet,
                 _runeSheet,
+                _materialItemSheet,
                 Random);
+            AssetReward = rewards.assets;
 
             Log.result = Result;
             return Log;

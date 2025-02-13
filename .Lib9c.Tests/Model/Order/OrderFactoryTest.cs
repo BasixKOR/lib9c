@@ -4,7 +4,7 @@ namespace Lib9c.Tests.Model.Order
     using System.Linq;
     using Bencodex.Types;
     using Lib9c.Model.Order;
-    using Libplanet.Assets;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Model.Item;
@@ -27,11 +27,11 @@ namespace Lib9c.Tests.Model.Order
         public void Create(ItemType itemType, long blockIndex, Order.OrderType orderType)
         {
             ITradableItem tradableItem;
-            Guid itemId = new Guid("15396359-04db-68d5-f24a-d89c18665900");
+            var itemId = new Guid("15396359-04db-68d5-f24a-d89c18665900");
             switch (itemType)
             {
                 case ItemType.Consumable:
-                    tradableItem = ItemFactory.CreateItemUsable(
+                    tradableItem = (ITradableItem)ItemFactory.CreateItemUsable(
                         _tableSheets.ConsumableItemSheet.First,
                         itemId,
                         0);
@@ -42,7 +42,7 @@ namespace Lib9c.Tests.Model.Order
                         itemId);
                     break;
                 case ItemType.Equipment:
-                    tradableItem = ItemFactory.CreateItemUsable(
+                    tradableItem = (ITradableItem)ItemFactory.CreateItemUsable(
                         _tableSheets.EquipmentItemSheet.First,
                         itemId,
                         0);
@@ -61,9 +61,9 @@ namespace Lib9c.Tests.Model.Order
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
             var currency = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
-            Guid orderId = new Guid("6d460c1a-755d-48e4-ad67-65d5f519dbc8");
+            var orderId = new Guid("6d460c1a-755d-48e4-ad67-65d5f519dbc8");
 
-            Order order = OrderFactory.Create(
+            var order = OrderFactory.Create(
                 Addresses.Admin,
                 Addresses.Blacksmith,
                 orderId,
@@ -94,8 +94,9 @@ namespace Lib9c.Tests.Model.Order
         [InlineData(ItemSubType.NormalMaterial)]
         public void Create_Throw_InvalidItemTypeException(ItemSubType itemSubType)
         {
-            Assert.Throws<InvalidItemTypeException>(() =>
-                OrderFactory.Create(default, default, default, default, default, default, itemSubType, 1));
+            Assert.Throws<InvalidItemTypeException>(
+                () =>
+                    OrderFactory.Create(default, default, default, default, default, default, itemSubType, 1));
         }
 
         [Theory]
@@ -109,7 +110,7 @@ namespace Lib9c.Tests.Model.Order
             switch (itemType)
             {
                 case ItemType.Consumable:
-                    tradableItem = ItemFactory.CreateItemUsable(
+                    tradableItem = (ITradableItem)ItemFactory.CreateItemUsable(
                         _tableSheets.ConsumableItemSheet.First,
                         Guid.NewGuid(),
                         0);
@@ -120,7 +121,7 @@ namespace Lib9c.Tests.Model.Order
                         Guid.NewGuid());
                     break;
                 case ItemType.Equipment:
-                    tradableItem = ItemFactory.CreateItemUsable(
+                    tradableItem = (ITradableItem)ItemFactory.CreateItemUsable(
                         _tableSheets.EquipmentItemSheet.First,
                         Guid.NewGuid(),
                         0);
@@ -138,7 +139,7 @@ namespace Lib9c.Tests.Model.Order
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
             var currency = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
-            Order order = OrderFactory.Create(
+            var order = OrderFactory.Create(
                 Addresses.Admin,
                 Addresses.Blacksmith,
                 default,
@@ -149,8 +150,8 @@ namespace Lib9c.Tests.Model.Order
                 1
             );
 
-            Dictionary serialized = (Dictionary)order.Serialize();
-            Order deserialized = OrderFactory.Deserialize(serialized);
+            var serialized = (Dictionary)order.Serialize();
+            var deserialized = OrderFactory.Deserialize(serialized);
             Assert.Equal(order, deserialized);
             Assert.Equal(orderType, deserialized.Type);
         }

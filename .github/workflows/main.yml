@@ -2,10 +2,13 @@ name: main
 
 on:
   push:
-    branches: []
-    tags: []
+    branches:
+      - "**"
+    tags:
+      - "**"
   pull_request:
-    branches: []
+    branches:
+      - "**"
 
 jobs:
   build-and-test:
@@ -16,112 +19,108 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-    - name: Check if .Libplanet refers to a tagged commit
-      if: |
-        github.event_name == 'push' && (
-          github.ref == 'refs/heads/main' ||
-          startsWith(github.ref, 'refs/heads/rc-') ||
-          startsWith(github.ref, 'refs/tags/')
-        ) ||
-        github.event_name == 'pull_request' && (
-          github.head_ref == 'refs/heads/main' ||
-          startsWith(github.head_ref, 'refs/heads/rc-') ||
-          startsWith(github.head_ref, 'refs/tags/')
-        )
-      run: |
-        set -e
-        pushd .Libplanet/
-        git fetch origin 'refs/tags/*:refs/tags/*'
-        if ! git describe --tags --exact-match; then
-          echo "The unreleased Libplanet shouldn't be used." > /dev/stderr
-          exit 1
-        fi
-        popd
+    - uses: actions/checkout@v4
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.100
+        dotnet-version: 6.0.400
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore --configuration ${{ matrix.configuration }}
+      run: dotnet build --self-contained=false --no-restore --configuration ${{ matrix.configuration }}
     - name: Test
       run: dotnet test --no-restore --verbosity normal --configuration ${{ matrix.configuration }}
 
   build-for-unity:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          submodules: true
-      - uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 6.0.100
-      - name: Enforce netstandard2.1 target with custom patch
+          dotnet-version: 6.0.400
+      - name: Enforce net5.0 target with custom patch
         run: |
           set -e
 
-          sed -i -E 's|<TargetFramework>.*</TargetFramework>|<TargetFramework>netstandard2.1</TargetFramework>|' Lib9c*/*.csproj Libplanet*/*.csproj
+          sed -i -E 's|<TargetFramework>.*</TargetFramework>|<TargetFramework>net5.0</TargetFramework>|' Lib9c*/*.csproj
           sed -i -E 's|<ImplicitUsings>.*</ImplicitUsings>|<ImplicitUsings>disable</ImplicitUsings>|' Lib9c*/*.csproj Libplanet*/*.csproj
-          sed -i -E 's|\[MaybeNullWhen\(false\)] out TValue value|out TValue value|' Lib9c/TableData/Sheet.cs
           sed -i -E 's|public bool TryGetValue\(TKey key, out TValue value, bool throwException\)|public bool TryGetValue\(TKey key, out TValue? value, bool throwException\)|' Lib9c/TableData/Sheet.cs
       - name: build
-        run: dotnet build
+        run: dotnet build --self-contained=false
+
+  build-js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.400
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: |
+            recursive: true
+            cwd: "integrations/javascript/@planetarium"
+      - name: Build Lib9c.Tools
+        run: dotnet build .Lib9c.Tools/Lib9c.Tools.csproj
+      - run: pnpm -r codegen
+        working-directory: "integrations/javascript/@planetarium"
+      - run: pnpm -r build
+        working-directory: "integrations/javascript/@planetarium"
+      - run: pnpm -r fmt:ci
+        working-directory: "integrations/javascript/@planetarium"
+      - run: pnpm -r test
+        working-directory: "integrations/javascript/@planetarium"
 
   release:
     if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
+    - uses: actions/checkout@v4
     - name: Check if a new tag refers a merge commit
       if: github.ref_type == 'tag'
       run: |
         set -evx
         curl -o /tmp/web-flow.gpg "$WEB_FLOW_KEY_URL"
         gpg --import /tmp/web-flow.gpg
+        # shellcheck disable=SC2126
         if ! git verify-commit "$GITHUB_REF_NAME" && \
            [[ "$( git cat-file -p "$GITHUB_REF_NAME" \
                 | grep -Ei '^parent\s+[0-9a-f]{40}$' | wc -l )" -lt 2 ]]; then
           echo "::error title=Invalid tag commit::Tags must refer to a merge" \
                "commit or a commit signed by GitHub web-flow" \
                "($WEB_FLOW_KEY_URL).  The tag $GITHUB_REF_NAME refers to " \
-               "a commit $(git rev-parse $GITHUB_REF_NAME) which is neither" \
+               "a commit $(git rev-parse "$GITHUB_REF_NAME") which is neither" \
                "a merge commit nor signed by GitHub web-flow."
           exit 1
         fi
       env:
         WEB_FLOW_KEY_URL: https://github.com/web-flow.gpg
-    - name: Update other repos referring lib9c as submodules
-      uses: planetarium/submodule-updater@main
-      with:
-        token: ${{ secrets.SUBMODULE_UPDATER_GH_TOKEN }}
-        committer: >
-          Submodule Updater <engineering+submodule-updater@planetariumhq.com>
-        targets: |
-          ${{ github.repository_owner }}/NineChronicles:rc-${{ github.ref_name }}?
-          ${{ github.repository_owner }}/NineChronicles.Headless:rc-${{ github.ref_name }}?
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.100
+        dotnet-version: 6.0.400
     - name: Collect available action type ids
       run: |
         mkdir publish
         dotnet run --property WarningLevel=0 --project .Lib9c.Tools/Lib9c.Tools.csproj -- action list > publish/all_action_type_ids.txt
+        dotnet run --property WarningLevel=0 --project .Lib9c.Tools/Lib9c.Tools.csproj -- action list --obsolete-only --json-path=publish/obsolete_action_types.json
     - name: Publish available action type ids
-      uses: peaceiris/actions-gh-pages@v3
+      uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./publish
         destination_dir: ${{ github.ref_name }}
+    - name: Publish available action type ids for latest
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./publish
+        destination_dir: latest
 
   update-submodule:
-    if: github.ref_type == 'branch' && startsWith(github.ref_name, 'rc-v')
+    if: github.ref_type == 'branch' && startsWith(github.ref_name, 'release/')
     runs-on: ubuntu-latest
     steps:
     - name: Update other repos referring lib9c as submodules
@@ -131,5 +130,6 @@ jobs:
         committer: >
           Submodule Updater <engineering+submodule-updater@planetariumhq.com>
         targets: |
-          ${{ github.repository_owner }}/NineChronicles:${{ github.ref_name }}?
-          ${{ github.repository_owner }}/NineChronicles.Headless:${{ github.ref_name }}?
+          planetarium/NineChronicles:refs/heads/release/*
+          ${{ github.repository_owner }}/NineChronicles.Headless:refs/heads/release/*
+          ${{ github.repository_owner }}/market-service:refs/heads/release/*

@@ -1,8 +1,7 @@
-﻿namespace Lib9c.Tests.Model.State
+namespace Lib9c.Tests.Model.State
 {
     using System;
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Model.State;
     using Xunit;
@@ -20,7 +19,7 @@
         [Fact]
         public void Serialize()
         {
-            var address = new PrivateKey().ToAddress();
+            var address = new PrivateKey().Address;
             var state = new HammerPointState(address, 1);
             state.AddHammerPoint(3, _tableSheets.CrystalHammerPointSheet);
             var serialized = state.Serialize();
@@ -34,7 +33,7 @@
         [Fact]
         public void ResetHammerPoint()
         {
-            var address = new PrivateKey().ToAddress();
+            var address = new PrivateKey().Address;
             var state = new HammerPointState(address, 1);
             state.AddHammerPoint(3, _tableSheets.CrystalHammerPointSheet);
             var serialized = state.Serialize();
@@ -53,7 +52,7 @@
         [Fact]
         public void AddHammerPoint()
         {
-            var address = new PrivateKey().ToAddress();
+            var address = new PrivateKey().Address;
             var state = new HammerPointState(address, 1);
             var sheet = _tableSheets.CrystalHammerPointSheet;
             state.AddHammerPoint(3, sheet);

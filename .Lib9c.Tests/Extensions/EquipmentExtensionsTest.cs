@@ -3,7 +3,6 @@ namespace Lib9c.Tests.Extensions
     using System;
     using System.Linq;
     using Lib9c.Tests.Action;
-    using Libplanet;
     using Libplanet.Action;
     using Libplanet.Crypto;
     using Nekoyume.Action;
@@ -69,10 +68,11 @@ namespace Lib9c.Tests.Extensions
                         false);
                     try
                     {
-                        Assert.False(equipment.IsMadeWithMimisbrunnrRecipe(
-                            recipeSheet,
-                            subRecipeSheet,
-                            equipmentOptionSheet));
+                        Assert.False(
+                            equipment.IsMadeWithMimisbrunnrRecipe(
+                                recipeSheet,
+                                subRecipeSheet,
+                                equipmentOptionSheet));
                     }
                     catch
                     {
@@ -139,7 +139,7 @@ namespace Lib9c.Tests.Extensions
             if (!(subRecipeRow is null))
             {
                 CombinationEquipment.AddAndUnlockOption(
-                    new AgentState(new PrivateKey().ToAddress()),
+                    new AgentState(new PrivateKey().Address),
                     null,
                     equipment,
                     random,

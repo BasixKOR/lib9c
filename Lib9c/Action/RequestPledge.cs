@@ -1,9 +1,10 @@
 using Bencodex.Types;
 using Lib9c;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 
 namespace Nekoyume.Action
 {
@@ -34,19 +35,19 @@ namespace Nekoyume.Action
             RefillMead = values[1].ToInteger();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var contractAddress = AgentAddress.GetPledgeAddress();
-            if (states.TryGetState(contractAddress, out List _))
+            if (states.TryGetLegacyState(contractAddress, out List _))
             {
                 throw new AlreadyContractedException($"{AgentAddress} already contracted.");
             }
 
             return states
-                .TransferAsset(context.Signer, AgentAddress, 1 * Currencies.Mead)
-                .SetState(
+                .TransferAsset(context, context.Signer, AgentAddress, 1 * Currencies.Mead)
+                .SetLegacyState(
                     contractAddress,
                     List.Empty
                         .Add(context.Signer.Serialize())

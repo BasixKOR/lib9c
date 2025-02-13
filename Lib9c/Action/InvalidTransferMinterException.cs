@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Libplanet;
+using Libplanet.Crypto;
 
 namespace Nekoyume.Action
 {
@@ -19,6 +19,10 @@ namespace Nekoyume.Action
             Minters = new HashSet<Address>(minters);
             Sender = sender;
             Recipient = recipient;
+        }
+
+        public InvalidTransferMinterException(string message) : base(message)
+        {
         }
 
         protected InvalidTransferMinterException(SerializationInfo info, StreamingContext context)

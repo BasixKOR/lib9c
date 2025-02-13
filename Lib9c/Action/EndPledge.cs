@@ -1,9 +1,10 @@
 using Bencodex.Types;
 using Lib9c;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 
 namespace Nekoyume.Action
 {
@@ -25,13 +26,13 @@ namespace Nekoyume.Action
             AgentAddress = ((Dictionary)plainValue)["values"].ToAddress();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
+            GasTracer.UseGas(1);
             Address signer = context.Signer;
-            var states = context.PreviousStates;
+            var states = context.PreviousState;
             var contractAddress = AgentAddress.GetPledgeAddress();
-            if (states.TryGetState(contractAddress, out List contract))
+            if (states.TryGetLegacyState(contractAddress, out List contract))
             {
                 if (signer != contract[0].ToAddress())
                 {
@@ -41,9 +42,9 @@ namespace Nekoyume.Action
                 var balance = states.GetBalance(AgentAddress, Currencies.Mead);
                 if (balance > 0 * Currencies.Mead)
                 {
-                    states = states.TransferAsset(AgentAddress, signer, balance);
+                    states = states.TransferAsset(context, AgentAddress, signer, balance);
                 }
-                return states.SetState(contractAddress, Null.Value);
+                return states.RemoveLegacyState(contractAddress);
             }
 
             throw new FailedLoadStateException("failed to find pledge.");

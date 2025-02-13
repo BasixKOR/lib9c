@@ -5,9 +5,11 @@ using System.Globalization;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Nekoyume.Action.Guild.Migration.LegacyModels;
+using Nekoyume.Arena;
 using Nekoyume.Extensions;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
@@ -15,6 +17,7 @@ using Nekoyume.Model.Mail;
 using Nekoyume.Model.Skill;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
 using Nekoyume.TableData.Pet;
@@ -24,10 +27,10 @@ using static Lib9c.SerializeKeys;
 namespace Nekoyume.Action
 {
     /// <summary>
-    /// Hard forked at https://github.com/planetarium/lib9c/pull/1711
+    /// Hard forked at https://github.com/planetarium/lib9c/pull/2195
     /// </summary>
     [Serializable]
-    [ActionType("combination_equipment16")]
+    [ActionType("combination_equipment17")]
     public class CombinationEquipment : GameAction, ICombinationEquipmentV4
     {
         public const string AvatarAddressKey = "a";
@@ -83,60 +86,38 @@ namespace Nekoyume.Action
             petId = plainValue[PetIdKey].ToNullableInteger();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            var slotAddress = avatarAddress.Derive(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    CombinationSlotState.DeriveFormat,
-                    slotIndex
-                )
-            );
-            var inventoryAddress = avatarAddress.Derive(LegacyInventoryKey);
-            var worldInformationAddress = avatarAddress.Derive(LegacyWorldInformationKey);
-            var questListAddress = avatarAddress.Derive(LegacyQuestListKey);
-            if (context.Rehearsal)
-            {
-                return states;
-            }
-
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var addressesHex = GetSignerAndOtherAddressesHex(context, avatarAddress);
             var started = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}CombinationEquipment exec started", addressesHex);
 
-            if (!states.TryGetAgentAvatarStatesV2(context.Signer, avatarAddress, out var agentState,
-                    out var avatarState, out _))
+            var agentState = states.GetAgentState(context.Signer);
+            if (agentState is null)
+            {
+                throw new FailedLoadStateException(
+                    $"{addressesHex}Aborted as the agent state of the signer was failed to load.");
+            }
+
+            if (!states.TryGetAvatarState(context.Signer, avatarAddress, out var avatarState))
             {
                 throw new FailedLoadStateException(
                     $"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
             }
 
-            // Validate Required Cleared Tutorial Stage
-            if (!avatarState.worldInformation.IsStageCleared(
-                    GameConfig.RequireClearedStageLevel.CombinationEquipmentAction))
+            var allSlotState = states.GetAllCombinationSlotState(avatarAddress);
+            if (allSlotState is null)
             {
-                avatarState.worldInformation.TryGetLastClearedStageId(out var current);
-                throw new NotEnoughClearedStageLevelException(
-                    addressesHex,
-                    GameConfig.RequireClearedStageLevel.CombinationEquipmentAction,
-                    current);
+                throw new FailedLoadStateException($"Aborted as the allSlotState was failed to load.");
             }
-            // ~Validate Required Cleared Tutorial Stage
 
             // Validate SlotIndex
-            var slotState = states.GetCombinationSlotState(avatarAddress, slotIndex);
-            if (slotState is null)
+            var slotState = allSlotState.GetSlot(slotIndex);
+            if (!slotState.ValidateV2(context.BlockIndex))
             {
-                throw new FailedLoadStateException(
-                    $"{addressesHex}Aborted as the slot state is failed to load: # {slotIndex}");
-            }
-
-            if (!slotState.Validate(avatarState, context.BlockIndex))
-            {
-                throw new CombinationSlotUnlockException(
-                    $"{addressesHex}Aborted as the slot state is invalid: {slotState} @ {slotIndex}");
+                throw new CombinationSlotUnlockException($"{addressesHex}Aborted as the slot state is invalid: {slotState} @ {slotIndex}");
             }
             // ~Validate SlotIndex
 
@@ -145,7 +126,7 @@ namespace Nekoyume.Action
             if (petId.HasValue)
             {
                 var petStateAddress = PetState.DeriveAddress(avatarAddress, petId.Value);
-                if (!states.TryGetState(petStateAddress, out List rawState))
+                if (!states.TryGetLegacyState(petStateAddress, out List rawState))
                 {
                     throw new FailedLoadStateException($"{addressesHex}Aborted as the {nameof(PetState)} was failed to load.");
                 }
@@ -224,7 +205,7 @@ namespace Nekoyume.Action
             if (equipmentItemRecipeSheet[recipeId].CRYSTAL != 0)
             {
                 var unlockedRecipeIdsAddress = avatarAddress.Derive("recipe_ids");
-                if (!states.TryGetState(unlockedRecipeIdsAddress, out List rawIds))
+                if (!states.TryGetLegacyState(unlockedRecipeIdsAddress, out List rawIds))
                 {
                     throw new FailedLoadStateException("can't find UnlockedRecipeList.");
                 }
@@ -308,7 +289,7 @@ namespace Nekoyume.Action
             CrystalHammerPointSheet.Row hammerPointRow = null;
             if (existHammerPointSheet)
             {
-                if (states.TryGetState(hammerPointAddress, out List serialized))
+                if (states.TryGetLegacyState(hammerPointAddress, out List serialized))
                 {
                     hammerPointState =
                         new HammerPointState(hammerPointAddress, serialized);
@@ -371,49 +352,56 @@ namespace Nekoyume.Action
             }
 
             // Subtract Required ActionPoint
+            // 2024-03-29 기준: 레시피에 CostActionPoint가 포함된 케이스는 없으나 TableSheets 상태에 의해 동작이 변경될 수 있기에 작성해둔다.
             if (costActionPoint > 0)
             {
-                if (avatarState.actionPoint < costActionPoint)
+                if (!states.TryGetActionPoint(avatarAddress, out var actionPoint))
+                {
+                    actionPoint = avatarState.actionPoint;
+                }
+
+                if (actionPoint < costActionPoint)
                 {
                     throw new NotEnoughActionPointException(
-                        $"{addressesHex}Aborted due to insufficient action point: {avatarState.actionPoint} < {costActionPoint}"
+                        $"{addressesHex}Aborted due to insufficient action point: {actionPoint} < {costActionPoint}"
                     );
                 }
 
-                avatarState.actionPoint -= costActionPoint;
+                actionPoint -= costActionPoint;
+                states = states.SetActionPoint(avatarAddress, actionPoint);
             }
             // ~Subtract Required ActionPoint
 
             // Transfer Required NCG
             if (costNcg > 0L)
             {
-                var arenaSheet = states.GetSheet<ArenaSheet>();
-                var arenaData = arenaSheet.GetRoundByBlockIndex(context.BlockIndex);
-                var feeStoreAddress = Addresses.GetBlacksmithFeeAddress(arenaData.ChampionshipId, arenaData.Round);
-
+                // Transfer tax.
+                var feeAddress = states.GetFeeAddress(context.BlockIndex);
                 states = states.TransferAsset(
+                    context,
                     context.Signer,
-                    feeStoreAddress,
+                    feeAddress,
                     states.GetGoldCurrency() * costNcg
                 );
             }
             // ~Transfer Required NCG
 
             // Create Equipment
+            var random = context.GetRandom();
             var equipment = (Equipment) ItemFactory.CreateItemUsable(
                 equipmentRow,
-                context.Random.GenerateRandomGuid(),
+                random.GenerateRandomGuid(),
                 endBlockIndex,
                 madeWithMimisbrunnrRecipe: isMimisbrunnrSubRecipe
             );
 
-            if (!(subRecipeRow is null))
+            if (subRecipeRow is not null)
             {
                 AddAndUnlockOption(
                     agentState,
                     petState,
                     equipment,
-                    context.Random,
+                    random,
                     subRecipeRow,
                     sheets.GetSheet<EquipmentItemOptionSheet>(),
                     petOptionSheet,
@@ -428,7 +416,7 @@ namespace Nekoyume.Action
                         AddSkillOption(
                             agentState,
                             equipment,
-                            context.Random,
+                            random,
                             subRecipeRow,
                             sheets.GetSheet<EquipmentItemOptionSheet>(),
                             sheets.GetSheet<SkillSheet>()
@@ -450,13 +438,12 @@ namespace Nekoyume.Action
             // ~Create Equipment
 
             // Apply block time discount
-            if (!(petState is null))
+            if (petState is not null)
             {
                 var requiredBlockIndex = endBlockIndex - context.BlockIndex;
-                var gameConfigState = states.GetGameConfigState();
                 requiredBlockIndex = PetHelper.CalculateReducedBlockOnCraft(
                     requiredBlockIndex,
-                    gameConfigState.RequiredAppraiseBlock,
+                    0,
                     petState,
                     petOptionSheet);
                 endBlockIndex = context.BlockIndex + requiredBlockIndex;
@@ -472,7 +459,7 @@ namespace Nekoyume.Action
             // ~Add or Update Equipment
 
             // Update Slot
-            var mailId = context.Random.GenerateRandomGuid();
+            var mailId = random.GenerateRandomGuid();
             var attachmentResult = new CombinationConsumable5.ResultModel
             {
                 id = mailId,
@@ -486,14 +473,15 @@ namespace Nekoyume.Action
                 subRecipeId = subRecipeId,
             };
             slotState.Update(attachmentResult, context.BlockIndex, endBlockIndex, petId);
+            allSlotState.SetSlot(slotState);
             // ~Update Slot
 
             // Update Pet
-            if (!(petState is null))
+            if (petState is not null)
             {
                 petState.Update(endBlockIndex);
                 var petStateAddress = PetState.DeriveAddress(avatarAddress, petState.PetId);
-                states = states.SetState(petStateAddress, petState.Serialize());
+                states = states.SetLegacyState(petStateAddress, petState.Serialize());
             }
             // ~Update Pet
 
@@ -509,17 +497,14 @@ namespace Nekoyume.Action
             var ended = DateTimeOffset.UtcNow;
             Log.Debug("{AddressesHex}CombinationEquipment Total Executed Time: {Elapsed}", addressesHex, ended - started);
             return states
-                .SetState(avatarAddress, avatarState.SerializeV2())
-                .SetState(inventoryAddress, avatarState.inventory.Serialize())
-                .SetState(worldInformationAddress, avatarState.worldInformation.Serialize())
-                .SetState(questListAddress, avatarState.questList.Serialize())
-                .SetState(slotAddress, slotState.Serialize())
-                .SetState(hammerPointAddress,hammerPointState.Serialize())
-                .SetState(context.Signer, agentState.Serialize());
+                .SetAvatarState(avatarAddress, avatarState)
+                .SetCombinationSlotState(avatarAddress, allSlotState)
+                .SetLegacyState(hammerPointAddress,hammerPointState.Serialize())
+                .SetAgentState(context.Signer, agentState);
         }
 
-        private IAccountStateDelta UseAssetsBySuperCraft(
-            IAccountStateDelta states,
+        private IWorld UseAssetsBySuperCraft(
+            IWorld states,
             IActionContext context,
             CrystalHammerPointSheet.Row row,
             HammerPointState hammerPointState)
@@ -533,13 +518,14 @@ namespace Nekoyume.Action
 
             hammerPointState.ResetHammerPoint();
             return states.TransferAsset(
+                context,
                 context.Signer,
                 Addresses.SuperCraft,
                 hammerPointCost);
         }
 
-        private IAccountStateDelta UseAssetsByNormalCombination(
-            IAccountStateDelta states,
+        private IWorld UseAssetsByNormalCombination(
+            IWorld states,
             IActionContext context,
             AvatarState avatarState,
             HammerPointState hammerPointState,
@@ -630,9 +616,9 @@ namespace Nekoyume.Action
                 }
 
                 states = states
-                    .SetState(dailyCostState.Address, dailyCostState.Serialize())
-                    .SetState(weeklyCostState.Address, weeklyCostState.Serialize())
-                    .TransferAsset(context.Signer, Addresses.MaterialCost, costCrystal);
+                    .SetLegacyState(dailyCostState.Address, dailyCostState.Serialize())
+                    .SetLegacyState(weeklyCostState.Address, weeklyCostState.Serialize())
+                    .TransferAsset(context, context.Signer, Addresses.MaterialCost, costCrystal);
             }
 
             int hammerPoint;
@@ -697,7 +683,6 @@ namespace Nekoyume.Action
                     equipment.StatsMap.AddStatAdditionalValue(stat.StatType, stat.BaseValue);
                     equipment.Update(equipment.RequiredBlockIndex + optionInfo.RequiredBlockIndex);
                     equipment.optionCountFromCombination++;
-                    agentState.unlockedOptions.Add(optionRow.Id);
                 }
                 else
                 {
@@ -707,7 +692,6 @@ namespace Nekoyume.Action
                         equipment.Skills.Add(skill);
                         equipment.Update(equipment.RequiredBlockIndex + optionInfo.RequiredBlockIndex);
                         equipment.optionCountFromCombination++;
-                        agentState.unlockedOptions.Add(optionRow.Id);
                     }
                 }
             }
@@ -758,7 +742,6 @@ namespace Nekoyume.Action
                     equipment.Skills.Add(skill);
                     equipment.Update(equipment.RequiredBlockIndex + optionInfo.RequiredBlockIndex);
                     equipment.optionCountFromCombination++;
-                    agentState.unlockedOptions.Add(optionRow.Id);
                 }
             }
         }

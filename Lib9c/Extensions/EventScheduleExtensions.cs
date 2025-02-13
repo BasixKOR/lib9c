@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using DecimalMath;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using Nekoyume.Exceptions;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Event;

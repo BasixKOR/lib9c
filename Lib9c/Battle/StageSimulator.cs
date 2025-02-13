@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Libplanet.Action;
-using Nekoyume.Action;
+using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.BattleStatus;
 using Nekoyume.Model.Item;
@@ -13,6 +13,8 @@ using Nekoyume.Model.State;
 using Nekoyume.Model.Buff;
 using Nekoyume.TableData;
 using Priority_Queue;
+using NormalAttack = Nekoyume.Model.BattleStatus.NormalAttack;
+using Skill = Nekoyume.Model.Skill.Skill;
 
 namespace Nekoyume.Battle
 {
@@ -32,12 +34,12 @@ namespace Nekoyume.Battle
         private int TurnLimit { get; }
         public override IEnumerable<ItemBase> Reward => _waveRewards;
 
-        public StageSimulator(
-            IRandom random,
+        public StageSimulator(IRandom random,
             AvatarState avatarState,
             List<Guid> foods,
-            List<RuneState> runeStates,
-            List<Model.Skill.Skill> skillsOnWaveStart,
+            AllRuneState runeStates,
+            RuneSlotState runeSlotState,
+            List<Skill> skillsOnWaveStart,
             int worldId,
             int stageId,
             StageSheet.Row stageRow,
@@ -47,18 +49,43 @@ namespace Nekoyume.Battle
             SimulatorSheets simulatorSheets,
             EnemySkillSheet enemySkillSheet,
             CostumeStatSheet costumeStatSheet,
-            List<ItemBase> waveRewards)
+            List<ItemBase> waveRewards,
+            List<StatModifier> collectionModifiers,
+            BuffLimitSheet buffLimitSheet,
+            BuffLinkSheet buffLinkSheet,
+            bool logEvent = true,
+            long shatterStrikeMaxDamage = 400_000
+        )
             : base(
                 random,
                 avatarState,
                 foods,
-                simulatorSheets)
+                simulatorSheets,
+                logEvent,
+                shatterStrikeMaxDamage
+            )
         {
-            Player.SetCostumeStat(costumeStatSheet);
-            if (runeStates != null)
+            BuffLimitSheet = buffLimitSheet;
+            BuffLinkSheet = buffLinkSheet;
+            var runeOptionSheet = simulatorSheets.RuneOptionSheet;
+            var skillSheet = simulatorSheets.SkillSheet;
+            var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(
+                runeStates, simulatorSheets.RuneListSheet, simulatorSheets.RuneLevelBonusSheet
+            );
+            var equippedRune = new List<RuneState>();
+            foreach (var runeInfo in runeSlotState.GetEquippedRuneSlotInfos())
             {
-                Player.SetRune(runeStates, simulatorSheets.RuneOptionSheet, simulatorSheets.SkillSheet);
+                if (runeStates.TryGetRuneState(runeInfo.RuneId, out var runeState))
+                {
+                    equippedRune.Add(runeState);
+                }
             }
+
+            Player.ConfigureStats(costumeStatSheet, equippedRune, runeOptionSheet, runeLevelBonus,
+                skillSheet, collectionModifiers);
+
+            // call SetRuneSkills last. because rune skills affect from total calculated stats
+            Player.SetRuneSkills(equippedRune, runeOptionSheet, skillSheet);
 
             _waves = new List<Wave>();
             _waveRewards = waveRewards;
@@ -128,8 +155,11 @@ namespace Nekoyume.Battle
                         ActionBuffSheet
                     );
 
-                    var usedSkill = skill.Use(Player, 0, buffs);
-                    Log.Add(usedSkill);
+                    var usedSkill = skill.Use(Player, 0, buffs, LogEvent);
+                    if (LogEvent)
+                    {
+                        Log.Add(usedSkill);
+                    }
                 }
 
                 while (true)
@@ -142,7 +172,7 @@ namespace Nekoyume.Battle
                             Result = BattleLog.Result.Lose;
                             if (Exp > 0)
                             {
-                                Player.GetExp((int)(Exp * 0.3m), true);
+                                Player.GetExp((int)(Exp * 0.3m), LogEvent);
                             }
                         }
                         else
@@ -169,7 +199,7 @@ namespace Nekoyume.Battle
                             Result = BattleLog.Result.Lose;
                             if (Exp > 0)
                             {
-                                Player.GetExp((int)(Exp * 0.3m), true);
+                                Player.GetExp((int)(Exp * 0.3m), LogEvent);
                             }
                         }
                         else
@@ -192,7 +222,7 @@ namespace Nekoyume.Battle
                             {
                                 if (Exp > 0)
                                 {
-                                    Player.GetExp(Exp, true);
+                                    Player.GetExp(Exp, LogEvent);
                                 }
 
                                 break;
@@ -200,10 +230,13 @@ namespace Nekoyume.Battle
                             case 2:
                             {
                                 ItemMap = Player.GetRewards(_waveRewards);
-                                var dropBox = new DropBox(null, _waveRewards);
-                                Log.Add(dropBox);
-                                var getReward = new GetReward(null, _waveRewards);
-                                Log.Add(getReward);
+                                if (LogEvent)
+                                {
+                                    var dropBox = new DropBox(null, _waveRewards);
+                                    Log.Add(dropBox);
+                                    var getReward = new GetReward(null, _waveRewards);
+                                    Log.Add(getReward);
+                                }
                                 break;
                             }
                             default:
@@ -225,8 +258,14 @@ namespace Nekoyume.Battle
 
                     foreach (var other in Characters)
                     {
+                        var spdMultiplier = 0.6m;
                         var current = Characters.GetPriority(other);
-                        var speed = current * 0.6m;
+                        if (other == Player && other.usedSkill is not null && other.usedSkill is not NormalAttack)
+                        {
+                            spdMultiplier = 0.9m;
+                        }
+
+                        var speed = current * spdMultiplier;
                         Characters.UpdatePriority(other, speed);
                     }
 

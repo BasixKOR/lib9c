@@ -35,7 +35,10 @@ namespace Nekoyume.TableData
             public SkillTargetType TargetType { get; private set; }
             public StatType StatType { get; private set; }
             public StatModifier.OperationType OperationType { get; private set; }
-            public int Value { get; private set; }
+            public long Value { get; private set; }
+            public bool IsEnhanceable { get; private set; }
+
+            public int MaxStack { get; private set; }
 
             public override void Set(IReadOnlyList<string> fields)
             {
@@ -48,7 +51,19 @@ namespace Nekoyume.TableData
                 // modifier
                 StatType = (StatType)Enum.Parse(typeof(StatType), fields[5]);
                 OperationType = (StatModifier.OperationType)Enum.Parse(typeof(StatModifier.OperationType), fields[6]);
-                Value = ParseInt(fields[7]);
+                Value = ParseLong(fields[7]);
+
+                if (fields.Count < 9)
+                {
+                    IsEnhanceable = true;
+                    return;
+                }
+
+                IsEnhanceable = ParseBool(fields[8], true);
+                if (fields.Count > 9)
+                {
+                    MaxStack = ParseInt(fields[9], 0);
+                }
             }
         }
 

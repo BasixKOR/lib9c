@@ -10,10 +10,11 @@ namespace Nekoyume.Model.Skill.Arena
     {
         public ArenaDoubleAttack(
             SkillSheet.Row skillRow,
-            int power,
+            long power,
             int chance,
             int statPowerRatio,
-            StatType referencedStatType) : base(skillRow, power, chance, statPowerRatio, referencedStatType)
+            StatType referencedStatType) : base(skillRow, power, chance, statPowerRatio,
+            referencedStatType)
         {
         }
 
@@ -23,25 +24,18 @@ namespace Nekoyume.Model.Skill.Arena
             int turn,
             IEnumerable<Buff.Buff> buffs)
         {
-            var clone = (ArenaCharacter)caster.Clone();
+            var clone = (ArenaCharacter) caster.Clone();
             var damage = ProcessDamage(caster, target, turn);
             var buff = ProcessBuff(caster, target, turn, buffs);
 
-            return new BattleStatus.Arena.ArenaDoubleAttack(clone, damage, buff);
-        }
-
-        [Obsolete("Use Use")]
-        public override BattleStatus.Arena.ArenaSkill UseV1(
-            ArenaCharacter caster,
-            ArenaCharacter target,
-            int turn,
-            IEnumerable<Buff.Buff> buffs)
-        {
-            var clone = (ArenaCharacter)caster.Clone();
-            var damage = ProcessDamage(caster, target, turn);
-            var buff = ProcessBuffV1(caster, target, turn, buffs);
-
-            return new BattleStatus.Arena.ArenaDoubleAttack(clone, damage, buff);
+            if (SkillRow.Combo)
+            {
+                return new BattleStatus.Arena.ArenaDoubleAttackWithCombo(SkillRow.Id, clone, damage, buff);
+            }
+            else
+            {
+                return new BattleStatus.Arena.ArenaDoubleAttack(SkillRow.Id, clone, damage, buff);
+            }
         }
     }
 }

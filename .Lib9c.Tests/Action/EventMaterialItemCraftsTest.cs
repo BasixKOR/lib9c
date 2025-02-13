@@ -2,9 +2,9 @@ namespace Lib9c.Tests.Action
 {
     using System.Collections.Generic;
     using System.Linq;
-    using Libplanet;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Exceptions;
@@ -12,6 +12,7 @@ namespace Lib9c.Tests.Action
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Mail;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Nekoyume.TableData.Event;
     using Xunit;
@@ -19,7 +20,7 @@ namespace Lib9c.Tests.Action
 
     public class EventMaterialItemCraftsTest
     {
-        private readonly IAccountStateDelta _initialStates;
+        private readonly IWorld _initialStates;
         private readonly TableSheets _tableSheets;
 
         private readonly Address _agentAddress;
@@ -27,52 +28,42 @@ namespace Lib9c.Tests.Action
 
         public EventMaterialItemCraftsTest()
         {
-            _initialStates = new State();
+            _initialStates = new World(MockUtil.MockModernWorldState);
             var sheets = TableSheetsImporter.ImportSheets();
             foreach (var (key, value) in sheets)
             {
                 _initialStates = _initialStates
-                    .SetState(Addresses.TableSheet.Derive(key), value.Serialize());
+                    .SetLegacyState(Addresses.TableSheet.Derive(key), value.Serialize());
             }
 
             _tableSheets = new TableSheets(sheets);
 
-            _agentAddress = new PrivateKey().ToAddress();
+            _agentAddress = new PrivateKey().Address;
             _avatarAddress = _agentAddress.Derive("avatar");
-
-            var inventoryAddr = _avatarAddress.Derive(LegacyInventoryKey);
-            var worldInformationAddr = _avatarAddress.Derive(LegacyWorldInformationKey);
-            var questListAddr = _avatarAddress.Derive(LegacyQuestListKey);
 
             var agentState = new AgentState(_agentAddress);
             agentState.avatarAddresses.Add(0, _avatarAddress);
 
             var gameConfigState = new GameConfigState(sheets[nameof(GameConfigSheet)]);
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 _avatarAddress,
                 _agentAddress,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                gameConfigState,
-                new PrivateKey().ToAddress()
-            )
-            {
-                level = 100,
-            };
+                new PrivateKey().Address
+            );
+            avatarState.level = 100;
 
             _initialStates = _initialStates
-                .SetState(_agentAddress, agentState.Serialize())
-                .SetState(_avatarAddress, avatarState.SerializeV2())
-                .SetState(inventoryAddr, avatarState.inventory.Serialize())
-                .SetState(worldInformationAddr, avatarState.worldInformation.Serialize())
-                .SetState(questListAddr, avatarState.questList.Serialize())
-                .SetState(gameConfigState.address, gameConfigState.Serialize());
+                .SetAgentState(_agentAddress, agentState)
+                .SetAvatarState(_avatarAddress, avatarState)
+                .SetLegacyState(gameConfigState.address, gameConfigState.Serialize());
 
             for (var i = 0; i < GameConfig.SlotCount; i++)
             {
                 var addr = CombinationSlotState.DeriveAddress(_avatarAddress, i);
                 const int unlock = GameConfig.RequireClearedStageLevel.CombinationEquipmentAction;
-                _initialStates = _initialStates.SetState(
+                _initialStates = _initialStates.SetLegacyState(
                     addr,
                     new CombinationSlotState(addr, unlock).Serialize());
             }
@@ -84,43 +75,12 @@ namespace Lib9c.Tests.Action
             {
                 1002,
                 10020001,
-                new Dictionary<int, int>
-                {
-                    [700000] = 5,
-                    [700001] = 5,
-                    [700002] = 5,
-                },
             };
-            yield return new object[]
-            {
-                1002,
-                10020001,
-                new Dictionary<int, int>
-                {
-                    [700102] = 5,
-                    [700104] = 5,
-                    [700106] = 5,
-                },
-            };
-            yield return new object[]
-            {
-                1002,
-                10020001,
-                new Dictionary<int, int>
-                {
-                    [700202] = 10,
-                    [700204] = 5,
-                },
-            };
+
             yield return new object[]
             {
                 1002,
                 10020002,
-                new Dictionary<int, int>
-                {
-                    [700108] = 5,
-                    [700206] = 5,
-                },
             };
         }
 
@@ -172,11 +132,28 @@ namespace Lib9c.Tests.Action
         [MemberData(nameof(GetExecuteSuccessMemberData))]
         public void Execute_Success(
             int eventScheduleId,
-            int eventMaterialItemRecipeId,
-            Dictionary<int, int> materialsToUse)
+            int eventMaterialItemRecipeId)
         {
-            Assert.True(_tableSheets.EventScheduleSheet
-                .TryGetValue(eventScheduleId, out var scheduleRow));
+            Assert.True(
+                _tableSheets.EventScheduleSheet
+                    .TryGetValue(eventScheduleId, out var scheduleRow));
+            var materialsToUse = new Dictionary<int, int>();
+            var totalCount = 0;
+            var row = _tableSheets.EventMaterialItemRecipeSheet[eventMaterialItemRecipeId];
+            while (totalCount < row.RequiredMaterialsCount)
+            {
+                foreach (var materialId in row.RequiredMaterialsId)
+                {
+                    materialsToUse.TryAdd(materialId, 0);
+                    materialsToUse[materialId] += 1;
+                    totalCount++;
+                    if (totalCount == row.RequiredMaterialsCount)
+                    {
+                        break;
+                    }
+                }
+            }
+
             var contextBlockIndex = scheduleRow.StartBlockIndex;
             Execute(
                 _initialStates,
@@ -200,27 +177,29 @@ namespace Lib9c.Tests.Action
             int eventMaterialItemRecipeId,
             Dictionary<int, int> materialsToUse)
         {
-            Assert.True(_tableSheets.EventScheduleSheet
-                .TryGetValue(1002, out var scheduleRow));
-            Assert.Throws<InvalidMaterialCountException>(() =>
-            {
-                Execute(
-                    _initialStates,
-                    eventScheduleId,
-                    eventMaterialItemRecipeId,
-                    materialsToUse,
-                    scheduleRow.StartBlockIndex);
-            });
+            Assert.True(
+                _tableSheets.EventScheduleSheet
+                    .TryGetValue(1002, out var scheduleRow));
+            Assert.Throws<InvalidMaterialCountException>(
+                () =>
+                {
+                    Execute(
+                        _initialStates,
+                        eventScheduleId,
+                        eventMaterialItemRecipeId,
+                        materialsToUse,
+                        scheduleRow.StartBlockIndex);
+                });
         }
 
         private void Execute(
-            IAccountStateDelta previousStates,
+            IWorld previousStates,
             int eventScheduleId,
             int eventMaterialItemRecipeId,
             Dictionary<int, int> materialsToUse,
             long blockIndex = 0)
         {
-            var previousAvatarState = previousStates.GetAvatarStateV2(_avatarAddress);
+            var previousAvatarState = previousStates.GetAvatarState(_avatarAddress);
 
             var recipeSheet = previousStates.GetSheet<EventMaterialItemRecipeSheet>();
             Assert.True(recipeSheet.TryGetValue(eventMaterialItemRecipeId, out var recipeRow));
@@ -239,12 +218,7 @@ namespace Lib9c.Tests.Action
                 GameConfig.RequireClearedStageLevel.CombinationConsumableAction);
 
             previousStates = previousStates
-                .SetState(
-                    _avatarAddress.Derive(LegacyInventoryKey),
-                    previousAvatarState.inventory.Serialize())
-                .SetState(
-                    _avatarAddress.Derive(LegacyWorldInformationKey),
-                    previousAvatarState.worldInformation.Serialize());
+                .SetAvatarState(_avatarAddress, previousAvatarState);
 
             var previousMaterialCount = previousAvatarState.inventory.Items
                 .Where(i => recipeRow.RequiredMaterialsId.Contains(i.item.Id))
@@ -261,16 +235,16 @@ namespace Lib9c.Tests.Action
                 MaterialsToUse = materialsToUse,
             };
 
-            var nextStates = action.Execute(new ActionContext
-            {
-                PreviousStates = previousStates,
-                Signer = _agentAddress,
-                Random = new TestRandom(),
-                Rehearsal = false,
-                BlockIndex = blockIndex,
-            });
+            var nextStates = action.Execute(
+                new ActionContext
+                {
+                    PreviousState = previousStates,
+                    Signer = _agentAddress,
+                    RandomSeed = 0,
+                    BlockIndex = blockIndex,
+                });
 
-            var nextAvatarState = nextStates.GetAvatarStateV2(_avatarAddress);
+            var nextAvatarState = nextStates.GetAvatarState(_avatarAddress);
 
             var nextMaterialCount = nextAvatarState.inventory.Items
                 .Where(i => recipeRow.RequiredMaterialsId.Contains(i.item.Id))

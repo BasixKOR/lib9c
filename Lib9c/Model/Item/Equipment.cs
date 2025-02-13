@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.Serialization;
 using Bencodex.Types;
 using Libplanet.Action;
-using Nekoyume.Action;
 using Nekoyume.Extensions;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
@@ -19,7 +18,12 @@ namespace Nekoyume.Model.Item
         // FIXME: Whether the equipment is equipped or not has no asset value and must be removed from the state.
         public bool equipped;
         public int level;
+        public long Exp;
         public int optionCountFromCombination;
+        public int IconId;
+        public bool ByCustomCraft;
+        public bool CraftWithRandom;
+        public bool HasRandomOnlyIcon;
 
         public DecimalStat Stat { get; }
         public int SetId { get; }
@@ -34,13 +38,19 @@ namespace Nekoyume.Model.Item
             return Math.Max(1.0m, stat * 0.1m);
         }
 
-        public Equipment(EquipmentItemSheet.Row data, Guid id, long requiredBlockIndex, bool madeWithMimisbrunnrRecipe = false)
+        public Equipment(EquipmentItemSheet.Row data, Guid id, long requiredBlockIndex,
+            bool madeWithMimisbrunnrRecipe = false, int iconId = 0)
             : base(data, id, requiredBlockIndex)
         {
             Stat = data.Stat;
             SetId = data.SetId;
             SpineResourcePath = data.SpineResourcePath;
             MadeWithMimisbrunnrRecipe = madeWithMimisbrunnrRecipe;
+            Exp = data.Exp ?? 0L;
+            IconId = iconId != 0 ? iconId : data.Id;
+            ByCustomCraft = false;
+            CraftWithRandom = false;
+            HasRandomOnlyIcon = false;
         }
 
         public Equipment(Dictionary serialized) : base(serialized)
@@ -61,6 +71,27 @@ namespace Nekoyume.Model.Item
                     level = (int) ((Integer) value).Value;
                 }
             }
+
+            if (serialized.TryGetValue((Text)EquipmentExpKey, out value))
+            {
+                try
+                {
+                    Exp = value.ToLong();
+                }
+                catch (InvalidCastException)
+                {
+                    Exp = (long)((Integer)value).Value;
+                }
+            }
+            else
+            {
+                Exp = 0L;
+            }
+
+            IconId = serialized.TryGetValue((Text)EquipmentIconIdKey, out value) ? (Integer)value : Id;
+            ByCustomCraft = serialized.TryGetValue((Text)ByCustomCraftKey, out value) && value.ToBoolean();
+            CraftWithRandom = serialized.TryGetValue((Text)CraftWithRandomKey, out value) && value.ToBoolean();
+            HasRandomOnlyIcon = serialized.TryGetValue((Text)HasRandomOnlyIconKey, out value) && value.ToBoolean();
 
             if (serialized.TryGetValue((Text) LegacyStatKey, out value))
             {
@@ -97,11 +128,16 @@ namespace Nekoyume.Model.Item
         {
 #pragma warning disable LAA1002
             var dict = ((Dictionary)base.Serialize())
-                .Add(LegacyEquippedKey, equipped.Serialize())
-                .Add(LegacyLevelKey, level.Serialize())
-                .Add(LegacyStatKey, Stat.SerializeForLegacyEquipmentStat())
-                .Add(LegacySetIdKey, SetId.Serialize())
-                .Add(LegacySpineResourcePathKey, SpineResourcePath.Serialize());
+                    .Add(LegacyEquippedKey, equipped.Serialize())
+                    .Add(LegacyLevelKey, level.Serialize())
+                    .Add(LegacyStatKey, Stat.SerializeForLegacyEquipmentStat())
+                    .Add(LegacySetIdKey, SetId.Serialize())
+                    .Add(LegacySpineResourcePathKey, SpineResourcePath.Serialize())
+                    .Add(EquipmentIconIdKey, IconId)
+                    .Add(ByCustomCraftKey, ByCustomCraft)
+                    .Add(CraftWithRandomKey, CraftWithRandom)
+                    .Add(HasRandomOnlyIconKey, HasRandomOnlyIcon)
+                ;
 
             if (optionCountFromCombination > 0)
             {
@@ -111,6 +147,11 @@ namespace Nekoyume.Model.Item
             if (MadeWithMimisbrunnrRecipe)
             {
                 dict = dict.SetItem(MadeWithMimisbrunnrRecipeKey, MadeWithMimisbrunnrRecipe.Serialize());
+            }
+
+            if (Exp > 0)
+            {
+                dict = dict.SetItem(EquipmentExpKey, Exp.Serialize());
             }
 
             return dict;
@@ -140,6 +181,7 @@ namespace Nekoyume.Model.Item
             }
         }
 
+        [Obsolete("Since ItemEnhancement12, Use `SetLevel` instead.")]
         public void LevelUp(IRandom random, EnhancementCostSheetV2.Row row, bool isGreatSuccess)
         {
             level++;
@@ -158,6 +200,45 @@ namespace Nekoyume.Model.Item
             {
                 UpdateOptionsV2(random, row, isGreatSuccess);
             }
+        }
+
+        public void SetLevel(IRandom random, int targetLevel, EnhancementCostSheetV3 sheet)
+        {
+            var startLevel = level;
+            level = targetLevel;
+            for (var i = startLevel + 1; i <= targetLevel; i++)
+            {
+                var row = sheet.OrderedList.First(
+                    r => r.Level == i && r.Grade == Grade && r.ItemSubType == ItemSubType
+                );
+                var rand = random.Next(row.BaseStatGrowthMin, row.BaseStatGrowthMax + 1);
+                var ratio = rand.NormalizeFromTenThousandths();
+                var baseStat = StatsMap.GetBaseStat(UniqueStatType) * ratio;
+                if (baseStat > 0)
+                {
+                    baseStat = Math.Max(1.0m, baseStat);
+                }
+
+                StatsMap.AddStatValue(UniqueStatType, baseStat);
+
+                if (GetOptionCount() > 0)
+                {
+                    UpdateOptionsV3(random, row);
+                }
+            }
+        }
+
+        public long GetRealExp(EquipmentItemSheet itemSheet, EnhancementCostSheetV3 costSheet)
+        {
+            if (Exp != 0) return Exp;
+            if (level == 0)
+            {
+                return (long)itemSheet.OrderedList.First(r => r.Id == Id).Exp!;
+            }
+
+            return costSheet.OrderedList.First(r =>
+                r.ItemSubType == ItemSubType && r.Grade == Grade &&
+                r.Level == level).Exp;
         }
 
         public List<object> GetOptions()
@@ -197,6 +278,7 @@ namespace Nekoyume.Model.Item
             }
         }
 
+        [Obsolete("Since ItemEnhancement12, Use UpdateOptionV3 instead.")]
         private void UpdateOptionsV2(IRandom random, EnhancementCostSheetV2.Row row, bool isGreatSuccess)
         {
             foreach (var stat in StatsMap.GetAdditionalStats())
@@ -236,6 +318,59 @@ namespace Nekoyume.Model.Item
                 {
                     addPower = Math.Max(1.0m, addPower);
                 }
+
+                var addStatPowerRatio = skill.StatPowerRatio * damageRatio;
+                if (addStatPowerRatio > 0)
+                {
+                    addStatPowerRatio = Math.Max(1.0m, addStatPowerRatio);
+                }
+
+                var chance = skill.Chance + (int)addChance;
+                var power = skill.Power + (int)addPower;
+                var statPowerRatio = skill.StatPowerRatio + (int)addStatPowerRatio;
+
+                skill.Update(chance, power, statPowerRatio);
+            }
+        }
+
+        private void UpdateOptionsV3(IRandom random, EnhancementCostSheetV3.Row row)
+        {
+            foreach (var stat in StatsMap.GetAdditionalStats())
+            {
+                var rand = random.Next(row.ExtraStatGrowthMin, row.ExtraStatGrowthMax + 1);
+                var ratio = rand.NormalizeFromTenThousandths();
+                var addValue = stat.AdditionalValue * ratio;
+                if (addValue > 0)
+                {
+                    addValue = Math.Max(1.0m, addValue);
+                }
+
+                StatsMap.SetStatAdditionalValue(stat.StatType, stat.AdditionalValue + addValue);
+            }
+
+            var skills = new List<Skill.Skill>();
+            skills.AddRange(Skills);
+            skills.AddRange(BuffSkills);
+            foreach (var skill in skills)
+            {
+                var chanceRand = random.Next(row.ExtraSkillChanceGrowthMin,
+                    row.ExtraSkillChanceGrowthMax + 1);
+                var chanceRatio = chanceRand.NormalizeFromTenThousandths();
+                var addChance = skill.Chance * chanceRatio;
+                if (addChance > 0)
+                {
+                    addChance = Math.Max(1.0m, addChance);
+                }
+
+                var damageRand = random.Next(row.ExtraSkillDamageGrowthMin,
+                    row.ExtraSkillDamageGrowthMax + 1);
+                var damageRatio = damageRand.NormalizeFromTenThousandths();
+                var addPower = skill.Power * damageRatio;
+                if (addPower > 0)
+                {
+                    addPower = Math.Max(1.0m, addPower);
+                }
+
                 var addStatPowerRatio = skill.StatPowerRatio * damageRatio;
                 if (addStatPowerRatio > 0)
                 {
@@ -253,7 +388,8 @@ namespace Nekoyume.Model.Item
         protected bool Equals(Equipment other)
         {
             return base.Equals(other) && equipped == other.equipped && level == other.level &&
-                   Equals(Stat, other.Stat) && SetId == other.SetId && SpineResourcePath == other.SpineResourcePath;
+                   Exp == other.Exp && Equals(Stat, other.Stat) && SetId == other.SetId &&
+                   SpineResourcePath == other.SpineResourcePath;
         }
 
         public override bool Equals(object obj)

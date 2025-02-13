@@ -12,18 +12,59 @@ namespace Nekoyume.Battle
     public static class CPHelper
     {
         public static int TotalCP(
-            IEnumerable<Equipment> equipments,
-            IEnumerable<Costume> costumes,
-            IEnumerable<RuneOptionSheet.Row.RuneOptionInfo> runeOptions,
+            IReadOnlyCollection<Equipment> equipments,
+            IReadOnlyCollection<Costume> costumes,
+            IReadOnlyCollection<RuneOptionSheet.Row.RuneOptionInfo> runeOptions,
             int level,
             CharacterSheet.Row row,
-            CostumeStatSheet costumeStatSheet)
+            CostumeStatSheet costumeStatSheet,
+            List<StatModifier> collectionStatModifiers,
+            int runeLevelBonus
+        )
         {
-            var levelStatsCp = GetStatsCP(row.ToStats(level), level);
-            var equipmentsCp = equipments.Sum(GetCP);
-            var costumeCp = costumes.Sum(c => GetCP(c, costumeStatSheet));
-            var runeCp = runeOptions.Sum(x => x.Cp);
-            var totalCp = DecimalToInt(levelStatsCp + equipmentsCp + costumeCp + runeCp);
+            decimal levelStatsCp = GetStatsCP(row.ToStats(level), level);
+            var collectionCp = 0m;
+            // CharacterStats.BaseStats CP equals row.ToStats
+            if (collectionStatModifiers.Any())
+            {
+                // Prepare CharacterStats for calculate collection Stats
+                var characterStats = new CharacterStats(row, level);
+                characterStats.ConfigureStats(equipments, costumes, runeOptions, costumeStatSheet, collectionStatModifiers, runeLevelBonus);
+                foreach (var (statType, value) in characterStats.CollectionStats.GetStats())
+                {
+                    collectionCp += GetStatCP(statType, value);
+                }
+            }
+
+            var equipmentsCp = 0;
+            var costumeCp = 0;
+            var runeCp = 0;
+            var runeLevelBonusCp = 0m;
+
+            foreach (var equipment in equipments)
+            {
+                equipmentsCp += GetCP(equipment);
+            }
+
+            foreach (var costume in costumes)
+            {
+                costumeCp += GetCP(costume, costumeStatSheet);
+            }
+
+            foreach (var runeOption in runeOptions)
+            {
+                runeCp += runeOption.Cp;
+                runeLevelBonusCp += runeOption.Stats.Sum(optionInfo =>
+                    GetStatCP(
+                        optionInfo.stat.StatType,
+                        optionInfo.stat.BaseValue * runeLevelBonus / 100_000m
+                    )
+                );
+            }
+
+            var totalCp = DecimalToInt(
+                levelStatsCp + equipmentsCp + costumeCp + runeCp + runeLevelBonusCp + collectionCp
+            );
             return totalCp;
         }
 
@@ -95,7 +136,7 @@ namespace Nekoyume.Battle
         }
 
         [Obsolete("Use GetCp")]
-        public static int GetCP(ITradableItem tradableItem, CostumeStatSheet sheet)
+        public static int GetCP(INonFungibleItem tradableItem, CostumeStatSheet sheet)
         {
             if (tradableItem is ItemUsable itemUsable)
             {
@@ -110,10 +151,16 @@ namespace Nekoyume.Battle
             return 0;
         }
 
-        private static decimal GetStatsCP(IStats stats, int characterLevel = 1)
+        public static decimal GetStatsCP(IStats stats, int characterLevel = 1)
         {
             var statTuples = stats.GetStats(true);
-            return statTuples.Sum(tuple => GetStatCP(tuple.statType, tuple.value, characterLevel));
+            decimal cp = 0m;
+            foreach (var tuple in statTuples)
+            {
+                cp += GetStatCP(tuple.statType, tuple.value, characterLevel);
+            }
+
+            return cp;
         }
 
         public static decimal GetStatCP(StatType statType, decimal statValue, int characterLevel = 1)
@@ -178,6 +225,40 @@ namespace Nekoyume.Battle
 
         public static decimal GetCPOfThorn(decimal value) =>
             value * 1m;
+
+        // NOTE: If a stat type is added or Cp calculation logic is changed, You must change this function too.
+        public static decimal ConvertCpToStat(StatType statType, decimal cp, int characterLevel)
+        {
+            switch (statType)
+            {
+                case StatType.HP:
+                    return cp / 0.7m;
+                case StatType.ATK:
+                    return cp / 10.5m;
+                case StatType.DEF:
+                    return cp / 10.5m;
+                case StatType.CRI:
+                    return cp / characterLevel / 20m;
+                case StatType.HIT:
+                    return cp / 2.3m;
+                case StatType.SPD:
+                    return cp / 3m;
+                case StatType.DRV:
+                    return cp / 10.5m;
+                case StatType.DRR:
+                    return cp / characterLevel / 20m;
+                case StatType.CDMG:
+                    return cp / characterLevel / 3m;
+                case StatType.ArmorPenetration:
+                    return cp / 5m;
+                case StatType.Thorn:
+                    return cp / 1m;
+                case StatType.NONE:
+                default:
+                    // throw new ArgumentOutOfRangeException(nameof(statType), statType, null);
+                    return 0m;
+            }
+        }
 
         public static decimal GetSkillsMultiplier(int skillsCount)
         {

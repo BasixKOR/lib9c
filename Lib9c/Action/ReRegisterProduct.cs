@@ -4,12 +4,14 @@ using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Model.Order;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Battle;
+using Nekoyume.Helper;
 using Nekoyume.Model.Market;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using static Lib9c.SerializeKeys;
 
@@ -24,14 +26,10 @@ namespace Nekoyume.Action
         public List<(IProductInfo, IRegisterInfo)> ReRegisterInfos;
         public bool ChargeAp;
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            IAccountStateDelta states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states;
-            }
+            GasTracer.UseGas(1);
+            IWorld states = context.PreviousState;
 
             if (!ReRegisterInfos.Any())
             {
@@ -57,28 +55,38 @@ namespace Nekoyume.Action
                 }
             }
 
-            if (!states.TryGetAvatarStateV2(context.Signer, AvatarAddress, out var avatarState,
-                    out var migrationRequired))
+            if (!states.TryGetAvatarState(context.Signer, AvatarAddress, out var avatarState))
             {
                 throw new FailedLoadStateException("failed to load avatar state");
             }
 
-            avatarState.UseAp(CostAp, ChargeAp, states.GetSheet<MaterialItemSheet>(), context.BlockIndex, states.GetGameConfigState());
+            if (!states.TryGetActionPoint(AvatarAddress, out var actionPoint))
+            {
+                actionPoint = avatarState.actionPoint;
+            }
+
+            var resultActionPoint = avatarState.inventory.UseActionPoint(actionPoint,
+                CostAp,
+                ChargeAp,
+                states.GetSheet<MaterialItemSheet>(),
+                context.BlockIndex);
             var productsStateAddress = ProductsState.DeriveAddress(AvatarAddress);
             ProductsState productsState;
-            if (states.TryGetState(productsStateAddress, out List rawProductList))
+            if (states.TryGetLegacyState(productsStateAddress, out List rawProductList))
             {
                 productsState = new ProductsState(rawProductList);
             }
             else
             {
-                var marketState = states.TryGetState(Addresses.Market, out List rawMarketList)
-                    ? new MarketState(rawMarketList)
-                    : new MarketState();
+                var marketState = states.TryGetLegacyState(Addresses.Market, out List rawMarketList)
+                    ? rawMarketList
+                    : List.Empty;
                 productsState = new ProductsState();
-                marketState.AvatarAddresses.Add(AvatarAddress);
-                states = states.SetState(Addresses.Market, marketState.Serialize());
+                marketState = marketState.Add(AvatarAddress.Serialize());
+                states = states.SetLegacyState(Addresses.Market, marketState);
             }
+
+            var random = context.GetRandom();
             foreach (var (productInfo, info) in ReRegisterInfos.OrderBy(tuple => tuple.Item2.Type).ThenBy(tuple => tuple.Item2.Price))
             {
                 var addressesHex = GetSignerAndOtherAddressesHex(context, AvatarAddress);
@@ -96,7 +104,7 @@ namespace Nekoyume.Action
 
                     var digestListAddress =
                         OrderDigestListState.DeriveAddress(avatarAddress);
-                    if (!states.TryGetState(digestListAddress, out Dictionary rawList))
+                    if (!states.TryGetLegacyState(digestListAddress, out Dictionary rawList))
                     {
                         throw new FailedLoadStateException(
                             $"{addressesHex} failed to load {nameof(OrderDigest)}({digestListAddress}).");
@@ -104,7 +112,7 @@ namespace Nekoyume.Action
 
                     var digestList = new OrderDigestListState(rawList);
                     var orderAddress = Order.DeriveAddress(productInfo.ProductId);
-                    if (!states.TryGetState(orderAddress, out Dictionary rawOrder))
+                    if (!states.TryGetLegacyState(orderAddress, out Dictionary rawOrder))
                     {
                         throw new FailedLoadStateException(
                             $"{addressesHex} failed to load {nameof(Order)}({orderAddress}).");
@@ -158,22 +166,15 @@ namespace Nekoyume.Action
                     states = CancelProductRegistration.Cancel(productsState, productInfo,
                         states, avatarState, context);
                 }
-                states = RegisterProduct.Register(context, info, avatarState, productsState, states);
+
+                states = RegisterProduct.Register(context, info, avatarState, productsState, states, random);
             }
 
             states = states
-                .SetState(AvatarAddress.Derive(LegacyInventoryKey), avatarState.inventory.Serialize())
-                .SetState(AvatarAddress, avatarState.SerializeV2())
-                .SetState(productsStateAddress, productsState.Serialize());
+                .SetAvatarState(AvatarAddress, avatarState)
+                .SetActionPoint(AvatarAddress, resultActionPoint)
+                .SetLegacyState(productsStateAddress, productsState.Serialize());
 
-            if (migrationRequired)
-            {
-                states = states
-                    .SetState(AvatarAddress.Derive(LegacyQuestListKey),
-                        avatarState.questList.Serialize())
-                    .SetState(AvatarAddress.Derive(LegacyWorldInformationKey),
-                        avatarState.worldInformation.Serialize());
-            }
             return states;
         }
 

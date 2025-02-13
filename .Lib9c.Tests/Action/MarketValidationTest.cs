@@ -2,30 +2,30 @@ namespace Lib9c.Tests.Action
 {
     using System;
     using System.Collections.Generic;
-    using Libplanet;
-    using Libplanet.Action;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.Helper;
     using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Xunit;
 
     public class MarketValidationTest
     {
-        private static readonly Address AgentAddress = new Address("F9A15F870701268Bd7bBeA6502eB15F4997f32f9");
-        private static readonly Address AvatarAddress = new Address("47d082a115c63e7b58b1532d20e631538eafadde");
-        private static readonly Currency Gold = Currency.Legacy("NCG", 2, minters: null);
+        private static readonly Address AgentAddress = new ("F9A15F870701268Bd7bBeA6502eB15F4997f32f9");
+        private static readonly Address AvatarAddress = new ("47d082a115c63e7b58b1532d20e631538eafadde");
+        private static readonly Currency Gold = Currency.Legacy("NCG", 2, null);
 
-        private readonly IAccountStateDelta _initialState;
+        private readonly IWorld _initialState;
 
         public MarketValidationTest()
         {
-            _initialState = new State()
-                .SetState(GoldCurrencyState.Address, new GoldCurrencyState(Gold).Serialize());
+            _initialState = new World(MockUtil.MockModernWorldState)
+                .SetLegacyState(GoldCurrencyState.Address, new GoldCurrencyState(Gold).Serialize());
         }
 
         public static IEnumerable<object[]> RegisterInfosMemberData()
@@ -43,11 +43,11 @@ namespace Lib9c.Tests.Action
                     {
                         new RegisterInfo
                         {
-                            AvatarAddress = new PrivateKey().ToAddress(),
+                            AvatarAddress = new PrivateKey().Address,
                         },
                         new AssetInfo
                         {
-                            AvatarAddress = new PrivateKey().ToAddress(),
+                            AvatarAddress = new PrivateKey().Address,
                         },
                     },
                     Exc = typeof(InvalidAddressException),
@@ -197,8 +197,8 @@ namespace Lib9c.Tests.Action
             var actionContext = new ActionContext
             {
                 Signer = AgentAddress,
-                PreviousStates = _initialState,
-                Random = new TestRandom(),
+                PreviousState = _initialState,
+                RandomSeed = 0,
             };
             foreach (var validateMember in validateMembers)
             {
@@ -207,7 +207,7 @@ namespace Lib9c.Tests.Action
                     var registerProduct = new RegisterProduct
                     {
                         AvatarAddress = AvatarAddress,
-                        RegisterInfos = new[] { registerInfo },
+                        RegisterInfos = new[] { registerInfo, },
                     };
                     Assert.Throws(validateMember.Exc, () => registerProduct.Execute(actionContext));
 
@@ -231,8 +231,8 @@ namespace Lib9c.Tests.Action
             var actionContext = new ActionContext
             {
                 Signer = AgentAddress,
-                PreviousStates = _initialState,
-                Random = new TestRandom(),
+                PreviousState = _initialState,
+                RandomSeed = 0,
             };
             foreach (var validateMember in validateMembers)
             {
@@ -241,7 +241,7 @@ namespace Lib9c.Tests.Action
                     var buyProduct = new BuyProduct
                     {
                         AvatarAddress = AvatarAddress,
-                        ProductInfos = new[] { productInfo },
+                        ProductInfos = new[] { productInfo, },
                     };
 
                     Assert.Throws(validateMember.Exc, () => buyProduct.Execute(actionContext));
@@ -249,7 +249,7 @@ namespace Lib9c.Tests.Action
                     var cancelRegister = new CancelProductRegistration
                     {
                         AvatarAddress = AvatarAddress,
-                        ProductInfos = new List<IProductInfo>() { productInfo },
+                        ProductInfos = new List<IProductInfo>() { productInfo, },
                     };
 
                     Assert.Throws(validateMember.Exc, () => cancelRegister.Execute(actionContext));

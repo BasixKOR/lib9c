@@ -4,11 +4,11 @@ namespace Lib9c.Tests.Action
     using System.Collections.Generic;
     using System.Linq;
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Action;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Battle;
@@ -17,50 +17,49 @@ namespace Lib9c.Tests.Action
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Xunit;
 
     public class RegisterProduct0Test
     {
-        private static readonly Address AvatarAddress =
-            new Address("47d082a115c63e7b58b1532d20e631538eafadde");
+        private static readonly Address AvatarAddress = new ("47d082a115c63e7b58b1532d20e631538eafadde");
 
-        private static readonly Currency Gold = Currency.Legacy("NCG", 2, minters: null);
+        private static readonly Currency Gold = Currency.Legacy("NCG", 2, null);
 
         private readonly Address _agentAddress;
         private readonly AvatarState _avatarState;
         private readonly TableSheets _tableSheets;
         private readonly GameConfigState _gameConfigState;
-        private IAccountStateDelta _initialState;
+        private IWorld _initialState;
 
         public RegisterProduct0Test()
         {
-            _agentAddress = new PrivateKey().ToAddress();
+            _agentAddress = new PrivateKey().Address;
             var agentState = new AgentState(_agentAddress);
-            var rankingMapAddress = new PrivateKey().ToAddress();
+            var rankingMapAddress = new PrivateKey().Address;
             _tableSheets = new TableSheets(TableSheetsImporter.ImportSheets());
             _gameConfigState = new GameConfigState((Text)_tableSheets.GameConfigSheet.Serialize());
-            _avatarState = new AvatarState(
+            _avatarState = AvatarState.Create(
                 AvatarAddress,
                 _agentAddress,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                _gameConfigState,
-                rankingMapAddress)
-            {
-                worldInformation = new WorldInformation(
-                    0,
-                    _tableSheets.WorldSheet,
-                    GameConfig.RequireClearedStageLevel.ActionsInShop),
-            };
+                rankingMapAddress);
+            _avatarState.worldInformation = new WorldInformation(
+                0,
+                _tableSheets.WorldSheet,
+                GameConfig.RequireClearedStageLevel.ActionsInShop);
+            _avatarState.actionPoint = DailyReward.ActionPointMax;
+
             agentState.avatarAddresses[0] = AvatarAddress;
 
-            _initialState = new State()
-                .SetState(GoldCurrencyState.Address, new GoldCurrencyState(Gold).Serialize())
-                .SetState(Addresses.GetSheetAddress<MaterialItemSheet>(), _tableSheets.MaterialItemSheet.Serialize())
-                .SetState(Addresses.GameConfig, _gameConfigState.Serialize())
-                .SetState(_agentAddress, agentState.Serialize())
-                .SetState(AvatarAddress, _avatarState.Serialize());
+            _initialState = new World(MockUtil.MockModernWorldState)
+                .SetLegacyState(GoldCurrencyState.Address, new GoldCurrencyState(Gold).Serialize())
+                .SetLegacyState(Addresses.GetSheetAddress<MaterialItemSheet>(), _tableSheets.MaterialItemSheet.Serialize())
+                .SetLegacyState(Addresses.GameConfig, _gameConfigState.Serialize())
+                .SetAgentState(_agentAddress, agentState)
+                .SetAvatarState(AvatarAddress, _avatarState);
         }
 
         public static IEnumerable<object[]> Execute_Validate_MemberData()
@@ -78,11 +77,11 @@ namespace Lib9c.Tests.Action
                     {
                         new RegisterInfo
                         {
-                            AvatarAddress = new PrivateKey().ToAddress(),
+                            AvatarAddress = new PrivateKey().Address,
                         },
                         new AssetInfo
                         {
-                            AvatarAddress = new PrivateKey().ToAddress(),
+                            AvatarAddress = new PrivateKey().Address,
                         },
                     },
                     Exc = typeof(InvalidAddressException),
@@ -206,9 +205,10 @@ namespace Lib9c.Tests.Action
             _avatarState.inventory.AddItem(equipment);
             Assert.Equal(2, _avatarState.inventory.Items.Count);
             var asset = 3 * RuneHelper.DailyRewardRune;
+            var context = new ActionContext();
             _initialState = _initialState
-                .SetState(AvatarAddress, _avatarState.Serialize())
-                .MintAsset(AvatarAddress, asset);
+                .SetAvatarState(AvatarAddress, _avatarState)
+                .MintAsset(context, AvatarAddress, asset);
             var action = new RegisterProduct0
             {
                 AvatarAddress = AvatarAddress,
@@ -227,7 +227,7 @@ namespace Lib9c.Tests.Action
                         AvatarAddress = AvatarAddress,
                         ItemCount = 1,
                         Price = 1 * Gold,
-                        TradableId = equipment.TradableId,
+                        TradableId = equipment.ItemId,
                         Type = ProductType.NonFungible,
                     },
                     new AssetInfo
@@ -239,30 +239,31 @@ namespace Lib9c.Tests.Action
                     },
                 },
             };
-            var nextState = action.Execute(new ActionContext
-            {
-                BlockIndex = 1L,
-                PreviousStates = _initialState,
-                Random = new TestRandom(),
-                Signer = _agentAddress,
-            });
+            var nextState = action.Execute(
+                new ActionContext
+                {
+                    BlockIndex = 1L,
+                    PreviousState = _initialState,
+                    RandomSeed = 0,
+                    Signer = _agentAddress,
+                });
 
-            var nextAvatarState = nextState.GetAvatarStateV2(AvatarAddress);
+            var nextAvatarState = nextState.GetAvatarState(AvatarAddress);
             Assert.Empty(nextAvatarState.inventory.Items);
             Assert.Equal(_gameConfigState.ActionPointMax - RegisterProduct0.CostAp, nextAvatarState.actionPoint);
 
-            var marketState = new MarketState(nextState.GetState(Addresses.Market));
+            var marketState = new MarketState(nextState.GetLegacyState(Addresses.Market));
             Assert.Contains(AvatarAddress, marketState.AvatarAddresses);
 
             var productsState =
-                new ProductsState((List)nextState.GetState(ProductsState.DeriveAddress(AvatarAddress)));
+                new ProductsState((List)nextState.GetLegacyState(ProductsState.DeriveAddress(AvatarAddress)));
             var random = new TestRandom();
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 var guid = random.GenerateRandomGuid();
                 Assert.Contains(guid, productsState.ProductIds);
                 var productAddress = Product.DeriveAddress(guid);
-                var product = ProductFactory.DeserializeProduct((List)nextState.GetState(productAddress));
+                var product = ProductFactory.DeserializeProduct((List)nextState.GetLegacyState(productAddress));
                 Assert.Equal(product.ProductId, guid);
                 Assert.Equal(1 * Gold, product.Price);
                 if (product is ItemProduct itemProduct)
@@ -291,14 +292,17 @@ namespace Lib9c.Tests.Action
                     var action = new RegisterProduct0
                     {
                         AvatarAddress = AvatarAddress,
-                        RegisterInfos = new[] { registerInfo },
+                        RegisterInfos = new[] { registerInfo, },
                     };
-                    Assert.Throws(validateMember.Exc, () => action.Execute(new ActionContext
-                    {
-                        PreviousStates = _initialState,
-                        Random = new TestRandom(),
-                        Signer = _agentAddress,
-                    }));
+                    Assert.Throws(
+                        validateMember.Exc,
+                        () => action.Execute(
+                            new ActionContext
+                            {
+                                PreviousState = _initialState,
+                                RandomSeed = 0,
+                                Signer = _agentAddress,
+                            }));
                 }
             }
         }
@@ -329,7 +333,7 @@ namespace Lib9c.Tests.Action
                 {
                     var equipmentRow = _tableSheets.EquipmentItemSheet.Values.First();
                     var id = Guid.NewGuid();
-                    tradableItem = ItemFactory.CreateItemUsable(equipmentRow, id, requiredBlockIndex);
+                    tradableItem = (ITradableItem)ItemFactory.CreateItemUsable(equipmentRow, id, requiredBlockIndex);
                     break;
                 }
 
@@ -346,7 +350,7 @@ namespace Lib9c.Tests.Action
                 _avatarState.inventory.AddItem((ItemBase)tradableItem);
             }
 
-            _initialState = _initialState.SetState(AvatarAddress, _avatarState.Serialize());
+            _initialState = _initialState.SetAvatarState(AvatarAddress, _avatarState);
             var action = new RegisterProduct0
             {
                 AvatarAddress = AvatarAddress,
@@ -363,20 +367,22 @@ namespace Lib9c.Tests.Action
                 },
             };
 
-            Assert.Throws<ItemDoesNotExistException>(() => action.Execute(new ActionContext
-            {
-                Signer = _agentAddress,
-                BlockIndex = blockIndex,
-                Random = new TestRandom(),
-                PreviousStates = _initialState,
-            }));
+            Assert.Throws<ItemDoesNotExistException>(
+                () => action.Execute(
+                    new ActionContext
+                    {
+                        Signer = _agentAddress,
+                        BlockIndex = blockIndex,
+                        RandomSeed = 0,
+                        PreviousState = _initialState,
+                    }));
         }
 
         [Fact]
         public void Execute_Throw_ArgumentOutOfRangeException()
         {
             var registerInfos = new List<RegisterInfo>();
-            for (int i = 0; i < RegisterProduct0.Capacity + 1; i++)
+            for (var i = 0; i < RegisterProduct0.Capacity + 1; i++)
             {
                 registerInfos.Add(new RegisterInfo());
             }

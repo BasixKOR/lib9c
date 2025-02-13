@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Bencodex.Types;
 using Cocona;
 using Lib9c.DevExtensions;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
-using Libplanet.Blocks;
+using Libplanet.Crypto;
 using Libplanet.Store;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Nekoyume.Model.State;
@@ -49,14 +49,20 @@ namespace Lib9c.Tools.SubCommand
             var actionLoader = new NCActionLoader();
 
             Bencodex.Types.Dictionary goldCurrencyStateDict = (Bencodex.Types.Dictionary)
-                chain.GetState(GoldCurrencyState.Address);
+                chain
+                    .GetWorldState()
+                    .GetAccountState(ReservedAddresses.LegacyAccount)
+                    .GetState(GoldCurrencyState.Address);
             GoldCurrencyState goldCurrencyState = new GoldCurrencyState(goldCurrencyStateDict);
             Currency gold = goldCurrencyState.Currency;
 
             if (address is {} addrStr)
             {
                 Address addr = Utils.ParseAddress(addrStr);
-                FungibleAssetValue balance = chain.GetBalance(addr, gold, offset.Hash);
+                FungibleAssetValue balance =
+                    chain
+                        .GetWorldState(offset.Hash)
+                        .GetBalance(addr, gold);
                 Console.WriteLine("{0}\t{1}", addr, balance);
                 return;
             }
@@ -71,7 +77,7 @@ namespace Lib9c.Tools.SubCommand
                     .Select(txId => store.GetTransaction(new TxId(txId.ToArray())))
                     .SelectMany(tx => tx.Actions is { } ca
                         ? ca.Select(a => actionLoader.LoadAction(digest.Index, a))
-                            .SelectMany(a => a is TransferAsset t
+                            .SelectMany(a => a is ITransferAsset t
                                 ? new[] { t.Sender, t.Recipient }
                                 : a is InitializeStates i &&
                                     i.GoldDistributions is Bencodex.Types.List l
@@ -84,7 +90,10 @@ namespace Lib9c.Tools.SubCommand
                 {
                     if (!printed.Contains(addr))
                     {
-                        FungibleAssetValue balance = chain.GetBalance(addr, gold, offset.Hash);
+                        FungibleAssetValue balance =
+                            chain
+                                .GetWorldState(offset.Hash)
+                                .GetBalance(addr, gold);
                         Console.WriteLine("{0}\t{1}", addr, balance);
                         printed.Add(addr);
                     }

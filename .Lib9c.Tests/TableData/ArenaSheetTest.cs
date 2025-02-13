@@ -28,7 +28,7 @@ namespace Lib9c.Tests.TableData
         {
             const string content = @"id,round,arena_type,start_block_index,end_block_index,required_medal_count,entrance_fee,ticket_price,additional_ticket_price
 1,1,OffSeason,1,2,0,0,5,2
-1,2,Season,3,4,0,100,50,20
+1,2,Season,3,4,0,100,50,20,1,1,1
 1,3,OffSeason,5,1005284,0,0,5,2";
 
             var sheet = new ArenaSheet();
@@ -46,6 +46,10 @@ namespace Lib9c.Tests.TableData
             Assert.Equal(0, sheet.First.Round.First().EntranceFee);
             Assert.Equal(5, sheet.First.Round.First().TicketPrice);
             Assert.Equal(2, sheet.First.Round.First().AdditionalTicketPrice);
+            Assert.Equal(0, sheet.First.Round.First().MedalId);
+
+            // 1,2,Season,3,4,0,100,50,20,1
+            Assert.Equal(1, sheet.First.Round[1].MedalId);
         }
 
         [Fact]
@@ -81,7 +85,8 @@ namespace Lib9c.Tests.TableData
                 nextRound = rounds[2];
                 Assert.Equal(ArenaType.Season, round.ArenaType);
                 Assert.Equal(0, round.RequiredMedalCount);
-                Assert.True(round.EntranceFee > 0L);
+                // fee can 0 for prepare NCIP-24
+                Assert.True(round.EntranceFee >= 0L);
                 Assert.True(round.StartBlockIndex < round.EndBlockIndex);
                 Assert.Equal(round.EndBlockIndex + 1, nextRound.StartBlockIndex);
                 round = nextRound;
@@ -95,7 +100,8 @@ namespace Lib9c.Tests.TableData
                 nextRound = rounds[4];
                 Assert.Equal(ArenaType.Season, round.ArenaType);
                 Assert.Equal(0, round.RequiredMedalCount);
-                Assert.True(round.EntranceFee > 0L);
+                // fee can 0 for prepare NCIP-24
+                Assert.True(round.EntranceFee >= 0L);
                 Assert.True(round.StartBlockIndex < round.EndBlockIndex);
                 Assert.Equal(round.EndBlockIndex + 1, nextRound.StartBlockIndex);
                 round = nextRound;
@@ -142,8 +148,21 @@ namespace Lib9c.Tests.TableData
                     }
                 }
 
-                Assert.True(round.RequiredMedalCount > 0);
-                Assert.True(round.EntranceFee > 0L);
+                // Check ChampionShip round data
+                // Except mocaverse event season 8
+                // Except ygg event season 9
+                if (round.ChampionshipId == 8 || round.ChampionshipId == 9)
+                {
+                    Assert.Equal(0, round.RequiredMedalCount);
+                }
+                else
+                {
+                    // fee can 0 for prepare NCIP-24
+                    Assert.True(round.RequiredMedalCount >= 0);
+                }
+
+                // fee can 0 for prepare NCIP-24
+                Assert.True(round.EntranceFee >= 0L);
                 Assert.True(round.StartBlockIndex < round.EndBlockIndex);
             }
         }
@@ -165,8 +184,9 @@ namespace Lib9c.Tests.TableData
 
             var lastRound = _arenaSheet.OrderedList[^1].Round[^1];
             blockIndex = lastRound.EndBlockIndex + 1;
-            Assert.Throws<InvalidOperationException>(() =>
-                _arenaSheet.GetRowByBlockIndex(blockIndex));
+            Assert.Throws<InvalidOperationException>(
+                () =>
+                    _arenaSheet.GetRowByBlockIndex(blockIndex));
         }
 
         [Fact]
@@ -190,8 +210,9 @@ namespace Lib9c.Tests.TableData
 
             var lastRound = _arenaSheet.OrderedList[^1].Round[^1];
             blockIndex = lastRound.EndBlockIndex + 1;
-            Assert.Throws<RoundNotFoundException>(() =>
-                _arenaSheet.GetRoundByBlockIndex(blockIndex));
+            Assert.Throws<RoundNotFoundException>(
+                () =>
+                    _arenaSheet.GetRoundByBlockIndex(blockIndex));
         }
     }
 }

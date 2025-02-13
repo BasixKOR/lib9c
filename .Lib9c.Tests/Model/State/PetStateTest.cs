@@ -1,7 +1,6 @@
 namespace Lib9c.Tests.Model.State
 {
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Action;
     using Nekoyume.Model.State;
@@ -43,8 +42,9 @@ namespace Lib9c.Tests.Model.State
             Assert.Equal(initialLevel, state.Level);
             if (shouldThrow)
             {
-                Assert.Throws<System.InvalidOperationException>(() =>
-                    state.LevelUp());
+                Assert.Throws<System.InvalidOperationException>(
+                    () =>
+                        state.LevelUp());
             }
             else
             {
@@ -58,7 +58,7 @@ namespace Lib9c.Tests.Model.State
         [InlineData(int.MaxValue)]
         public void DeriveAddress(int petId)
         {
-            var avatarAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
             var expectedAddress = avatarAddress.Derive($"pet-{petId}");
             Assert.Equal(expectedAddress, PetState.DeriveAddress(avatarAddress, petId));
         }

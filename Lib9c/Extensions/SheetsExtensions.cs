@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Action;
 using Nekoyume.TableData;
+using Nekoyume.TableData.Rune;
 
 namespace Nekoyume.Extensions
 {
@@ -192,7 +192,9 @@ namespace Nekoyume.Extensions
                 sheets.GetSheet<CharacterSheet>(),
                 sheets.GetSheet<CharacterLevelSheet>(),
                 sheets.GetSheet<EquipmentItemSetEffectSheet>(),
-                sheets.GetSheet<RuneOptionSheet>()
+                sheets.GetSheet<RuneOptionSheet>(),
+                sheets.GetSheet<RuneListSheet>(),
+                sheets.GetSheet<RuneLevelBonusSheet>()
             );
         }
 
@@ -245,7 +247,9 @@ namespace Nekoyume.Extensions
                 sheets.GetSheet<StageSheet>(),
                 sheets.GetSheet<StageWaveSheet>(),
                 sheets.GetSheet<EnemySkillSheet>(),
-                sheets.GetSheet<RuneOptionSheet>()
+                sheets.GetSheet<RuneOptionSheet>(),
+                sheets.GetSheet<RuneListSheet>(),
+                sheets.GetSheet<RuneLevelBonusSheet>()
             );
         }
 
@@ -297,7 +301,9 @@ namespace Nekoyume.Extensions
                 sheets.GetSheet<CharacterLevelSheet>(),
                 sheets.GetSheet<EquipmentItemSetEffectSheet>(),
                 sheets.GetSheet<WeeklyArenaRewardSheet>(),
-                sheets.GetSheet<RuneOptionSheet>()
+                sheets.GetSheet<RuneOptionSheet>(),
+                sheets.GetSheet<RuneListSheet>(),
+                sheets.GetSheet<RuneLevelBonusSheet>()
             );
         }
 
@@ -349,7 +355,9 @@ namespace Nekoyume.Extensions
                 sheets.GetSheet<EquipmentItemSetEffectSheet>(),
                 sheets.GetSheet<CostumeStatSheet>(),
                 sheets.GetSheet<WeeklyArenaRewardSheet>(),
-                sheets.GetSheet<RuneOptionSheet>()
+                sheets.GetSheet<RuneOptionSheet>(),
+                sheets.GetSheet<RuneListSheet>(),
+                sheets.GetSheet<RuneLevelBonusSheet>()
             );
         }
 
@@ -408,11 +416,15 @@ namespace Nekoyume.Extensions
                 sheets.GetSheet<WorldBossBattleRewardSheet>(),
                 sheets.GetSheet<RuneWeightSheet>(),
                 sheets.GetSheet<RuneSheet>(),
-                sheets.GetSheet<RuneOptionSheet>()
+                sheets.GetSheet<RuneOptionSheet>(),
+                sheets.GetSheet<RuneListSheet>(),
+                sheets.GetSheet<RuneLevelBonusSheet>()
             );
         }
 
-        public static int FindLevelByStakedAmount(this IStakeRewardSheet sheet, Address agentAddress,
+        public static int FindLevelByStakedAmount(
+            this IStakeRewardSheet sheet,
+            Address agentAddress,
             FungibleAssetValue balance)
         {
             List<IStakeRewardRow> orderedRows =

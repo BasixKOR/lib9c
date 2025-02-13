@@ -1,8 +1,7 @@
-﻿namespace Lib9c.Tests.Model.State
+namespace Lib9c.Tests.Model.State
 {
     using System.Collections.Generic;
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Model.State;
     using Xunit;
@@ -20,10 +19,10 @@
         [Fact]
         public void Serialize()
         {
-            var address = new PrivateKey().ToAddress();
+            var address = new PrivateKey().Address;
             var state = new CrystalRandomSkillState(address, 1);
             state.Update(100_000_000, _tableSheets.CrystalStageBuffGachaSheet);
-            state.Update(new List<int> { 1, 2, 3 });
+            state.Update(new List<int> { 1, 2, 3, });
             var serialized = state.Serialize();
             var deserialized = new CrystalRandomSkillState(address, (List)serialized);
 

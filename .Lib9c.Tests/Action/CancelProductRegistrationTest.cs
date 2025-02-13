@@ -3,24 +3,27 @@ namespace Lib9c.Tests.Action
     using System;
     using System.Collections.Generic;
     using Bencodex.Types;
-    using Lib9c.Model.Order;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Helper;
     using Nekoyume.Model;
+    using Nekoyume.Model.Item;
+    using Nekoyume.Model.Mail;
     using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
+    using Newtonsoft.Json.Serialization;
     using Serilog;
     using Xunit;
     using Xunit.Abstractions;
 
     public class CancelProductRegistrationTest
     {
-        private readonly IAccountStateDelta _initialState;
+        private readonly IWorld _initialState;
         private readonly Address _agentAddress;
         private readonly Address _avatarAddress;
         private readonly GoldCurrencyState _goldCurrencyState;
@@ -34,12 +37,12 @@ namespace Lib9c.Tests.Action
                 .WriteTo.TestOutput(outputHelper)
                 .CreateLogger();
 
-            _initialState = new State();
+            _initialState = new World(MockUtil.MockModernWorldState);
             var sheets = TableSheetsImporter.ImportSheets();
             foreach (var (key, value) in sheets)
             {
                 _initialState = _initialState
-                    .SetState(Addresses.TableSheet.Derive(key), value.Serialize());
+                    .SetLegacyState(Addresses.TableSheet.Derive(key), value.Serialize());
             }
 
             _tableSheets = new TableSheets(sheets);
@@ -50,31 +53,30 @@ namespace Lib9c.Tests.Action
 #pragma warning restore CS0618
             _goldCurrencyState = new GoldCurrencyState(currency);
 
-            _agentAddress = new PrivateKey().ToAddress();
+            _agentAddress = new PrivateKey().Address;
             var agentState = new AgentState(_agentAddress);
-            _avatarAddress = new PrivateKey().ToAddress();
+            _avatarAddress = new PrivateKey().Address;
             _gameConfigState = new GameConfigState((Text)_tableSheets.GameConfigSheet.Serialize());
-            var rankingMapAddress = new PrivateKey().ToAddress();
-            var avatarState = new AvatarState(
+            var rankingMapAddress = new PrivateKey().Address;
+            var avatarState = AvatarState.Create(
                 _avatarAddress,
                 _agentAddress,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                _gameConfigState,
-                rankingMapAddress)
-            {
-                worldInformation = new WorldInformation(
-                    0,
-                    _tableSheets.WorldSheet,
-                    GameConfig.RequireClearedStageLevel.ActionsInShop),
-            };
+                rankingMapAddress);
+            avatarState.worldInformation = new WorldInformation(
+                0,
+                _tableSheets.WorldSheet,
+                GameConfig.RequireClearedStageLevel.ActionsInShop);
+
             agentState.avatarAddresses[0] = _avatarAddress;
 
             _initialState = _initialState
-                .SetState(GoldCurrencyState.Address, _goldCurrencyState.Serialize())
-                .SetState(_agentAddress, agentState.Serialize())
-                .SetState(Addresses.Shop, new ShopState().Serialize())
-                .SetState(_avatarAddress, avatarState.Serialize());
+                .SetLegacyState(GoldCurrencyState.Address, _goldCurrencyState.Serialize())
+                .SetAgentState(_agentAddress, agentState)
+                .SetLegacyState(Addresses.Shop, new ShopState().Serialize())
+                .SetAvatarState(_avatarAddress, avatarState)
+                .SetActionPoint(_avatarAddress, DailyReward.ActionPointMax);
         }
 
         [Theory]
@@ -102,10 +104,10 @@ namespace Lib9c.Tests.Action
                     new ItemProductInfo
                     {
                         AvatarAddress = invalidAvatarAddress
-                            ? new PrivateKey().ToAddress()
+                            ? new PrivateKey().Address
                             : _avatarAddress,
                         AgentAddress = invalidAgentAddress
-                            ? new PrivateKey().ToAddress()
+                            ? new PrivateKey().Address
                             : _agentAddress,
                         Legacy = false,
                         Price = 1 * _goldCurrencyState.Currency,
@@ -119,8 +121,8 @@ namespace Lib9c.Tests.Action
             {
                 Signer = _agentAddress,
                 BlockIndex = 1L,
-                PreviousStates = _initialState,
-                Random = new TestRandom(),
+                PreviousState = _initialState,
+                RandomSeed = 0,
             };
             Assert.Throws<InvalidAddressException>(() => action.Execute(actionContext));
         }
@@ -128,7 +130,8 @@ namespace Lib9c.Tests.Action
         [Fact]
         public void Execute_Throw_ProductNotFoundException()
         {
-            var prevState = _initialState.MintAsset(_avatarAddress, 1 * RuneHelper.StakeRune);
+            var context = new ActionContext();
+            var prevState = _initialState.MintAsset(context, _avatarAddress, 1 * RuneHelper.StakeRune);
             var registerProduct = new RegisterProduct
             {
                 AvatarAddress = _avatarAddress,
@@ -143,20 +146,21 @@ namespace Lib9c.Tests.Action
                     },
                 },
             };
-            var nexState = registerProduct.Execute(new ActionContext
-            {
-                PreviousStates = prevState,
-                BlockIndex = 1L,
-                Signer = _agentAddress,
-                Random = new TestRandom(),
-            });
+            var nexState = registerProduct.Execute(
+                new ActionContext
+                {
+                    PreviousState = prevState,
+                    BlockIndex = 1L,
+                    Signer = _agentAddress,
+                    RandomSeed = 0,
+                });
             Assert.Equal(
                 0 * RuneHelper.StakeRune,
                 nexState.GetBalance(_avatarAddress, RuneHelper.StakeRune)
             );
             var productsState =
                 new ProductsState(
-                    (List)nexState.GetState(ProductsState.DeriveAddress(_avatarAddress)));
+                    (List)nexState.GetLegacyState(ProductsState.DeriveAddress(_avatarAddress)));
             var productId = Assert.Single(productsState.ProductIds);
 
             var action = new CancelProductRegistration
@@ -183,20 +187,22 @@ namespace Lib9c.Tests.Action
                 },
             };
 
-            Assert.Throws<ProductNotFoundException>(() => action.Execute(new ActionContext
-            {
-                PreviousStates = nexState,
-                BlockIndex = 2L,
-                Signer = _agentAddress,
-                Random = new TestRandom(),
-            }));
+            Assert.Throws<ProductNotFoundException>(
+                () => action.Execute(
+                    new ActionContext
+                    {
+                        PreviousState = nexState,
+                        BlockIndex = 2L,
+                        Signer = _agentAddress,
+                        RandomSeed = 0,
+                    }));
         }
 
         [Fact]
         public void Execute_Throw_ArgumentOutOfRangeException()
         {
             var productInfos = new List<IProductInfo>();
-            for (int i = 0; i < CancelProductRegistration.Capacity + 1; i++)
+            for (var i = 0; i < CancelProductRegistration.Capacity + 1; i++)
             {
                 productInfos.Add(new ItemProductInfo());
             }
@@ -209,6 +215,65 @@ namespace Lib9c.Tests.Action
             };
 
             Assert.Throws<ArgumentOutOfRangeException>(() => action.Execute(new ActionContext()));
+        }
+
+        [Theory]
+        [InlineData(ProductType.FungibleAssetValue)]
+        [InlineData(ProductType.NonFungible)]
+        [InlineData(ProductType.Fungible)]
+        public void Mail_Serialize_BackwardCompatibility(ProductType productType)
+        {
+            Product product;
+            var gold = _goldCurrencyState.Currency;
+            switch (productType)
+            {
+                case ProductType.FungibleAssetValue:
+                    product = new FavProduct
+                    {
+                        SellerAgentAddress = new PrivateKey().Address,
+                        SellerAvatarAddress = new PrivateKey().Address,
+                        Asset = 1 * RuneHelper.StakeRune,
+                        RegisteredBlockIndex = 1L,
+                        ProductId = Guid.NewGuid(),
+                        Price = 1 * gold,
+                        Type = ProductType.FungibleAssetValue,
+                    };
+                    break;
+                case ProductType.Fungible:
+                case ProductType.NonFungible:
+                {
+                    var tradableItem = productType == ProductType.Fungible
+                        ? ItemFactory.CreateTradableMaterial(_tableSheets.MaterialItemSheet.First)
+                        : (ITradableItem)ItemFactory.CreateItemUsable(_tableSheets.EquipmentItemSheet.First, Guid.NewGuid(), 0L);
+                    product = new ItemProduct
+                    {
+                        SellerAgentAddress = new PrivateKey().Address,
+                        SellerAvatarAddress = new PrivateKey().Address,
+                        RegisteredBlockIndex = 1L,
+                        ProductId = Guid.NewGuid(),
+                        Price = 1 * gold,
+                        Type = ProductType.NonFungible,
+                        ItemCount = 1,
+                        TradableItem = tradableItem,
+                    };
+                    break;
+                }
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(productType), productType, null);
+            }
+
+            var mail = new ProductCancelMail(2L, Guid.NewGuid(), 2L, product!.ProductId, product!);
+            var serialized = (Dictionary)mail.Serialize();
+            var deserialized = new ProductCancelMail(serialized);
+            Assert.Equal(serialized, deserialized.Serialize());
+            // serialized mail on v200220;
+            serialized = (Dictionary)serialized.Remove((Text)ProductCancelMail.ProductKey);
+            deserialized = new ProductCancelMail(serialized);
+            Assert.Equal(deserialized.ProductId, product.ProductId);
+            Assert.Null(deserialized.Product);
+            // check serialize not throw exception
+            deserialized.Serialize();
         }
     }
 }

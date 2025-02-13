@@ -1,7 +1,6 @@
 namespace Lib9c.Tests.Model.Arena
 {
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Model.Arena;
     using Xunit;
@@ -11,7 +10,7 @@ namespace Lib9c.Tests.Model.Arena
         [Fact]
         public void Serialize()
         {
-            var avatarAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
             var state = new ArenaInformation(avatarAddress, 1, 1);
             var serialized = (List)state.Serialize();
             var deserialized = new ArenaInformation(serialized);

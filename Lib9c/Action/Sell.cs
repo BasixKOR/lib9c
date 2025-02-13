@@ -5,12 +5,13 @@ using System.Diagnostics;
 using Bencodex.Types;
 using Lib9c.Abstractions;
 using Lib9c.Model.Order;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Serilog;
 using static Lib9c.SerializeKeys;
@@ -61,34 +62,17 @@ namespace Nekoyume.Action
             orderId = plainValue[OrderIdKey].ToGuid();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            var inventoryAddress = sellerAvatarAddress.Derive(LegacyInventoryKey);
-            var worldInformationAddress = sellerAvatarAddress.Derive(LegacyWorldInformationKey);
-            var questListAddress = sellerAvatarAddress.Derive(LegacyQuestListKey);
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             Address shopAddress = ShardedShopStateV2.DeriveAddress(itemSubType, orderId);
             Address itemAddress = Addresses.GetItemAddress(tradableId);
             Address orderAddress = Order.DeriveAddress(orderId);
             Address orderReceiptAddress = OrderDigestListState.DeriveAddress(sellerAvatarAddress);
-            if (context.Rehearsal)
-            {
-                return states
-                    .SetState(context.Signer, MarkChanged)
-                    .SetState(shopAddress, MarkChanged)
-                    .SetState(itemAddress, MarkChanged)
-                    .SetState(orderAddress, MarkChanged)
-                    .SetState(orderReceiptAddress, MarkChanged)
-                    .SetState(inventoryAddress, MarkChanged)
-                    .SetState(worldInformationAddress, MarkChanged)
-                    .SetState(questListAddress, MarkChanged)
-                    .SetState(sellerAvatarAddress, MarkChanged);
-            }
 
-            context.UseGas(1);
             CheckObsolete(ActionObsoleteConfig.V200030ObsoleteIndex, context);
-            if (!(states.GetState(Addresses.Market) is null))
+            if (!(states.GetLegacyState(Addresses.Market) is null))
             {
                 throw new ActionObsoletedException("Sell action is obsoleted. please use SellProduct.");
             }
@@ -108,12 +92,16 @@ namespace Nekoyume.Action
                     $"{addressesHex}Aborted as the price is less than zero: {price}.");
             }
 
-            if (!states.TryGetAgentAvatarStatesV2(
+            if (states.GetAgentState(context.Signer) is null)
+            {
+                throw new FailedLoadStateException(
+                    $"{addressesHex}Aborted as the agent state of the signer was failed to load.");
+            }
+
+            if (!states.TryGetAvatarState(
                     context.Signer,
                     sellerAvatarAddress,
-                    out _,
-                    out var avatarState,
-                    out _))
+                    out var avatarState))
             {
                 throw new FailedLoadStateException(
                     $"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
@@ -153,7 +141,7 @@ namespace Nekoyume.Action
 
             ITradableItem tradableItem = order.Sell(avatarState);
 
-            var shardedShopState = states.TryGetState(shopAddress, out Dictionary serializedState)
+            var shardedShopState = states.TryGetLegacyState(shopAddress, out Dictionary serializedState)
                 ? new ShardedShopStateV2(serializedState)
                 : new ShardedShopStateV2(shopAddress);
 
@@ -172,26 +160,23 @@ namespace Nekoyume.Action
             avatarState.blockIndex = context.BlockIndex;
 
             var orderReceiptList =
-                states.TryGetState(orderReceiptAddress, out Dictionary receiptDict)
+                states.TryGetLegacyState(orderReceiptAddress, out Dictionary receiptDict)
                     ? new OrderDigestListState(receiptDict)
                     : new OrderDigestListState(orderReceiptAddress);
 
             orderReceiptList.Add(orderDigest);
 
-            states = states.SetState(orderReceiptAddress, orderReceiptList.Serialize());
             states = states
-                .SetState(inventoryAddress, avatarState.inventory.Serialize())
-                .SetState(worldInformationAddress, avatarState.worldInformation.Serialize())
-                .SetState(questListAddress, avatarState.questList.Serialize())
-                .SetState(sellerAvatarAddress, avatarState.SerializeV2());
+                .SetLegacyState(orderReceiptAddress, orderReceiptList.Serialize())
+                .SetAvatarState(sellerAvatarAddress, avatarState);
             sw.Stop();
             Log.Verbose("{AddressesHex}Sell Set AvatarState: {Elapsed}", addressesHex, sw.Elapsed);
             sw.Restart();
 
             states = states
-                .SetState(itemAddress, tradableItem.Serialize())
-                .SetState(orderAddress, order.Serialize())
-                .SetState(shopAddress, shardedShopState.Serialize());
+                .SetLegacyState(itemAddress, tradableItem.Serialize())
+                .SetLegacyState(orderAddress, order.Serialize())
+                .SetLegacyState(shopAddress, shardedShopState.Serialize());
             sw.Stop();
             var ended = DateTimeOffset.UtcNow;
             Log.Verbose("{AddressesHex}Sell Set ShopState: {Elapsed}", addressesHex, sw.Elapsed);

@@ -31,6 +31,11 @@ namespace Nekoyume.Battle
             _items = new List<Item>();
         }
 
+        public void Clear()
+        {
+            _items.Clear();
+        }
+
         public void Add(T item, decimal weight)
         {
             if (weight > 0)
@@ -149,7 +154,11 @@ namespace Nekoyume.Battle
 
     public class InvalidCountException : InvalidOperationException
     {
-        public InvalidCountException() : base("count must be greater than 0.")
+        public InvalidCountException() : this("count must be greater than 0.")
+        {
+        }
+
+        public InvalidCountException(string message) : base(message)
         {
         }
     }

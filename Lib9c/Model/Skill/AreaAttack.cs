@@ -10,21 +10,20 @@ namespace Nekoyume.Model.Skill
     {
         public AreaAttack(
             SkillSheet.Row skillRow,
-            int power,
+            long power,
             int chance,
             int statPowerRatio,
             StatType referencedStatType) : base(skillRow, power, chance, statPowerRatio, referencedStatType)
         {
         }
 
-        public override Model.BattleStatus.Skill Use(
-            CharacterBase caster, 
-            int simulatorWaveTurn, 
-            IEnumerable<Buff.Buff> buffs)
+        public override BattleStatus.Skill Use(CharacterBase caster,
+            int simulatorWaveTurn,
+            IEnumerable<Buff.Buff> buffs, bool copyCharacter)
         {
-            var clone = (CharacterBase) caster.Clone();
-            var damage = ProcessDamage(caster, simulatorWaveTurn);
-            var buff = ProcessBuff(caster, simulatorWaveTurn, buffs);
+            var clone = copyCharacter ? (CharacterBase) caster.Clone() : null;
+            var damage = ProcessDamage(caster, simulatorWaveTurn, copyCharacter: copyCharacter);
+            var buff = ProcessBuff(caster, simulatorWaveTurn, buffs, copyCharacter);
 
             return new Model.BattleStatus.AreaAttack(SkillRow.Id, clone, damage, buff);
         }

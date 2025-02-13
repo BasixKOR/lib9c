@@ -1,14 +1,14 @@
-﻿namespace Lib9c.Tests.Action
+namespace Lib9c.Tests.Action
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using Bencodex.Types;
     using Lib9c.Model.Order;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Battle;
@@ -16,6 +16,7 @@
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Serilog;
     using Xunit;
     using Xunit.Abstractions;
@@ -31,7 +32,7 @@
         private readonly TableSheets _tableSheets;
         private readonly GoldCurrencyState _goldCurrencyState;
         private readonly GameConfigState _gameConfigState;
-        private IAccountStateDelta _initialState;
+        private IWorld _initialState;
 
         public ReRegisterProductTest(ITestOutputHelper outputHelper)
         {
@@ -40,12 +41,12 @@
                 .WriteTo.TestOutput(outputHelper)
                 .CreateLogger();
 
-            _initialState = new State();
+            _initialState = new World(MockUtil.MockModernWorldState);
             var sheets = TableSheetsImporter.ImportSheets();
             foreach (var (key, value) in sheets)
             {
                 _initialState = _initialState
-                    .SetState(Addresses.TableSheet.Derive(key), value.Serialize());
+                    .SetLegacyState(Addresses.TableSheet.Derive(key), value.Serialize());
             }
 
             _tableSheets = new TableSheets(sheets);
@@ -58,32 +59,31 @@
 
             var shopState = new ShopState();
 
-            _agentAddress = new PrivateKey().ToAddress();
+            _agentAddress = new PrivateKey().Address;
             var agentState = new AgentState(_agentAddress);
-            _avatarAddress = new PrivateKey().ToAddress();
-            var rankingMapAddress = new PrivateKey().ToAddress();
+            _avatarAddress = new PrivateKey().Address;
+            var rankingMapAddress = new PrivateKey().Address;
             _gameConfigState = new GameConfigState((Text)_tableSheets.GameConfigSheet.Serialize());
-            _avatarState = new AvatarState(
+            _avatarState = AvatarState.Create(
                 _avatarAddress,
                 _agentAddress,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                _gameConfigState,
-                rankingMapAddress)
-            {
-                worldInformation = new WorldInformation(
-                    0,
-                    _tableSheets.WorldSheet,
-                    GameConfig.RequireClearedStageLevel.ActionsInShop),
-            };
+                rankingMapAddress);
+            _avatarState.worldInformation = new WorldInformation(
+                0,
+                _tableSheets.WorldSheet,
+                GameConfig.RequireClearedStageLevel.ActionsInShop);
+
             agentState.avatarAddresses[0] = _avatarAddress;
 
             _initialState = _initialState
-                .SetState(GoldCurrencyState.Address, _goldCurrencyState.Serialize())
-                .SetState(Addresses.Shop, shopState.Serialize())
-                .SetState(_agentAddress, agentState.Serialize())
-                .SetState(Addresses.GameConfig, _gameConfigState.Serialize())
-                .SetState(_avatarAddress, _avatarState.Serialize());
+                .SetLegacyState(GoldCurrencyState.Address, _goldCurrencyState.Serialize())
+                .SetLegacyState(Addresses.Shop, shopState.Serialize())
+                .SetAgentState(_agentAddress, agentState)
+                .SetLegacyState(Addresses.GameConfig, _gameConfigState.Serialize())
+                .SetAvatarState(_avatarAddress, _avatarState)
+                .SetActionPoint(_avatarAddress, DailyReward.ActionPointMax);
         }
 
         [Theory]
@@ -121,7 +121,7 @@
                         _tableSheets.EquipmentItemSheet.First,
                         itemId,
                         requiredBlockIndex);
-                    tradableItem = itemUsable;
+                    tradableItem = (ITradableItem)itemUsable;
                     itemSubType = itemUsable.ItemSubType;
                     break;
                 }
@@ -164,7 +164,7 @@
 
             if (inventoryCount > 1)
             {
-                for (int i = 0; i < inventoryCount; i++)
+                for (var i = 0; i < inventoryCount; i++)
                 {
                     // Different RequiredBlockIndex for divide inventory slot.
                     if (tradableItem is ITradableFungibleItem tradableFungibleItem)
@@ -197,22 +197,18 @@
 
             if (fromPreviousAction)
             {
-                prevState = prevState.SetState(_avatarAddress, avatarState.Serialize());
+                prevState = prevState.SetAvatarState(_avatarAddress, avatarState);
             }
             else
             {
-                prevState = prevState
-                    .SetState(_avatarAddress.Derive(LegacyInventoryKey), avatarState.inventory.Serialize())
-                    .SetState(_avatarAddress.Derive(LegacyWorldInformationKey), avatarState.worldInformation.Serialize())
-                    .SetState(_avatarAddress.Derive(LegacyQuestListKey), avatarState.questList.Serialize())
-                    .SetState(_avatarAddress, avatarState.SerializeV2());
+                prevState = prevState.SetAvatarState(_avatarAddress, avatarState);
             }
 
             prevState = prevState
-                .SetState(Addresses.GetItemAddress(itemId), sellItem.Serialize())
-                .SetState(Order.DeriveAddress(order.OrderId), order.Serialize())
-                .SetState(orderDigestList.Address, orderDigestList.Serialize())
-                .SetState(shardedShopAddress, shopState.Serialize());
+                .SetLegacyState(Addresses.GetItemAddress(itemId), sellItem.Serialize())
+                .SetLegacyState(Order.DeriveAddress(order.OrderId), order.Serialize())
+                .SetLegacyState(orderDigestList.Address, orderDigestList.Serialize())
+                .SetLegacyState(shardedShopAddress, shopState.Serialize());
 
             var currencyState = prevState.GetGoldCurrency();
             var price = new FungibleAssetValue(currencyState, ProductPrice, 0);
@@ -229,20 +225,20 @@
             var action = new UpdateSell
             {
                 sellerAvatarAddress = _avatarAddress,
-                updateSellInfos = new[] { updateSellInfo },
+                updateSellInfos = new[] { updateSellInfo, },
             };
 
-            var expectedState = action.Execute(new ActionContext
-            {
-                BlockIndex = 101,
-                PreviousStates = prevState,
-                Random = new TestRandom(),
-                Rehearsal = false,
-                Signer = _agentAddress,
-            });
+            var expectedState = action.Execute(
+                new ActionContext
+                {
+                    BlockIndex = 101,
+                    PreviousState = prevState,
+                    RandomSeed = 0,
+                    Signer = _agentAddress,
+                });
 
             var updateSellShopAddress = ShardedShopStateV2.DeriveAddress(itemSubType, updateSellOrderId);
-            var nextShopState = new ShardedShopStateV2((Dictionary)expectedState.GetState(updateSellShopAddress));
+            var nextShopState = new ShardedShopStateV2((Dictionary)expectedState.GetLegacyState(updateSellShopAddress));
             Assert.Equal(1, nextShopState.OrderDigestList.Count);
             Assert.NotEqual(orderId, nextShopState.OrderDigestList.First().OrderId);
             Assert.Equal(updateSellOrderId, nextShopState.OrderDigestList.First().OrderId);
@@ -279,31 +275,29 @@
                 },
             };
 
-            var actualState = reRegister.Execute(new ActionContext
-            {
-                BlockIndex = 101,
-                PreviousStates = prevState,
-                Random = new TestRandom(),
-                Rehearsal = false,
-                Signer = _agentAddress,
-            });
+            var actualState = reRegister.Execute(
+                new ActionContext
+                {
+                    BlockIndex = 101,
+                    PreviousState = prevState,
+                    RandomSeed = 0,
+                    Signer = _agentAddress,
+                });
 
-            var targetShopState = new ShardedShopStateV2((Dictionary)actualState.GetState(shardedShopAddress));
-            var nextOrderDigestListState = new OrderDigestListState((Dictionary)actualState.GetState(orderDigestList.Address));
+            var targetShopState = new ShardedShopStateV2((Dictionary)actualState.GetLegacyState(shardedShopAddress));
+            var nextOrderDigestListState = new OrderDigestListState((Dictionary)actualState.GetLegacyState(orderDigestList.Address));
             Assert.Empty(targetShopState.OrderDigestList);
             Assert.Empty(nextOrderDigestListState.OrderDigestList);
             var productsState =
                 new ProductsState(
-                    (List)actualState.GetState(ProductsState.DeriveAddress(_avatarAddress)));
+                    (List)actualState.GetLegacyState(ProductsState.DeriveAddress(_avatarAddress)));
             var productId = Assert.Single(productsState.ProductIds);
             var product =
-                ProductFactory.DeserializeProduct((List)actualState.GetState(Product.DeriveAddress(productId)));
+                ProductFactory.DeserializeProduct((List)actualState.GetLegacyState(Product.DeriveAddress(productId)));
             Assert.Equal(productId, product.ProductId);
             Assert.Equal(productType, product.Type);
             Assert.Equal(order.Price, product.Price);
-
-            var nextAvatarState = actualState.GetAvatarStateV2(_avatarAddress);
-            Assert.Equal(_gameConfigState.ActionPointMax - ReRegisterProduct.CostAp, nextAvatarState.actionPoint);
+            Assert.Equal(DailyReward.ActionPointMax - ReRegisterProduct.CostAp, actualState.GetActionPoint(_avatarAddress));
         }
 
         [Fact]
@@ -322,7 +316,7 @@
         public void Execute_Throw_ArgumentOutOfRangeException()
         {
             var reRegisterInfos = new List<(IProductInfo, IRegisterInfo)>();
-            for (int i = 0; i < ReRegisterProduct.Capacity + 1; i++)
+            for (var i = 0; i < ReRegisterProduct.Capacity + 1; i++)
             {
                 reRegisterInfos.Add((new ItemProductInfo(), new RegisterInfo()));
             }

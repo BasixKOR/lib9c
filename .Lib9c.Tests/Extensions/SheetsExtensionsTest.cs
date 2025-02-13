@@ -1,22 +1,25 @@
-﻿namespace Lib9c.Tests.Extensions
+namespace Lib9c.Tests.Extensions
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.State;
+    using Lib9c.Tests.Action;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
+    using Libplanet.Mocks;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Xunit;
 
     public class SheetsExtensionsTest
     {
-        private IAccountStateDelta _states;
+        private IWorld _states;
         private Dictionary<string, string> _sheetNameAndFiles;
         private Dictionary<Address, IValue> _sheetsAddressAndValues;
         private Type[] _sheetTypes;
@@ -24,7 +27,7 @@
 
         public SheetsExtensionsTest()
         {
-            _states = new Tests.Action.State();
+            _states = new World(MockUtil.MockModernWorldState);
             InitSheets(
                 _states,
                 out _sheetNameAndFiles,
@@ -55,7 +58,7 @@
         }
 
         internal static void InitSheets(
-            IAccountStateDelta states,
+            IWorld states,
             out Dictionary<string, string> sheetNameAndFiles,
             out Dictionary<Address, IValue> sheetsAddressAndValues,
             out Type[] sheetTypes,
@@ -67,16 +70,17 @@
                 pair => pair.Value.Serialize());
             foreach (var (address, value) in sheetsAddressAndValues)
             {
-                states = states.SetState(address, value);
+                states = states.SetLegacyState(address, value);
             }
 
             var iSheetType = typeof(ISheet);
             var sheetNameAndFilesTemp = sheetNameAndFiles;
             sheetTypes = Assembly.GetAssembly(typeof(ISheet))?.GetTypes()
-                .Where(type =>
-                    iSheetType.IsAssignableFrom(type) &&
-                    !type.IsAbstract &&
-                    sheetNameAndFilesTemp.ContainsKey(type.Name))
+                .Where(
+                    type =>
+                        iSheetType.IsAssignableFrom(type) &&
+                        !type.IsAbstract &&
+                        sheetNameAndFilesTemp.ContainsKey(type.Name))
                 .ToArray();
             Assert.NotNull(sheetTypes);
             Assert.NotEmpty(sheetTypes);

@@ -5,7 +5,6 @@ namespace Lib9c.Tests.Model.State
     using System.Linq;
     using System.Runtime.Serialization.Formatters.Binary;
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume;
     using Nekoyume.Action;
@@ -27,7 +26,7 @@ namespace Lib9c.Tests.Model.State
         public void Serialize()
         {
             var state = new RankingState();
-            var avatarAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
             state.UpdateRankingMap(avatarAddress);
             var serialized = state.Serialize();
 
@@ -43,7 +42,7 @@ namespace Lib9c.Tests.Model.State
             var state = new RankingState();
             for (var i = 0; i < 1000; i++)
             {
-                state.UpdateRankingMap(new PrivateKey().ToAddress());
+                state.UpdateRankingMap(new PrivateKey().Address);
             }
 
             var serializedV1 = state.Serialize();
@@ -99,8 +98,9 @@ namespace Lib9c.Tests.Model.State
                 state.UpdateRankingMap(address.Derive(i.ToString()));
             }
 
-            var exec = Assert.Throws<RankingExceededException>(() =>
-                state.UpdateRankingMap(address.Derive((max + 1).ToString())));
+            var exec = Assert.Throws<RankingExceededException>(
+                () =>
+                    state.UpdateRankingMap(address.Derive((max + 1).ToString())));
 
             var formatter = new BinaryFormatter();
             using var ms = new MemoryStream();
@@ -114,18 +114,23 @@ namespace Lib9c.Tests.Model.State
         private static IValue SerializeV1_With_Deterministic_Problem(RankingState rankingState)
         {
 #pragma warning disable LAA1002
-            return new Dictionary(new Dictionary<IKey, IValue>
-            {
-                [(Text)"ranking_map"] = new Dictionary(rankingState.RankingMap.Select(kv =>
-                    new KeyValuePair<IKey, IValue>(
-                        (Binary)kv.Key.Serialize(),
-                        new List(kv.Value.Select(a => a.Serialize()))
-                    )
-                )),
-            }.Union(new Dictionary(new Dictionary<IKey, IValue>
-            {
-                [(Text)LegacyAddressKey] = rankingState.address.Serialize(),
-            })));
+            return new Dictionary(
+                new Dictionary<IKey, IValue>
+                {
+                    [(Text)"ranking_map"] = new Dictionary(
+                        rankingState.RankingMap.Select(
+                            kv =>
+                                new KeyValuePair<IKey, IValue>(
+                                    (Binary)kv.Key.Serialize(),
+                                    new List(kv.Value.Select(a => a.Serialize()))
+                                )
+                        )),
+                }.Union(
+                    new Dictionary(
+                        new Dictionary<IKey, IValue>
+                        {
+                            [(Text)LegacyAddressKey] = rankingState.address.Serialize(),
+                        })));
 #pragma warning restore LAA1002
         }
     }

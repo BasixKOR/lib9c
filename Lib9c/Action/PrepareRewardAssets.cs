@@ -2,11 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 
 namespace Nekoyume.Action
 {
@@ -42,17 +43,10 @@ namespace Nekoyume.Action
             Assets = serialized["a"].ToList(StateExtensions.ToFungibleAssetValue);
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            IAccountStateDelta states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                foreach (var asset in Assets)
-                {
-                    return states.MarkBalanceChanged(asset.Currency, RewardPoolAddress);
-                }
-            }
+            GasTracer.UseGas(1);
+            IWorld states = context.PreviousState;
 
             CheckPermission(context);
 
@@ -63,7 +57,7 @@ namespace Nekoyume.Action
                 {
                     throw new CurrencyPermissionException(null, context.Signer, asset.Currency);
                 }
-                states = states.MintAsset(RewardPoolAddress, asset);
+                states = states.MintAsset(context, RewardPoolAddress, asset);
             }
 
             return states;

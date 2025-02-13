@@ -2,10 +2,11 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Model.Coupons;
+using Nekoyume.Module;
 
 namespace Nekoyume.Action.Coupons
 {
@@ -27,22 +28,15 @@ namespace Nekoyume.Action.Coupons
 
         public Address Recipient { get; private set; }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states.SetCouponWallet(
-                    Recipient,
-                    ImmutableDictionary.Create<Guid, Coupon>(),
-                    rehearsal: true);
-            }
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
 
             CheckPermission(context);
 
             var wallet = states.GetCouponWallet(Recipient);
-            var random = context.Random;
+            var random = context.GetRandom();
             var idBytes = new byte[16];
             var orderedRewards = Rewards.OrderBy(kv => kv.Key, default(RewardSet.Comparer));
             foreach (var (rewardSet, quantity) in orderedRewards)

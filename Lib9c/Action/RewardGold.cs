@@ -4,11 +4,12 @@ using System.Linq;
 using System.Numerics;
 using Bencodex.Types;
 using Lib9c;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Serilog;
 
@@ -34,11 +35,10 @@ namespace Nekoyume.Action
         {
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            states = TransferMead(states);
+            var states = context.PreviousState;
+            states = TransferMead(context, states);
             states = GenesisGoldDistribution(context, states);
             var addressesHex = GetSignerAndOtherAddressesHex(context, context.Signer);
             var started = DateTimeOffset.UtcNow;
@@ -47,7 +47,7 @@ namespace Nekoyume.Action
             // Avoid InvalidBlockStateRootHashException before table patch.
             var arenaSheetAddress = Addresses.GetSheetAddress<ArenaSheet>();
             // Avoid InvalidBlockStateRootHashException in unit test genesis block evaluate.
-            if (states.GetState(arenaSheetAddress) is null || context.BlockIndex == 0)
+            if (states.GetLegacyState(arenaSheetAddress) is null || context.BlockIndex == 0)
             {
                 states = WeeklyArenaRankingBoard2(context, states);
             }
@@ -57,20 +57,21 @@ namespace Nekoyume.Action
             return MinerReward(context, states);
         }
 
-        public IAccountStateDelta GenesisGoldDistribution(IActionContext ctx, IAccountStateDelta states)
+        public IWorld GenesisGoldDistribution(IActionContext ctx, IWorld states)
         {
             IEnumerable<GoldDistribution> goldDistributions = states.GetGoldDistribution();
             var index = ctx.BlockIndex;
             Currency goldCurrency = states.GetGoldCurrency();
             Address fund = GoldCurrencyState.Address;
+            FungibleAssetValue fundValue = states.GetBalance(fund, goldCurrency);
             foreach(GoldDistribution distribution in goldDistributions)
             {
                 BigInteger amount = distribution.GetAmount(index);
-                if (amount <= 0) continue;
+                FungibleAssetValue fav = goldCurrency * amount;
+                if (amount <= 0 || fundValue < fav) continue;
 
                 // We should divide by 100 for only mainnet distributions.
                 // See also: https://github.com/planetarium/lib9c/pull/170#issuecomment-713380172
-                FungibleAssetValue fav = goldCurrency * amount;
                 var testAddresses = new HashSet<Address>(
                     new []
                     {
@@ -83,6 +84,7 @@ namespace Nekoyume.Action
                     fav = fav.DivRem(100, out FungibleAssetValue _);
                 }
                 states = states.TransferAsset(
+                    ctx,
                     fund,
                     distribution.Address,
                     fav
@@ -92,7 +94,7 @@ namespace Nekoyume.Action
         }
 
         [Obsolete("Use WeeklyArenaRankingBoard2 for performance.")]
-        public IAccountStateDelta WeeklyArenaRankingBoard(IActionContext ctx, IAccountStateDelta states)
+        public IWorld WeeklyArenaRankingBoard(IActionContext ctx, IWorld states)
         {
             var gameConfigState = states.GetGameConfigState();
             var index = Math.Max((int) ctx.BlockIndex / gameConfigState.WeeklyArenaInterval, 0);
@@ -102,7 +104,7 @@ namespace Nekoyume.Action
             if (nextWeekly is null)
             {
                 nextWeekly = new WeeklyArenaState(nextIndex);
-                states = states.SetState(nextWeekly.address, nextWeekly.Serialize());
+                states = states.SetLegacyState(nextWeekly.address, nextWeekly.Serialize());
             }
 
             // Beginning block of a new weekly arena.
@@ -113,44 +115,44 @@ namespace Nekoyume.Action
                 {
                     prevWeekly.End();
                     weekly.Update(prevWeekly, ctx.BlockIndex);
-                    states = states.SetState(prevWeekly.address, prevWeekly.Serialize());
-                    states = states.SetState(weekly.address, weekly.Serialize());
+                    states = states.SetLegacyState(prevWeekly.address, prevWeekly.Serialize());
+                    states = states.SetLegacyState(weekly.address, weekly.Serialize());
                 }
             }
             else if (ctx.BlockIndex - weekly.ResetIndex >= gameConfigState.DailyArenaInterval)
             {
                 weekly.ResetCount(ctx.BlockIndex);
-                states = states.SetState(weekly.address, weekly.Serialize());
+                states = states.SetLegacyState(weekly.address, weekly.Serialize());
             }
             return states;
         }
 
-        public IAccountStateDelta WeeklyArenaRankingBoard2(IActionContext ctx, IAccountStateDelta states)
+        public IWorld WeeklyArenaRankingBoard2(IActionContext ctx, IWorld states)
         {
             states = PrepareNextArena(ctx, states);
             states = ResetChallengeCount(ctx, states);
             return states;
         }
 
-        public IAccountStateDelta PrepareNextArena(IActionContext ctx, IAccountStateDelta states)
+        public IWorld PrepareNextArena(IActionContext ctx, IWorld states)
         {
             var gameConfigState = states.GetGameConfigState();
             var index = Math.Max((int) ctx.BlockIndex / gameConfigState.WeeklyArenaInterval, 0);
             var weeklyAddress = WeeklyArenaState.DeriveAddress(index);
-            var rawWeekly = (Dictionary) states.GetState(weeklyAddress);
+            var rawWeekly = (Dictionary) states.GetLegacyState(weeklyAddress);
             var nextIndex = index + 1;
             var nextWeekly = states.GetWeeklyArenaState(nextIndex);
             if (nextWeekly is null)
             {
                 nextWeekly = new WeeklyArenaState(nextIndex);
-                states = states.SetState(nextWeekly.address, nextWeekly.Serialize());
+                states = states.SetLegacyState(nextWeekly.address, nextWeekly.Serialize());
             }
 
             // Beginning block of a new weekly arena.
             if (ctx.BlockIndex % gameConfigState.WeeklyArenaInterval == 0 && index > 0)
             {
                 var prevWeeklyAddress = WeeklyArenaState.DeriveAddress(index - 1);
-                var rawPrevWeekly = (Dictionary) states.GetState(prevWeeklyAddress);
+                var rawPrevWeekly = (Dictionary) states.GetLegacyState(prevWeeklyAddress);
                 if (!rawPrevWeekly["ended"].ToBoolean())
                 {
                     rawPrevWeekly = rawPrevWeekly.SetItem("ended", true.Serialize());
@@ -158,7 +160,7 @@ namespace Nekoyume.Action
                     var prevWeekly = new WeeklyArenaState(rawPrevWeekly);
                     var listAddress = weekly.address.Derive("address_list");
                     // Set ArenaInfo, address list for new RankingBattle.
-                    var addressList = states.TryGetState(listAddress, out List rawList)
+                    var addressList = states.TryGetLegacyState(listAddress, out List rawList)
                         ? rawList.ToList(StateExtensions.ToAddress)
                         : new List<Address>();
                     var nextAddresses = rawList ?? List.Empty;
@@ -174,7 +176,7 @@ namespace Nekoyume.Action
                                 var address = kv.Key;
                                 var lazyInfo = kv.Value;
                                 var info = new ArenaInfo(lazyInfo.State);
-                                states = states.SetState(
+                                states = states.SetLegacyState(
                                     weeklyAddress.Derive(address.ToByteArray()), info.Serialize());
                                 if (!addressList.Contains(address))
                                 {
@@ -189,7 +191,7 @@ namespace Nekoyume.Action
                             // Copy addresses from prev weekly address list.
                             var prevListAddress = prevWeekly.address.Derive("address_list");
 
-                            if (states.TryGetState(prevListAddress, out List prevRawList))
+                            if (states.TryGetLegacyState(prevListAddress, out List prevRawList))
                             {
                                 var prevList = prevRawList.ToList(StateExtensions.ToAddress);
                                 foreach (var address in prevList.Where(address => !addressList.Contains(address)))
@@ -201,7 +203,7 @@ namespace Nekoyume.Action
                             // Copy activated ArenaInfo from prev ArenaInfo.
                             foreach (var address in addressList)
                             {
-                                if (states.TryGetState(
+                                if (states.TryGetLegacyState(
                                         prevWeekly.address.Derive(address.ToByteArray()),
                                         out Dictionary rawInfo))
                                 {
@@ -215,14 +217,14 @@ namespace Nekoyume.Action
                                     }
 
                                     nextAddresses = nextAddresses.Add(address.Serialize());
-                                    states = states.SetState(
+                                    states = states.SetLegacyState(
                                         weeklyAddress.Derive(address.ToByteArray()),
                                         new ArenaInfo(prevInfo).Serialize());
                                 }
                             }
                         }
                         // Set address list.
-                        states = states.SetState(listAddress, nextAddresses);
+                        states = states.SetLegacyState(listAddress, nextAddresses);
                     }
                     // Run legacy Update.
                     else
@@ -230,19 +232,19 @@ namespace Nekoyume.Action
                         weekly.Update(prevWeekly, ctx.BlockIndex);
                     }
 
-                    states = states.SetState(prevWeeklyAddress, rawPrevWeekly);
-                    states = states.SetState(weeklyAddress, weekly.Serialize());
+                    states = states.SetLegacyState(prevWeeklyAddress, rawPrevWeekly);
+                    states = states.SetLegacyState(weeklyAddress, weekly.Serialize());
                 }
             }
             return states;
         }
 
-        public IAccountStateDelta ResetChallengeCount(IActionContext ctx, IAccountStateDelta states)
+        public IWorld ResetChallengeCount(IActionContext ctx, IWorld states)
         {
             var gameConfigState = states.GetGameConfigState();
             var index = Math.Max((int) ctx.BlockIndex / gameConfigState.WeeklyArenaInterval, 0);
             var weeklyAddress = WeeklyArenaState.DeriveAddress(index);
-            var rawWeekly = (Dictionary) states.GetState(weeklyAddress);
+            var rawWeekly = (Dictionary) states.GetLegacyState(weeklyAddress);
             var resetIndex = rawWeekly["resetIndex"].ToLong();
 
             if (ctx.BlockIndex - resetIndex >= gameConfigState.DailyArenaInterval)
@@ -253,17 +255,17 @@ namespace Nekoyume.Action
                     // Reset count each ArenaInfo.
                     weekly.ResetIndex = ctx.BlockIndex;
                     var listAddress = weeklyAddress.Derive("address_list");
-                    if (states.TryGetState(listAddress, out List rawList))
+                    if (states.TryGetLegacyState(listAddress, out List rawList))
                     {
                         var addressList = rawList.ToList(StateExtensions.ToAddress);
                         foreach (var address in addressList)
                         {
                             var infoAddress = weeklyAddress.Derive(address.ToByteArray());
-                            if (states.TryGetState(infoAddress, out Dictionary rawInfo))
+                            if (states.TryGetLegacyState(infoAddress, out Dictionary rawInfo))
                             {
                                 var info = new ArenaInfo(rawInfo);
                                 info.ResetCount();
-                                states = states.SetState(infoAddress, info.Serialize());
+                                states = states.SetLegacyState(infoAddress, info.Serialize());
                             }
                         }
                     }
@@ -273,51 +275,45 @@ namespace Nekoyume.Action
                     // Run legacy ResetCount.
                     weekly.ResetCount(ctx.BlockIndex);
                 }
-                states = states.SetState(weeklyAddress, weekly.Serialize());
+                states = states.SetLegacyState(weeklyAddress, weekly.Serialize());
             }
             return states;
         }
 
-        public IAccountStateDelta MinerReward(IActionContext ctx, IAccountStateDelta states)
+        public IWorld MinerReward(IActionContext ctx, IWorld states)
         {
-            // 마이닝 보상
-            // https://www.notion.so/planetarium/Mining-Reward-b7024ef463c24ebca40a2623027d497d
-            Currency currency = states.GetGoldCurrency();
-            FungibleAssetValue defaultMiningReward = currency * 10;
-            var countOfHalfLife = (int)Math.Pow(2, Convert.ToInt64((ctx.BlockIndex - 1) / 12614400));
-            FungibleAssetValue miningReward =
-                defaultMiningReward.DivRem(countOfHalfLife, out FungibleAssetValue _);
-
-            if (miningReward >= FungibleAssetValue.Parse(currency, "1.25"))
+            Currency currency = Currencies.Mead;
+            var usedGas = states.GetBalance(Addresses.GasPool, currency);
+            var defaultReward = currency * 5;
+            var halfOfUsedGas = usedGas.DivRem(2).Quotient;
+            var gasToBurn = usedGas - halfOfUsedGas;
+            var miningReward = halfOfUsedGas + defaultReward;
+            states = states.MintAsset(ctx, Addresses.GasPool, defaultReward);
+            if (gasToBurn.Sign > 0)
             {
-                states = states.TransferAsset(
-                    GoldCurrencyState.Address,
-                    ctx.Miner,
-                    miningReward
-                );
+                states = states.BurnAsset(ctx, Addresses.GasPool, gasToBurn);
             }
+            states = states.TransferAsset(
+                ctx, Addresses.GasPool, Addresses.RewardPool, miningReward);
 
             return states;
         }
 
-        public static IAccountStateDelta TransferMead(IAccountStateDelta states)
+        public static IWorld TransferMead(IActionContext context, IWorld states)
         {
-#pragma warning disable LAA1002
-            var targetAddresses = states
-                .TotalUpdatedFungibleAssets
-#pragma warning restore LAA1002
-                .Where(d => d.Value.Contains(Currencies.Mead))
-                .Select(kv => kv.Key)
+            var targetAddresses = context.Txs
+                .Where(tx => tx.MaxGasPrice is { } price && price.Currency.Equals(Currencies.Mead))
+                .Select(tx => tx.Signer)
                 .Distinct();
             foreach (var address in targetAddresses)
             {
                 var contractAddress = address.GetPledgeAddress();
-                if (states.TryGetState(contractAddress, out List contract) &&
+                if (states.TryGetLegacyState(contractAddress, out List contract) &&
                     contract[1].ToBoolean())
                 {
                     try
                     {
-                        states = states.Mead(address, contract[2].ToInteger());
+                        states = states.Mead(context, address, contract[2].ToInteger());
                     }
                     catch (InsufficientBalanceException)
                     {

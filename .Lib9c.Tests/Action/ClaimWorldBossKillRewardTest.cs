@@ -1,16 +1,16 @@
 namespace Lib9c.Tests.Action
 {
     using System;
-    using System.Collections.Generic;
+    using System.Linq;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Helper;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Xunit;
 
@@ -25,20 +25,23 @@ namespace Lib9c.Tests.Action
         {
             var sheets = TableSheetsImporter.ImportSheets();
             var tableSheets = new TableSheets(sheets);
-            Address agentAddress = new PrivateKey().ToAddress();
-            Address avatarAddress = new PrivateKey().ToAddress();
-            IAccountStateDelta state = new State();
+            var agentAddress = new PrivateKey().Address;
+            var avatarAddress = new PrivateKey().Address;
+            IWorld state = new World(MockUtil.MockModernWorldState);
 
             var runeWeightSheet = new RuneWeightSheet();
-            runeWeightSheet.Set(@"id,boss_id,rank,rune_id,weight
+            runeWeightSheet.Set(
+                @"id,boss_id,rank,rune_id,weight
 1,900001,0,10001,100
 ");
             var killRewardSheet = new WorldBossKillRewardSheet();
-            killRewardSheet.Set(@"id,boss_id,rank,rune_min,rune_max,crystal
+            killRewardSheet.Set(
+                @"id,boss_id,rank,rune_min,rune_max,crystal
 1,900001,0,1,1,100
 ");
             var worldBossListSheet = new WorldBossListSheet();
-            worldBossListSheet.Set(@"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
+            worldBossListSheet.Set(
+                @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
 1,900001,0,100,300,200,100,10
 ");
             var worldBossKillRewardRecordAddress = Addresses.GetWorldBossKillRewardRecordAddress(avatarAddress, 1);
@@ -56,25 +59,25 @@ namespace Lib9c.Tests.Action
 
             var rankingMapAddress = avatarAddress.Derive("ranking_map");
             var gameConfigState = new GameConfigState(sheets[nameof(GameConfigSheet)]);
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 avatarAddress,
                 agentAddress,
                 0,
                 tableSheets.GetAvatarSheets(),
-                gameConfigState,
                 rankingMapAddress);
 
             state = state
-                .SetState(Addresses.GetSheetAddress<RuneWeightSheet>(), runeWeightSheet.Serialize())
-                .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(), worldBossListSheet.Serialize())
-                .SetState(Addresses.GetSheetAddress<WorldBossKillRewardSheet>(), killRewardSheet.Serialize())
-                .SetState(Addresses.GetSheetAddress<RuneSheet>(), tableSheets.RuneSheet.Serialize())
-                .SetState(Addresses.GetSheetAddress<WorldBossCharacterSheet>(), tableSheets.WorldBossCharacterSheet.Serialize())
-                .SetState(Addresses.GameConfig, gameConfigState.Serialize())
-                .SetState(avatarAddress, avatarState.Serialize())
-                .SetState(worldBossKillRewardRecordAddress, worldBossKillRewardRecord.Serialize())
-                .SetState(worldBossAddress, worldBossState.Serialize())
-                .SetState(raiderStateAddress, raiderState.Serialize());
+                .SetLegacyState(Addresses.GetSheetAddress<RuneWeightSheet>(), runeWeightSheet.Serialize())
+                .SetLegacyState(Addresses.GetSheetAddress<WorldBossListSheet>(), worldBossListSheet.Serialize())
+                .SetLegacyState(Addresses.GetSheetAddress<WorldBossKillRewardSheet>(), killRewardSheet.Serialize())
+                .SetLegacyState(Addresses.GetSheetAddress<RuneSheet>(), tableSheets.RuneSheet.Serialize())
+                .SetLegacyState(Addresses.GetSheetAddress<WorldBossCharacterSheet>(), tableSheets.WorldBossCharacterSheet.Serialize())
+                .SetLegacyState(Addresses.GetSheetAddress<MaterialItemSheet>(), tableSheets.MaterialItemSheet.Serialize())
+                .SetLegacyState(Addresses.GameConfig, gameConfigState.Serialize())
+                .SetAvatarState(avatarAddress, avatarState)
+                .SetLegacyState(worldBossKillRewardRecordAddress, worldBossKillRewardRecord.Serialize())
+                .SetLegacyState(worldBossAddress, worldBossState.Serialize())
+                .SetLegacyState(raiderStateAddress, raiderState.Serialize());
 
             var action = new ClaimWordBossKillReward
             {
@@ -84,30 +87,32 @@ namespace Lib9c.Tests.Action
             if (exc is null)
             {
                 var randomSeed = 0;
-                var nextState = action.Execute(new ActionContext
-                {
-                    BlockIndex = blockIndex,
-                    Signer = agentAddress,
-                    PreviousStates = state,
-                    Random = new TestRandom(randomSeed),
-                });
+                var nextState = action.Execute(
+                    new ActionContext
+                    {
+                        BlockIndex = blockIndex,
+                        Signer = agentAddress,
+                        PreviousState = state,
+                        RandomSeed = randomSeed,
+                    });
 
                 var runeCurrency = RuneHelper.ToCurrency(tableSheets.RuneSheet[10001]);
                 Assert.Equal(1 * runeCurrency, nextState.GetBalance(avatarAddress, runeCurrency));
                 Assert.Equal(100 * CrystalCalculator.CRYSTAL, nextState.GetBalance(agentAddress, CrystalCalculator.CRYSTAL));
-                var nextRewardInfo = new WorldBossKillRewardRecord((List)nextState.GetState(worldBossKillRewardRecordAddress));
+                var nextRewardInfo = new WorldBossKillRewardRecord((List)nextState.GetLegacyState(worldBossKillRewardRecordAddress));
                 Assert.All(nextRewardInfo, kv => Assert.True(kv.Value));
 
-                List<FungibleAssetValue> rewards = RuneHelper.CalculateReward(
+                var rewards = WorldBossHelper.CalculateReward(
                     0,
                     worldBossState.Id,
                     runeWeightSheet,
                     killRewardSheet,
                     tableSheets.RuneSheet,
+                    tableSheets.MaterialItemSheet,
                     new TestRandom(randomSeed)
                 );
 
-                foreach (var reward in rewards)
+                foreach (var reward in rewards.assets)
                 {
                     if (reward.Currency.Equals(CrystalCalculator.CRYSTAL))
                     {
@@ -118,16 +123,28 @@ namespace Lib9c.Tests.Action
                         Assert.Equal(reward, nextState.GetBalance(avatarAddress, reward.Currency));
                     }
                 }
+
+                var inventory = nextState.GetAvatarState(avatarAddress).inventory;
+                foreach (var reward in rewards.materials)
+                {
+                    var itemCount = inventory.TryGetTradableFungibleItems(reward.Key.FungibleId, null, blockIndex, out var items)
+                        ? items.Sum(item => item.count)
+                        : 0;
+                    Assert.Equal(reward.Value, itemCount);
+                }
             }
             else
             {
-                Assert.Throws(exc, () => action.Execute(new ActionContext
-                {
-                    BlockIndex = blockIndex,
-                    Signer = default,
-                    PreviousStates = state,
-                    Random = new TestRandom(),
-                }));
+                Assert.Throws(
+                    exc,
+                    () => action.Execute(
+                        new ActionContext
+                        {
+                            BlockIndex = blockIndex,
+                            Signer = default,
+                            PreviousState = state,
+                            RandomSeed = 0,
+                        }));
             }
         }
     }

@@ -42,6 +42,16 @@ namespace Nekoyume.Model.Item
 
         // Costume
         Title = 18,
+
+        // Aura
+        Aura = 19,
+
+        // Grimoire
+        Grimoire = 20,
+
+        // Custom Craft
+        Scroll = 21,
+        Circle = 22,
     }
 
     public class ItemTypeComparer : IEqualityComparer<ItemType>

@@ -1,5 +1,5 @@
 using System;
-using Libplanet;
+using Libplanet.Crypto;
 
 namespace Nekoyume.Action.Factory
 {
@@ -11,25 +11,20 @@ namespace Nekoyume.Action.Factory
             long blockIndex,
             Address avatarAddress)
         {
-            if (blockIndex > ClaimStakeReward2.ObsoletedIndex)
+            if (blockIndex > ClaimStakeReward8.ObsoleteBlockIndex)
             {
                 return new ClaimStakeReward(avatarAddress);
             }
 
-            // FIXME: This method should consider the starting block index of
-            //        `claim_stake_reward2`. And if the `blockIndex` is less than
-            //        the starting block index, it should throw an exception.
-            // default: Version 2
-            return new ClaimStakeReward2(avatarAddress);
+            throw new ArgumentOutOfRangeException(
+                $"Invalid block index: {blockIndex}");
         }
 
         public static IClaimStakeReward CreateByVersion(
             int version,
             Address avatarAddress) => version switch
         {
-            1 => new ClaimStakeReward1(avatarAddress),
-            2 => new ClaimStakeReward2(avatarAddress),
-            3 => new ClaimStakeReward(avatarAddress),
+            9 => new ClaimStakeReward(avatarAddress),
             _ => throw new ArgumentOutOfRangeException(
                 $"Invalid version: {version}"),
         };

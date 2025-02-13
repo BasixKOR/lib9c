@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Bencodex.Types;
+using System.Linq;
+using Nekoyume.Model.Buff;
 using Nekoyume.Model.Elemental;
 using Nekoyume.Model.Stat;
-using Nekoyume.Model.State;
 using Nekoyume.TableData;
 
 namespace Nekoyume.Model.Skill.Arena
@@ -12,7 +12,7 @@ namespace Nekoyume.Model.Skill.Arena
     public abstract class ArenaSkill : ISkill
     {
         public SkillSheet.Row SkillRow { get; }
-        public int Power { get; private set; }
+        public long Power { get; private set; }
         public int Chance { get; private set; }
         public int StatPowerRatio { get; private set; }
         public StatType ReferencedStatType { get; private set; }
@@ -23,7 +23,7 @@ namespace Nekoyume.Model.Skill.Arena
 
         protected ArenaSkill(
             SkillSheet.Row skillRow,
-            int power,
+            long power,
             int chance,
             int statPowerRatio,
             StatType referencedStatType)
@@ -36,14 +36,6 @@ namespace Nekoyume.Model.Skill.Arena
         }
 
         public abstract BattleStatus.Arena.ArenaSkill Use(
-            ArenaCharacter caster,
-            ArenaCharacter target,
-            int turn,
-            IEnumerable<Buff.Buff> buffs
-        );
-
-        [Obsolete("Use Use")]
-        public abstract BattleStatus.Arena.ArenaSkill UseV1(
             ArenaCharacter caster,
             ArenaCharacter target,
             int turn,
@@ -68,7 +60,7 @@ namespace Nekoyume.Model.Skill.Arena
             unchecked
             {
                 var hashCode = SkillRow.GetHashCode();
-                hashCode = (hashCode * 397) ^ Power;
+                hashCode = (hashCode * 397) ^ Power.GetHashCode();
                 hashCode = (hashCode * 397) ^ Chance.GetHashCode();
                 hashCode = (hashCode * 397) ^ StatPowerRatio.GetHashCode();
                 hashCode = (hashCode * 397) ^ ReferencedStatType.GetHashCode();
@@ -86,18 +78,34 @@ namespace Nekoyume.Model.Skill.Arena
             var infos = new List<BattleStatus.Arena.ArenaSkill.ArenaSkillInfo>();
             foreach (var buff in buffs)
             {
+                IEnumerable<Buff.Buff> dispelList = null;
                 switch (buff.BuffInfo.SkillTargetType)
                 {
                     case SkillTargetType.Enemy:
                     case SkillTargetType.Enemies:
-                        target.AddBuff(buff);
-                        infos.Add(GetSkillInfo(target, turn, buff));
+                        var affected = true;
+                        var dispel = target.Buffs.Values.FirstOrDefault(bf => bf is Dispel);
+                        if (dispel is not null && buff.IsDebuff())
+                        {
+                            if (target.Simulator.Random.Next(0, 100) < dispel.BuffInfo.Chance)
+                            {
+                                affected = false;
+                            }
+                        }
+
+                        if (affected)
+                        {
+                            dispelList = target.AddBuff(buff);
+                        }
+
+                        infos.Add(GetSkillInfo(target, turn, buff, affected: affected,
+                            dispelList: dispelList));
                         break;
 
                     case SkillTargetType.Self:
                     case SkillTargetType.Ally:
-                        caster.AddBuff(buff);
-                        infos.Add(GetSkillInfo(caster, turn, buff));
+                        dispelList = caster.AddBuff(buff);
+                        infos.Add(GetSkillInfo(caster, turn, buff, dispelList: dispelList));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -107,57 +115,40 @@ namespace Nekoyume.Model.Skill.Arena
             return infos;
         }
 
-        [Obsolete("Use ProcessBuff")]
-        protected IEnumerable<BattleStatus.Arena.ArenaSkill.ArenaSkillInfo> ProcessBuffV1(
-            ArenaCharacter caster,
-            ArenaCharacter target,
-            int turn,
-            IEnumerable<Buff.Buff> buffs
-        )
-        {
-            var infos = new List<BattleStatus.Arena.ArenaSkill.ArenaSkillInfo>();
-            foreach (var buff in buffs)
-            {
-                switch (buff.BuffInfo.SkillTargetType)
-                {
-                    case SkillTargetType.Enemy:
-                    case SkillTargetType.Enemies:
-                        target.AddBuffV1(buff);
-                        infos.Add(GetSkillInfo(target, turn, buff));
-                        break;
-
-                    case SkillTargetType.Self:
-                    case SkillTargetType.Ally:
-                        caster.AddBuffV1(buff);
-                        infos.Add(GetSkillInfo(caster, turn, buff));
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-
-            return infos;
-        }
-
-        private BattleStatus.Arena.ArenaSkill.ArenaSkillInfo GetSkillInfo(ICloneable target, int turn, Buff.Buff buff)
+        private BattleStatus.Arena.ArenaSkill.ArenaSkillInfo GetSkillInfo(ICloneable target,
+            int turn, Buff.Buff buff, bool affected = true,
+            IEnumerable<Buff.Buff> dispelList = null)
         {
             return new BattleStatus.Arena.ArenaSkill.ArenaSkillInfo(
-                (ArenaCharacter) target.Clone(),
+                (ArenaCharacter)target.Clone(),
                 0,
                 false,
                 SkillRow.SkillCategory,
                 turn,
                 ElementalType.Normal,
                 SkillRow.SkillTargetType,
-                buff);
+                buff,
+                affected,
+                dispelList
+            );
         }
 
 
-        public void Update(int chance, int power, int statPowerRatio)
+        public void Update(int chance, long power, int statPowerRatio)
         {
             Chance = chance;
             Power = power;
             StatPowerRatio = statPowerRatio;
+        }
+
+        public bool IsBuff()
+        {
+            return SkillRow.SkillType is SkillType.Buff;
+        }
+
+        public bool IsDebuff()
+        {
+            return SkillRow.SkillType is SkillType.Debuff;
         }
     }
 }

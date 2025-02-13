@@ -5,16 +5,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.DevExtensions.Action;
+using Lib9c.Tests;
 using Lib9c.Tests.Action;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
-using Libplanet.State;
+using Libplanet.Mocks;
+using Libplanet.Types.Assets;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
 using Xunit;
@@ -24,28 +26,30 @@ namespace Lib9c.DevExtensions.Tests.Action
 {
     public class CreateOrReplaceAvatarTest
     {
-        private readonly IAccountStateDelta _initialStates;
+        private readonly IWorld _initialStates;
+        private readonly TableSheets _tableSheets;
 
         public CreateOrReplaceAvatarTest()
         {
-            _initialStates = new Lib9c.Tests.Action.State();
+            _initialStates = new World(MockUtil.MockModernWorldState);
 
 #pragma warning disable CS0618
             var ncgCurrency = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
-            _initialStates = _initialStates.SetState(
+            _initialStates = _initialStates.SetLegacyState(
                 GoldCurrencyState.Address,
                 new GoldCurrencyState(ncgCurrency).Serialize());
             var sheets = TableSheetsImporter.ImportSheets();
+            _tableSheets = new TableSheets(sheets);
             foreach (var (key, value) in sheets)
             {
-                _initialStates = _initialStates.SetState(
+                _initialStates = _initialStates.SetLegacyState(
                     Addresses.TableSheet.Derive(key),
                     value.Serialize());
             }
 
             var gameConfigState = new GameConfigState(sheets[nameof(GameConfigSheet)]);
-            _initialStates = _initialStates.SetState(
+            _initialStates = _initialStates.SetLegacyState(
                 gameConfigState.address,
                 gameConfigState.Serialize());
         }
@@ -70,30 +74,22 @@ namespace Lib9c.DevExtensions.Tests.Action
                 int.MaxValue,
                 new[]
                 {
-                    (10111000, 0),
-                    (10111000, 21), // 21: See also EnhancementCostSheetV2.csv
-                    (10211000, 0),
-                    (10211000, 21),
-                    (10311000, 0),
-                    (10311000, 21),
-                    (10411000, 0),
-                    (10411000, 21),
-                    (10511000, 0),
-                    (10511000, 21),
+                    (ItemSubType.Weapon, 0),
+                    (ItemSubType.Weapon, 21), // 21: See also EnhancementCostSheetV2.csv
                 },
                 new[]
                 {
                     (200000, 1),
                     (201010, 2),
                 },
-                new[] { 40100000 },
+                new[] { 40100000, },
                 new[]
                 {
                     (10001, 0),
                     (20001, 1),
                     (30001, 10),
                 },
-                (1, new[] { 1, 2, 3 }),
+                (1, new[] { 1, 2, 3, }),
             };
         }
 
@@ -225,7 +221,7 @@ namespace Lib9c.DevExtensions.Tests.Action
                 0, 0, "AB", 0, 0, 0, 0, 1,
                 null,
                 null,
-                new[] { -1 },
+                new[] { -1, },
                 null,
                 null,
             };
@@ -277,7 +273,7 @@ namespace Lib9c.DevExtensions.Tests.Action
                 null,
                 null,
                 null,
-                (0, new[] { -1 }),
+                (0, new[] { -1, }),
             };
         }
 
@@ -292,12 +288,23 @@ namespace Lib9c.DevExtensions.Tests.Action
             int ear,
             int tail,
             int level,
-            (int equipmentId, int level)[]? equipments,
+            (ItemSubType itemSubType, int level)[]? equipmentData,
             (int consumableId, int count)[]? foods,
             int[]? costumeIds,
             (int runeId, int level)[]? runes,
             (int stageId, int[] crystalRandomBuffIds)? crystalRandomBuff)
         {
+            var equipments = new List<(int, int)>();
+            if (!(equipmentData is null))
+            {
+                foreach (var data in equipmentData)
+                {
+                    var row = _tableSheets.EquipmentItemRecipeSheet.Values.First(r =>
+                        r.ItemSubType == data.itemSubType);
+                    equipments.Add((row.ResultEquipmentId, data.level));
+                }
+            }
+
             var action = new CreateOrReplaceAvatar(
                 avatarIndex,
                 name,
@@ -306,7 +313,7 @@ namespace Lib9c.DevExtensions.Tests.Action
                 ear,
                 tail,
                 level,
-                equipments,
+                equipments.ToArray(),
                 foods,
                 costumeIds,
                 runes,
@@ -349,13 +356,24 @@ namespace Lib9c.DevExtensions.Tests.Action
             int ear,
             int tail,
             int level,
-            (int equipmentId, int level)[]? equipments,
+            (ItemSubType itemSubType, int level)[]? equipmentData,
             (int consumableId, int count)[]? foods,
             int[]? costumeIds,
             (int runeId, int level)[]? runes,
             (int stageId, int[] crystalRandomBuffIds)? crystalRandomBuff)
         {
-            var agentAddr = new PrivateKey().ToAddress();
+            var equipments = new List<(int, int)>();
+            if (!(equipmentData is null))
+            {
+                foreach (var data in equipmentData)
+                {
+                    var row = _tableSheets.EquipmentItemRecipeSheet.Values.First(r =>
+                        r.ItemSubType == data.itemSubType);
+                    equipments.Add((row.ResultEquipmentId, data.level));
+                }
+            }
+
+            var agentAddr = new PrivateKey().Address;
             Execute(
                 _initialStates,
                 blockIndex,
@@ -367,7 +385,7 @@ namespace Lib9c.DevExtensions.Tests.Action
                 ear,
                 tail,
                 level,
-                equipments,
+                equipments.ToArray(),
                 foods,
                 costumeIds,
                 runes,
@@ -391,7 +409,7 @@ namespace Lib9c.DevExtensions.Tests.Action
             (int runeId, int level)[]? runes,
             (int stageId, int[] crystalRandomBuffIds)? crystalRandomBuff)
         {
-            var agentAddr = new PrivateKey().ToAddress();
+            var agentAddr = new PrivateKey().Address;
             Assert.Throws<ArgumentException>(() => Execute(
                 _initialStates,
                 blockIndex,
@@ -411,7 +429,7 @@ namespace Lib9c.DevExtensions.Tests.Action
         }
 
         private static void Execute(
-            IAccountStateDelta previousStates,
+            IWorld previousStates,
             long blockIndex,
             Address agentAddr,
             int avatarIndex,
@@ -443,17 +461,16 @@ namespace Lib9c.DevExtensions.Tests.Action
                 crystalRandomBuff);
             var nextStates = action.Execute(new ActionContext
             {
-                PreviousStates = previousStates,
+                PreviousState = previousStates,
                 Signer = agentAddr,
-                Random = new TestRandom(),
-                Rehearsal = false,
+                RandomSeed = 0,
                 BlockIndex = blockIndex,
             });
-            var agent = new AgentState((Dictionary)nextStates.GetState(agentAddr)!);
+            var agent = nextStates.GetAgentState(agentAddr)!;
             Assert.Single(agent.avatarAddresses);
             Assert.True(agent.avatarAddresses.ContainsKey(action.AvatarIndex));
             avatarAddr ??= agent.avatarAddresses[action.AvatarIndex];
-            var avatar = new AvatarState((Dictionary)nextStates.GetState(avatarAddr.Value)!);
+            var avatar = nextStates.GetAvatarState(avatarAddr.Value);
             Assert.Equal(action.Name, avatar.name);
             Assert.Equal(action.Hair, avatar.hair);
             Assert.Equal(action.Lens, avatar.lens);
@@ -461,9 +478,7 @@ namespace Lib9c.DevExtensions.Tests.Action
             Assert.Equal(action.Tail, avatar.tail);
             Assert.Equal(action.Level, avatar.level);
 
-            var inventoryAddr = avatarAddr.Value.Derive(LegacyInventoryKey);
-            var inventory =
-                new Inventory((List)nextStates.GetState(inventoryAddr)!);
+            var inventory = avatar.inventory;
             var inventoryEquipments = inventory.Equipments.ToArray();
             var equipmentItemRecipeSheet =
                 nextStates.GetSheet<EquipmentItemRecipeSheet>();
@@ -479,7 +494,7 @@ namespace Lib9c.DevExtensions.Tests.Action
                 var recipe = equipmentItemRecipeSheet.OrderedList!.First(r =>
                     r.ResultEquipmentId == equipment.Id);
                 Assert.NotNull(recipe);
-                Assert.Equal(3, recipe.SubRecipeIds.Count);
+                Assert.Equal(2, recipe.SubRecipeIds.Count);
                 Assert.True(equipmentItemSubRecipeSheetV2.TryGetValue(
                     recipe.SubRecipeIds[1],
                     out var subRecipe));
@@ -508,7 +523,7 @@ namespace Lib9c.DevExtensions.Tests.Action
                     Assert.Contains(
                         equipment.StatsMap.GetAdditionalStats(false),
                         stat => stat.statType == statOption.Key &&
-                                stat.additionalValue == statOption.Value);
+                            stat.additionalValue == statOption.Value);
                 }
 
                 var skillOptions = options
@@ -537,24 +552,25 @@ namespace Lib9c.DevExtensions.Tests.Action
                 Assert.Contains(inventoryCostumes, e => e.Id == costumeId);
             }
 
+            var allRuneState = nextStates.GetRuneState(avatarAddr.Value, out _);
             foreach (var (runeId, runeLevel) in action.Runes)
             {
-                var runeList = (List)nextStates.GetState(
-                    RuneState.DeriveAddress(avatarAddr.Value, runeId))!;
-                Assert.Equal(runeLevel, runeList[1].ToInteger());
+                var runeState = allRuneState.GetRuneState(runeId);
+                Assert.NotNull(runeState);
+                Assert.Equal(runeLevel, runeState.Level);
             }
 
             var crystalRandomSkillAddr =
                 Addresses.GetSkillStateAddressFromAvatarAddress(avatarAddr.Value);
             if (action.CrystalRandomBuff is null)
             {
-                Assert.Equal(Null.Value, nextStates.GetState(crystalRandomSkillAddr));
+                Assert.Null(nextStates.GetLegacyState(crystalRandomSkillAddr));
             }
             else
             {
                 var crystalRandomSkillState = new CrystalRandomSkillState(
                     crystalRandomSkillAddr,
-                    (List)nextStates.GetState(crystalRandomSkillAddr)!);
+                    (List)nextStates.GetLegacyState(crystalRandomSkillAddr)!);
                 var (stageId, crystalRandomBuffIds) = action.CrystalRandomBuff.Value;
                 Assert.Equal(stageId, crystalRandomSkillState.StageId);
                 var crystalStageBuffGachaSheet = nextStates.GetSheet<CrystalStageBuffGachaSheet>();

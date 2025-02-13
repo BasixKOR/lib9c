@@ -5,7 +5,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.Serialization;
 using Bencodex.Types;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
@@ -61,7 +61,7 @@ namespace Nekoyume.Model.Quest
     #endregion
 
     [Serializable]
-    public class QuestList : IEnumerable<Quest>, IState
+    public class QuestList : IEnumerable<Quest>, IState, ICloneable
     {
         public const string QuestsKey = "q";
         private readonly List<Quest> _quests;
@@ -131,18 +131,46 @@ namespace Nekoyume.Model.Quest
             }
         }
 
+        public QuestList(List serialized)
+        {
+            _listVersion = (Integer) serialized[0];
+            _quests = serialized[1].ToList(Quest.Deserialize);
+            var list = (List)serialized[2];
+            completedQuestIds = list.Select(i => (int)(Integer)i).ToList();
+        }
+
+        public object Clone()
+        {
+            return new QuestList((List)SerializeList());
+        }
+
         public void UpdateList(
             QuestSheet questSheet,
             QuestRewardSheet questRewardSheet,
             QuestItemRewardSheet questItemRewardSheet,
-            EquipmentItemRecipeSheet equipmentItemRecipeSheet)
+            EquipmentItemRecipeSheet equipmentItemRecipeSheet,
+            ICollection<int> newIds)
         {
-            UpdateListV1(
-                _listVersion + 1,
-                questSheet,
-                questRewardSheet,
-                questItemRewardSheet,
-                equipmentItemRecipeSheet);
+            foreach (var questRow in questSheet.OrderedList!)
+            {
+                if (!newIds.Contains(questRow.Id))
+                {
+                    continue;
+                }
+
+                var reward = GetQuestReward(
+                    questRow.QuestRewardId,
+                    questRewardSheet,
+                    questItemRewardSheet);
+
+                Quest quest = CreateQuest(questRow, reward, equipmentItemRecipeSheet);
+                if (quest is null)
+                {
+                    continue;
+                }
+
+                _quests.Add(quest);
+            }
         }
 
         /// <exception cref="UpdateListVersionException"></exception>
@@ -319,7 +347,8 @@ namespace Nekoyume.Model.Quest
             }
         }
 
-        public IValue Serialize()
+        [Obsolete("Dictionary type is obsolete.")]
+        public IValue SerializeDictionary()
         {
             if (_listVersion > 1)
             {
@@ -342,6 +371,14 @@ namespace Nekoyume.Model.Quest
                     .OrderBy(i => i)
                     .Select(i => i.Serialize()))
             });
+        }
+
+        public IValue SerializeList()
+        {
+            return List.Empty
+                .Add(_listVersion)
+                .Add(new List(_quests.OrderBy(i => i.Id).Select(q => q.SerializeList())))
+                .Add(new List(completedQuestIds.OrderBy(i => i)));
         }
 
         public void UpdateCombinationEquipmentQuest(int recipeId)
@@ -437,5 +474,7 @@ namespace Nekoyume.Model.Quest
 
             return quest;
         }
+
+        public IValue Serialize() => SerializeList();
     }
 }

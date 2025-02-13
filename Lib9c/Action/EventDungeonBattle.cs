@@ -5,31 +5,35 @@ using System.Diagnostics;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Nekoyume.Action.Guild.Migration.LegacyModels;
 using Nekoyume.Battle;
 using Nekoyume.Exceptions;
 using Nekoyume.Extensions;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Event;
 using Nekoyume.Model.Skill;
+using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Event;
+using Nekoyume.TableData.Rune;
 using Serilog;
 using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.Action
 {
     /// <summary>
-    /// Hard forked at https://github.com/planetarium/lib9c/pull/1663
+    /// Hard forked at https://github.com/planetarium/lib9c/pull/2195
     /// </summary>
     [Serializable]
     [ActionType(ActionTypeText)]
     public class EventDungeonBattle : GameAction, IEventDungeonBattleV2
     {
-        private const string ActionTypeText = "event_dungeon_battle5";
+        private const string ActionTypeText = "event_dungeon_battle6";
         public const int PlayCount = 1;
 
         public Address AvatarAddress;
@@ -114,15 +118,10 @@ namespace Nekoyume.Action
             RuneInfos = list[8].ToList(x => new RuneSlotInfo((List)x));
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                return states;
-            }
-
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var addressesHex = GetSignerAndOtherAddressesHex(context, AvatarAddress);
             var started = DateTimeOffset.UtcNow;
             Log.Verbose(
@@ -133,11 +132,10 @@ namespace Nekoyume.Action
             var sw = new Stopwatch();
             // Get AvatarState
             sw.Start();
-            if (!states.TryGetAvatarStateV2(
+            if (!states.TryGetAvatarState(
                     context.Signer,
                     AvatarAddress,
-                    out var avatarState,
-                    out var migrationRequired))
+                    out var avatarState))
             {
                 throw new FailedLoadStateException(
                     ActionTypeText,
@@ -154,22 +152,32 @@ namespace Nekoyume.Action
                 sw.Elapsed);
             // ~Get AvatarState
 
+            var collectionExist = states.TryGetCollectionState(AvatarAddress, out var collectionState);
             // Get sheets
             sw.Restart();
+            var sheetTypes = new List<Type>
+            {
+                typeof(EventScheduleSheet),
+                typeof(EventDungeonSheet),
+                typeof(EventDungeonStageSheet),
+                typeof(EventDungeonStageWaveSheet),
+                typeof(EnemySkillSheet),
+                typeof(CostumeStatSheet),
+                typeof(MaterialItemSheet),
+                typeof(RuneListSheet),
+                typeof(RuneLevelBonusSheet),
+                typeof(BuffLimitSheet),
+                typeof(BuffLinkSheet),
+            };
+            if (collectionExist)
+            {
+                sheetTypes.Add(typeof(CollectionSheet));
+            }
             var sheets = states.GetSheets(
                 containSimulatorSheets: true,
                 containValidateItemRequirementSheets: true,
-                sheetTypes: new[]
-                {
-                    typeof(EventScheduleSheet),
-                    typeof(EventDungeonSheet),
-                    typeof(EventDungeonStageSheet),
-                    typeof(EventDungeonStageWaveSheet),
-                    typeof(EnemySkillSheet),
-                    typeof(CostumeStatSheet),
-                    typeof(MaterialItemSheet),
-                    typeof(RuneListSheet),
-                });
+                sheetTypes: sheetTypes
+);
             sw.Stop();
             Log.Verbose(
                 "[{ActionTypeString}][{AddressesHex}] Get sheets: {Elapsed}",
@@ -201,13 +209,15 @@ namespace Nekoyume.Action
                 ActionTypeText,
                 addressesHex);
 
-            var equipmentList = avatarState.ValidateEquipmentsV2(Equipments, context.BlockIndex);
-            var costumeIds = avatarState.ValidateCostume(Costumes);
-            var foodIds = avatarState.ValidateConsumable(Foods, context.BlockIndex);
+            var gameConfigState = states.GetGameConfigState();
+            var equipmentList = avatarState.ValidateEquipmentsV3(
+                Equipments, context.BlockIndex, gameConfigState);
+            var costumeList = avatarState.ValidateCostumeV2(Costumes, gameConfigState);
+            var foodIds = avatarState.ValidateConsumableV2(Foods, context.BlockIndex, gameConfigState);
             var equipmentAndCostumes = Equipments.Concat(Costumes);
             avatarState.EquipItems(equipmentAndCostumes);
             avatarState.ValidateItemRequirement(
-                costumeIds.Concat(foodIds).ToList(),
+                costumeList.Select(e => e.Id).Concat(foodIds).ToList(),
                 equipmentList,
                 sheets.GetSheet<ItemRequirementSheet>(),
                 sheets.GetSheet<EquipmentItemRecipeSheet>(),
@@ -228,7 +238,7 @@ namespace Nekoyume.Action
             var eventDungeonInfoAddr = EventDungeonInfo.DeriveAddress(
                 AvatarAddress,
                 EventDungeonId);
-            var eventDungeonInfo = states.GetState(eventDungeonInfoAddr)
+            var eventDungeonInfo = states.GetLegacyState(eventDungeonInfoAddr)
                 is Bencodex.Types.List serializedEventDungeonInfoList
                 ? new EventDungeonInfo(serializedEventDungeonInfoList)
                 : new EventDungeonInfo(remainingTickets: scheduleRow.DungeonTicketsMax);
@@ -267,10 +277,20 @@ namespace Nekoyume.Action
                     currency);
                 if (cost.Sign > 0)
                 {
+                    var feeAddress = Addresses.RewardPool;
+                    // TODO: [GuildMigration] Remove this after migration
+                    if (states.GetDelegationMigrationHeight() is long migrationHeight
+                        && context.BlockIndex < migrationHeight)
+                    {
+                        feeAddress = Addresses.EventDungeon;
+                    }
+
                     states = states.TransferAsset(
+                        context,
                         context.Signer,
-                        Addresses.EventDungeon,
-                        cost);
+                        feeAddress,
+                        cost
+                    );
                 }
 
                 // NOTE: The number of ticket purchases should be increased
@@ -298,21 +318,21 @@ namespace Nekoyume.Action
 
             // update rune slot
             var runeSlotStateAddress = RuneSlotState.DeriveAddress(AvatarAddress, BattleType.Adventure);
-            var runeSlotState = states.TryGetState(runeSlotStateAddress, out List rawRuneSlotState)
+            var runeSlotState = states.TryGetLegacyState(runeSlotStateAddress, out List rawRuneSlotState)
                 ? new RuneSlotState(rawRuneSlotState)
                 : new RuneSlotState(BattleType.Adventure);
             var runeListSheet = sheets.GetSheet<RuneListSheet>();
             runeSlotState.UpdateSlot(RuneInfos, runeListSheet);
-            states = states.SetState(runeSlotStateAddress, runeSlotState.Serialize());
+            states = states.SetLegacyState(runeSlotStateAddress, runeSlotState.Serialize());
 
             // update item slot
             var itemSlotStateAddress = ItemSlotState.DeriveAddress(AvatarAddress, BattleType.Adventure);
-            var itemSlotState = states.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
+            var itemSlotState = states.TryGetLegacyState(itemSlotStateAddress, out List rawItemSlotState)
                 ? new ItemSlotState(rawItemSlotState)
                 : new ItemSlotState(BattleType.Adventure);
             itemSlotState.UpdateEquipment(Equipments);
             itemSlotState.UpdateCostumes(Costumes);
-            states = states.SetState(itemSlotStateAddress, itemSlotState.Serialize());
+            states = states.SetLegacyState(itemSlotStateAddress, itemSlotState.Serialize());
 
             // Simulate
             sw.Restart();
@@ -320,20 +340,33 @@ namespace Nekoyume.Action
                 EventDungeonStageId.ToEventDungeonStageNumber(),
                 PlayCount);
             var simulatorSheets = sheets.GetSimulatorSheets();
-            var runeStates = new List<RuneState>();
-            foreach (var address in RuneInfos.Select(info => RuneState.DeriveAddress(AvatarAddress, info.RuneId)))
+            var runeStates = states.GetRuneState(AvatarAddress, out var migrateRequired);
+            if (migrateRequired)
             {
-                if (states.TryGetState(address, out List rawRuneState))
-                {
-                    runeStates.Add(new RuneState(rawRuneState));
-                }
+                states = states.SetRuneState(AvatarAddress, runeStates);
             }
 
+            // just validate
+            foreach (var runeSlotInfo in RuneInfos)
+            {
+                runeStates.GetRuneState(runeSlotInfo.RuneId);
+            }
+
+            var random = context.GetRandom();
+            var collectionModifiers = new List<StatModifier>();
+            if (collectionExist)
+            {
+                var collectionSheet = sheets.GetSheet<CollectionSheet>();
+                collectionModifiers = collectionState.GetModifiers(collectionSheet);
+            }
+
+            var buffLimitSheet = sheets.GetSheet<BuffLimitSheet>();
             var simulator = new StageSimulator(
-                context.Random,
+                random,
                 avatarState,
                 Foods,
                 runeStates,
+                runeSlotState,
                 new List<Skill>(),
                 EventDungeonId,
                 EventDungeonStageId,
@@ -345,10 +378,14 @@ namespace Nekoyume.Action
                 sheets.GetSheet<EnemySkillSheet>(),
                 sheets.GetSheet<CostumeStatSheet>(),
                 StageSimulator.GetWaveRewards(
-                    context.Random,
+                    random,
                     stageRow,
                     sheets.GetSheet<MaterialItemSheet>(),
-                    PlayCount));
+                    PlayCount),
+                collectionModifiers,
+                buffLimitSheet,
+                sheets.GetSheet<BuffLinkSheet>(),
+                shatterStrikeMaxDamage: gameConfigState.ShatterStrikeMaxDamage);
             simulator.Simulate();
             sw.Stop();
             Log.Verbose(
@@ -385,30 +422,9 @@ namespace Nekoyume.Action
 
             // Set states
             sw.Restart();
-            if (migrationRequired)
-            {
-                states = states
-                    .SetState(AvatarAddress, avatarState.SerializeV2())
-                    .SetState(
-                        AvatarAddress.Derive(LegacyInventoryKey),
-                        avatarState.inventory.Serialize())
-                    .SetState(
-                        AvatarAddress.Derive(LegacyWorldInformationKey),
-                        avatarState.worldInformation.Serialize())
-                    .SetState(
-                        AvatarAddress.Derive(LegacyQuestListKey),
-                        avatarState.questList.Serialize())
-                    .SetState(eventDungeonInfoAddr, eventDungeonInfo.Serialize());
-            }
-            else
-            {
-                states = states
-                    .SetState(AvatarAddress, avatarState.SerializeV2())
-                    .SetState(
-                        AvatarAddress.Derive(LegacyInventoryKey),
-                        avatarState.inventory.Serialize())
-                    .SetState(eventDungeonInfoAddr, eventDungeonInfo.Serialize());
-            }
+            states = states
+                .SetAvatarState(AvatarAddress, avatarState)
+                .SetLegacyState(eventDungeonInfoAddr, eventDungeonInfo.Serialize());
 
             sw.Stop();
             Log.Verbose(

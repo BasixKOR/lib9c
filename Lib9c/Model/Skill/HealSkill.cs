@@ -10,26 +10,26 @@ namespace Nekoyume.Model.Skill
     {
         public HealSkill(
             SkillSheet.Row skillRow,
-            int power,
+            long power,
             int chance,
             int statPowerRatio,
             StatType referencedStatType) : base(skillRow, power, chance, statPowerRatio, referencedStatType)
         {
         }
 
-        public override BattleStatus.Skill Use(
-            CharacterBase caster, 
+        public override BattleStatus.Skill Use(CharacterBase caster,
             int simulatorWaveTurn,
-            IEnumerable<Buff.Buff> buffs)
+            IEnumerable<Buff.Buff> buffs, bool copyCharacter)
         {
-            var clone = (CharacterBase) caster.Clone();
-            var heal = ProcessHeal(caster, simulatorWaveTurn);
-            var buff = ProcessBuff(caster, simulatorWaveTurn, buffs);
-            
+            var clone = copyCharacter ? (CharacterBase) caster.Clone() : null;
+            var heal = ProcessHeal(caster, simulatorWaveTurn, copyCharacter);
+            var buff = ProcessBuff(caster, simulatorWaveTurn, buffs, copyCharacter);
+
             return new BattleStatus.HealSkill(SkillRow.Id, clone, heal, buff);
         }
 
-        protected IEnumerable<BattleStatus.Skill.SkillInfo> ProcessHeal(CharacterBase caster, int simulatorWaveTurn)
+        protected IEnumerable<BattleStatus.Skill.SkillInfo> ProcessHeal(CharacterBase caster,
+            int simulatorWaveTurn, bool copyCharacter)
         {
             var infos = new List<BattleStatus.Skill.SkillInfo>();
 
@@ -42,8 +42,8 @@ namespace Nekoyume.Model.Skill
             foreach (var target in SkillRow.SkillTargetType.GetTarget(caster))
             {
                 target.Heal(healPoint);
-                infos.Add(new BattleStatus.Skill.SkillInfo((CharacterBase)target.Clone(), healPoint, caster.IsCritical(false),
-                    SkillRow.SkillCategory, simulatorWaveTurn));
+                infos.Add(new BattleStatus.Skill.SkillInfo(target.Id, target.IsDead, target.Thorn, healPoint, caster.IsCritical(false),
+                    SkillRow.SkillCategory, simulatorWaveTurn, target: copyCharacter ? (CharacterBase)target.Clone() : target));
             }
 
             return infos;

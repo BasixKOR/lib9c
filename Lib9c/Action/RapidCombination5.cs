@@ -5,11 +5,12 @@ using System.Globalization;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using static Lib9c.SerializeKeys;
 
@@ -53,10 +54,10 @@ namespace Nekoyume.Action
         Address IRapidCombinationV1.AvatarAddress => avatarAddress;
         int IRapidCombinationV1.SlotIndex => slotIndex;
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
             var slotAddress = avatarAddress.Derive(
                 string.Format(
                     CultureInfo.InvariantCulture,
@@ -64,43 +65,29 @@ namespace Nekoyume.Action
                     slotIndex
                 )
             );
-            var inventoryAddress = avatarAddress.Derive(LegacyInventoryKey);
-            var worldInformationAddress = avatarAddress.Derive(LegacyWorldInformationKey);
-            var questListAddress = avatarAddress.Derive(LegacyQuestListKey);
-            if (context.Rehearsal)
-            {
-                return states
-                    .SetState(avatarAddress, MarkChanged)
-                    .SetState(inventoryAddress, MarkChanged)
-                    .SetState(worldInformationAddress, MarkChanged)
-                    .SetState(questListAddress, MarkChanged)
-                    .SetState(slotAddress, MarkChanged);
-            }
 
             CheckObsolete(ActionObsoleteConfig.V100083ObsoleteIndex, context);
 
             var addressesHex = GetSignerAndOtherAddressesHex(context, avatarAddress);
 
-            if (!states.TryGetAgentAvatarStatesV2(
-                context.Signer,
-                avatarAddress,
-                out var agentState,
-                out var avatarState,
-                out _))
+            var agentState = states.GetAgentState(context.Signer);
+            if (agentState is null)
             {
                 throw new FailedLoadStateException($"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
             }
 
-            var slotState = states.GetCombinationSlotState(avatarAddress, slotIndex);
+            if (!states.TryGetAvatarState(
+                context.Signer,
+                avatarAddress,
+                out var avatarState))
+            {
+                throw new FailedLoadStateException($"{addressesHex}Aborted as the avatar state of the signer was failed to load.");
+            }
+
+            var slotState = states.GetCombinationSlotStateLegacy(avatarAddress, slotIndex);
             if (slotState?.Result is null)
             {
                 throw new CombinationSlotResultNullException($"{addressesHex}CombinationSlot Result is null. ({avatarAddress}), ({slotIndex})");
-            }
-
-            if(!avatarState.worldInformation.IsStageCleared(slotState.UnlockStage))
-            {
-                avatarState.worldInformation.TryGetLastClearedStageId(out var current);
-                throw new NotEnoughClearedStageLevelException(addressesHex, slotState.UnlockStage, current);
             }
 
             var diff = slotState.Result.itemUsable.RequiredBlockIndex - context.BlockIndex;
@@ -115,12 +102,12 @@ namespace Nekoyume.Action
                 throw new FailedLoadStateException($"{addressesHex}Aborted as the GameConfigState was failed to load.");
             }
 
-            if (context.BlockIndex < slotState.StartBlockIndex + GameConfig.RequiredAppraiseBlock)
+            if (context.BlockIndex < slotState.WorkStartBlockIndex + GameConfig.RequiredAppraiseBlock)
             {
                 throw new AppraiseBlockNotReachedException(
                     $"{addressesHex}Aborted as Item appraisal block section. " +
                     $"context block index: {context.BlockIndex}, " +
-                    $"actionable block index : {slotState.StartBlockIndex + GameConfig.RequiredAppraiseBlock}");
+                    $"actionable block index : {slotState.WorkStartBlockIndex + GameConfig.RequiredAppraiseBlock}");
             }
 
             var count = RapidCombination0.CalculateHourglassCount(gameConfigState, diff);
@@ -137,11 +124,8 @@ namespace Nekoyume.Action
             avatarState.UpdateFromRapidCombinationV2((ResultModel)slotState.Result, context.BlockIndex);
 
             return states
-                .SetState(avatarAddress, avatarState.SerializeV2())
-                .SetState(inventoryAddress, avatarState.inventory.Serialize())
-                .SetState(worldInformationAddress, avatarState.worldInformation.Serialize())
-                .SetState(questListAddress, avatarState.questList.Serialize())
-                .SetState(slotAddress, slotState.Serialize());
+                .SetAvatarState(avatarAddress, avatarState)
+                .SetLegacyState(slotAddress, slotState.Serialize());
         }
 
         protected override IImmutableDictionary<string, IValue> PlainValueInternal =>

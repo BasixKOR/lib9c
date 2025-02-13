@@ -2,7 +2,6 @@ namespace Lib9c.Tests.Model.State
 {
     using System.Collections.Generic;
     using System.Numerics;
-    using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Model.State;
     using Xunit;
@@ -11,22 +10,22 @@ namespace Lib9c.Tests.Model.State
     {
         public static IEnumerable<object[]> Get_Long_MemberData()
         {
-            yield return new object[] { long.MinValue };
-            yield return new object[] { 0L };
-            yield return new object[] { long.MaxValue };
+            yield return new object[] { long.MinValue, };
+            yield return new object[] { 0L, };
+            yield return new object[] { long.MaxValue, };
         }
 
         public static IEnumerable<object[]> Get_BigInteger_MemberData()
         {
-            yield return new object[] { (BigInteger)decimal.MinValue };
-            yield return new object[] { (BigInteger)0 };
-            yield return new object[] { (BigInteger)decimal.MaxValue };
+            yield return new object[] { (BigInteger)decimal.MinValue, };
+            yield return new object[] { (BigInteger)0, };
+            yield return new object[] { (BigInteger)decimal.MaxValue, };
         }
 
         [Fact]
         public void Address()
         {
-            var addr = new PrivateKey().ToAddress();
+            var addr = new PrivateKey().Address;
             var ser = addr.Serialize();
             var de = ser.ToAddress();
             Assert.Equal(addr, de);
@@ -37,7 +36,7 @@ namespace Lib9c.Tests.Model.State
         [Fact]
         public void NullableAddress()
         {
-            Address? addr = new PrivateKey().ToAddress();
+            Address? addr = new PrivateKey().Address;
             var ser = addr.Serialize();
             var de = ser.ToNullableAddress();
             Assert.Equal(addr, de);

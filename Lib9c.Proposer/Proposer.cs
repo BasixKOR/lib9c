@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
-using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
 using Libplanet.Crypto;
-using Libplanet.Tx;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
+using Libplanet.Types.Tx;
 using Serilog;
 
 namespace Nekoyume.Blockchain
@@ -35,6 +34,16 @@ namespace Nekoyume.Blockchain
                 block = _chain.ProposeBlock(
                     _privateKey,
                     lastCommit: lastCommit);
+
+                if (!(_chain.GetNextWorldState() is IWorldState worldState))
+                {
+                    throw new InvalidOperationException(
+                        "Failed to get next world state. Appending is not completed.");
+                }
+
+                var proposerPower = worldState.GetValidatorSet().GetValidatorsPower(
+                    new List<PublicKey> { _privateKey.PublicKey });
+
                 BlockCommit? commit = block.Index > 0
                     ? new BlockCommit(
                         block.Index,
@@ -47,6 +56,7 @@ namespace Nekoyume.Blockchain
                                 block.Hash,
                                 DateTimeOffset.UtcNow,
                                 _privateKey.PublicKey,
+                                proposerPower,
                                 VoteFlag.PreCommit).Sign(_privateKey)))
                     : null;
                 _chain.Append(block, commit);

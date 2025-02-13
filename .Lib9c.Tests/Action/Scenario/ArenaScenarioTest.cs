@@ -3,22 +3,21 @@ namespace Lib9c.Tests.Action.Scenario
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Libplanet;
     using Libplanet.Action;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Arena;
     using Nekoyume.Model;
     using Nekoyume.Model.Arena;
-    using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Serilog;
-    using Xunit;
     using Xunit.Abstractions;
     using static Lib9c.SerializeKeys;
 
@@ -29,7 +28,7 @@ namespace Lib9c.Tests.Action.Scenario
         private readonly Currency _ncg;
         private TableSheets _tableSheets;
         private Dictionary<string, string> _sheets;
-        private IAccountStateDelta _state;
+        private IWorld _state;
 
         public ArenaScenarioTest(ITestOutputHelper outputHelper)
         {
@@ -38,13 +37,13 @@ namespace Lib9c.Tests.Action.Scenario
                 .WriteTo.TestOutput(outputHelper)
                 .CreateLogger();
 
-            _state = new Tests.Action.State();
+            _state = new World(MockUtil.MockModernWorldState);
 
             _sheets = TableSheetsImporter.ImportSheets();
             var tableSheets = new TableSheets(_sheets);
             foreach (var (key, value) in _sheets)
             {
-                _state = _state.SetState(Addresses.TableSheet.Derive(key), value.Serialize());
+                _state = _state.SetLegacyState(Addresses.TableSheet.Derive(key), value.Serialize());
             }
 
             _tableSheets = new TableSheets(_sheets);
@@ -54,14 +53,11 @@ namespace Lib9c.Tests.Action.Scenario
             _ncg = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
             var goldCurrencyState = new GoldCurrencyState(_ncg);
-            _rankingMapAddress = new PrivateKey().ToAddress();
-            var clearStageId = Math.Max(
-                _tableSheets.StageSheet.First?.Id ?? 1,
-                GameConfig.RequireClearedStageLevel.ActionsInRankingBoard);
+            _rankingMapAddress = new PrivateKey().Address;
 
             _state = _state
-                .SetState(Addresses.GoldCurrency, goldCurrencyState.Serialize())
-                .SetState(Addresses.GameConfig, new GameConfigState(_sheets[nameof(GameConfigSheet)]).Serialize());
+                .SetLegacyState(Addresses.GoldCurrency, goldCurrencyState.Serialize())
+                .SetLegacyState(Addresses.GameConfig, new GameConfigState(_sheets[nameof(GameConfigSheet)]).Serialize());
         }
 
         public (List<Guid> Equipments, List<Guid> Costumes) GetDummyItems(AvatarState avatarState)
@@ -85,7 +81,8 @@ namespace Lib9c.Tests.Action.Scenario
                     .Id;
 
                 var costume = (Costume)ItemFactory.CreateItem(
-                    _tableSheets.ItemSheet[costumeId], random);
+                    _tableSheets.ItemSheet[costumeId],
+                    random);
                 avatarState.inventory.AddItem(costume);
                 costumes.Add(costume.ItemId);
             }
@@ -93,16 +90,17 @@ namespace Lib9c.Tests.Action.Scenario
             return (equipments, costumes);
         }
 
-        public IAccountStateDelta JoinArena(
+        public IWorld JoinArena(
+            IActionContext context,
             IRandom random,
             Address signer,
             Address avatarAddress,
             ArenaSheet.RoundData roundData)
         {
             var preCurrency = roundData.EntranceFee * _crystal;
-            _state = _state.MintAsset(signer, preCurrency);
+            _state = _state.MintAsset(context, signer, preCurrency);
 
-            var action = new JoinArena()
+            var action = new JoinArena3()
             {
                 championshipId = roundData.ChampionshipId,
                 round = roundData.Round,
@@ -111,18 +109,18 @@ namespace Lib9c.Tests.Action.Scenario
                 avatarAddress = avatarAddress,
             };
 
-            _state = action.Execute(new ActionContext
-            {
-                PreviousStates = _state,
-                Signer = signer,
-                Random = random,
-                Rehearsal = false,
-                BlockIndex = roundData.StartBlockIndex,
-            });
+            _state = action.Execute(
+                new ActionContext
+                {
+                    PreviousState = _state,
+                    Signer = signer,
+                    RandomSeed = random.Seed,
+                    BlockIndex = roundData.StartBlockIndex,
+                });
             return _state;
         }
 
-        public IAccountStateDelta BattleArena(
+        public IWorld BattleArena(
             IRandom random,
             Address signer,
             Address myAvatarAddress,
@@ -131,7 +129,7 @@ namespace Lib9c.Tests.Action.Scenario
             int ticket,
             long blockIndex)
         {
-            var action = new BattleArena6()
+            var action = new BattleArena()
             {
                 myAvatarAddress = myAvatarAddress,
                 enemyAvatarAddress = enemyAvatarAddress,
@@ -142,14 +140,14 @@ namespace Lib9c.Tests.Action.Scenario
                 equipments = new List<Guid>(),
             };
 
-            _state = action.Execute(new ActionContext
-            {
-                PreviousStates = _state,
-                Signer = signer,
-                Random = random,
-                Rehearsal = false,
-                BlockIndex = blockIndex,
-            });
+            _state = action.Execute(
+                new ActionContext
+                {
+                    PreviousState = _state,
+                    Signer = signer,
+                    RandomSeed = random.Seed,
+                    BlockIndex = blockIndex,
+                });
             return _state;
         }
 
@@ -159,30 +157,25 @@ namespace Lib9c.Tests.Action.Scenario
                 _tableSheets.StageSheet.First?.Id ?? 1,
                 GameConfig.RequireClearedStageLevel.ActionsInRankingBoard);
 
-            var agentAddress = new PrivateKey().ToAddress();
+            var agentAddress = new PrivateKey().Address;
             var agentState = new AgentState(agentAddress);
 
             var avatarAddress = agentAddress.Derive("avatar");
-            var avatarState = new AvatarState(
+            var avatarState = AvatarState.Create(
                 avatarAddress,
                 agentAddress,
                 0,
                 _tableSheets.GetAvatarSheets(),
-                new GameConfigState(_sheets[nameof(GameConfigSheet)]),
-                _rankingMapAddress)
-            {
-                worldInformation = new WorldInformation(
-                    0,
-                    _tableSheets.WorldSheet,
-                    clearStageId),
-            };
+                _rankingMapAddress);
+            avatarState.worldInformation = new WorldInformation(
+                0,
+                _tableSheets.WorldSheet,
+                clearStageId);
+
             agentState.avatarAddresses.Add(0, avatarAddress);
             _state = _state
-                .SetState(agentState.address, agentState.Serialize())
-                .SetState(avatarState.address.Derive(LegacyInventoryKey), avatarState.inventory.Serialize())
-                .SetState(avatarState.address.Derive(LegacyWorldInformationKey), avatarState.worldInformation.Serialize())
-                .SetState(avatarState.address.Derive(LegacyQuestListKey), avatarState.questList.Serialize())
-                .SetState(avatarState.address, avatarState.Serialize());
+                .SetAgentState(agentAddress, agentState)
+                .SetAvatarState(avatarAddress, avatarState);
 
             return (agentState, avatarState);
         }
@@ -342,10 +335,10 @@ namespace Lib9c.Tests.Action.Scenario
         private static string ShowLog(Address adr, ArenaSheet.RoundData data, ArenaScore score, ArenaInformation ai, int medalCount)
         {
             return $"[#{adr.ToHex().Substring(0, 6)}] arenaType({data.ArenaType}) / " +
-                   $"score({score.Score}) / " +
-                   $"Win({ai.Win}) / Lose({ai.Lose}) / " +
-                   $"Ticket({ai.Ticket}) / TicketResetCount({ai.TicketResetCount}) / " +
-                   $"MedalCount({medalCount})";
+                $"score({score.Score}) / " +
+                $"Win({ai.Win}) / Lose({ai.Lose}) / " +
+                $"Ticket({ai.Ticket}) / TicketResetCount({ai.TicketResetCount}) / " +
+                $"MedalCount({medalCount})";
         }
 
         private bool TryGetTarget(
@@ -364,7 +357,7 @@ namespace Lib9c.Tests.Action.Scenario
                 }
             }
 
-            targetAddress = new PrivateKey().ToAddress();
+            targetAddress = new PrivateKey().Address;
             return false;
         }
 

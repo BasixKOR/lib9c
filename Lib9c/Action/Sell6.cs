@@ -5,13 +5,14 @@ using System.Diagnostics;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Abstractions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Serilog;
 using BxDictionary = Bencodex.Types.Dictionary;
 using BxList = Bencodex.Types.List;
@@ -58,20 +59,10 @@ namespace Nekoyume.Action
             itemSubType = plainValue[ItemSubTypeKey].ToEnum<ItemSubType>();
         }
 
-        public override IAccountStateDelta Execute(IActionContext context)
+        public override IWorld Execute(IActionContext context)
         {
-            context.UseGas(1);
-            var states = context.PreviousStates;
-            if (context.Rehearsal)
-            {
-                states = states.SetState(sellerAvatarAddress, MarkChanged);
-                states = ShardedShopState.AddressKeys.Aggregate(
-                    states,
-                    (current, addressKey) => current.SetState(
-                        ShardedShopState.DeriveAddress(itemSubType, addressKey),
-                        MarkChanged));
-                return states.SetState(context.Signer, MarkChanged);
-            }
+            GasTracer.UseGas(1);
+            var states = context.PreviousState;
 
             CheckObsolete(ActionObsoleteConfig.V100080ObsoleteIndex, context);
 
@@ -88,10 +79,15 @@ namespace Nekoyume.Action
                     $"{addressesHex}Aborted as the price is less than zero: {price}.");
             }
 
-            if (!states.TryGetAgentAvatarStates(
+            if (states.GetAgentState(context.Signer) is null)
+            {
+                throw new FailedLoadStateException(
+                    $"{addressesHex}Aborted as the agent state of the signer was failed to load.");
+            }
+
+            if (!states.TryGetAvatarState(
                 context.Signer,
                 sellerAvatarAddress,
-                out _,
                 out var avatarState))
             {
                 throw new FailedLoadStateException(
@@ -164,9 +160,10 @@ namespace Nekoyume.Action
 
             ITradableItem tradableItem = avatarState.inventory.SellItem(tradableId, context.BlockIndex, count);
 
-            var productId = context.Random.GenerateRandomGuid();
+            var random = context.GetRandom();
+            var productId = random.GenerateRandomGuid();
             var shardedShopAddress = ShardedShopState.DeriveAddress(itemSubType, productId);
-            if (!states.TryGetState(shardedShopAddress, out BxDictionary serializedSharedShopState))
+            if (!states.TryGetLegacyState(shardedShopAddress, out BxDictionary serializedSharedShopState))
             {
                 var shardedShopState = new ShardedShopState(shardedShopAddress);
                 serializedSharedShopState = (BxDictionary) shardedShopState.Serialize();
@@ -276,17 +273,17 @@ namespace Nekoyume.Action
             var mail = new SellCancelMail(
                 result,
                 context.BlockIndex,
-                context.Random.GenerateRandomGuid(),
+                random.GenerateRandomGuid(),
                 expiredBlockIndex);
             result.id = mail.id;
             avatarState.Update(mail);
 
-            states = states.SetState(sellerAvatarAddress, avatarState.Serialize());
+            states = states.SetAvatarState(sellerAvatarAddress, avatarState, true, false, false, false);
             sw.Stop();
             Log.Verbose("{AddressesHex}Sell Set AvatarState: {Elapsed}", addressesHex, sw.Elapsed);
             sw.Restart();
 
-            states = states.SetState(shardedShopAddress, serializedSharedShopState);
+            states = states.SetLegacyState(shardedShopAddress, serializedSharedShopState);
             sw.Stop();
             var ended = DateTimeOffset.UtcNow;
             Log.Verbose("{AddressesHex}Sell Set ShopState: {Elapsed}", addressesHex, sw.Elapsed);

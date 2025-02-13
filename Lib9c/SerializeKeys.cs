@@ -44,6 +44,11 @@ namespace Lib9c
         public const string OptionCountFromCombinationKey = "oc";
         public const string RequiredCharacterLevelKey = "rc";
         public const string MadeWithMimisbrunnrRecipeKey = "mwmr";
+        public const string EquipmentExpKey = "eq_exp";
+        public const string EquipmentIconIdKey = "icon_id";
+        public const string ByCustomCraftKey = "bcc";
+        public const string CraftWithRandomKey = "cwr";
+        public const string HasRandomOnlyIconKey = "hroi";
 
         // Stat
         public const string StatTypeKey = "stt";
@@ -101,6 +106,7 @@ namespace Lib9c
         public const string CancellableBlockIndexKey = "cbi";
         public const string AchievementsKey = "ach";
         public const string AmountKey = "am";
+        public const string StakeAvatarAddressKey = "saa";
 
         // State
         public const string AddressKey = "a";
@@ -173,5 +179,13 @@ namespace Lib9c
 
         // Grand Finale
         public const string GrandFinaleIdKey = "gfi";
+
+        // ClaimItems
+        public const string ClaimDataKey = "cd";
+        public const string MemoKey = "m";
+
+        // Battle
+        public const string ArenaProviderKey = "arp";
+        public const string ChargeApKey = "cha";
     }
 }

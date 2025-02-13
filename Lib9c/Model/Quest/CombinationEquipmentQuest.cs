@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using Bencodex.Types;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -10,20 +8,66 @@ namespace Nekoyume.Model.Quest
 {
     public class CombinationEquipmentQuest : Quest
     {
-        public readonly int RecipeId;
-        public readonly int StageId;
+        public int RecipeId
+        {
+            get
+            {
+                if (_serializedRecipeId is { })
+                {
+                    _recipeId = _serializedRecipeId switch
+                    {
+                        Integer i => i,
+                        Text t => t.ToInteger(),
+                        _ => throw new ArgumentOutOfRangeException(),
+                    };
+
+                    _serializedRecipeId = null;
+                }
+
+                return _recipeId;
+            }
+        }
+
+        public int StageId {
+            get
+            {
+                if (_serializedStageId is { })
+                {
+                    _stageId = _serializedStageId switch
+                    {
+                        Integer i => i,
+                        Text t => t.ToInteger(),
+                        _ => throw new ArgumentOutOfRangeException(),
+                    };
+
+                    _serializedStageId = null;
+                }
+
+                return _stageId;
+            }
+        }
+        private IValue _serializedRecipeId;
+        private int _recipeId;
+        private IValue _serializedStageId;
+        private int _stageId;
 
         public CombinationEquipmentQuest(QuestSheet.Row data, QuestReward reward, int stageId) : base(data, reward)
         {
             var row = (CombinationEquipmentQuestSheet.Row) data;
-            RecipeId = row.RecipeId;
-            StageId = stageId;
+            _recipeId = row.RecipeId;
+            _stageId = stageId;
         }
 
         public CombinationEquipmentQuest(Dictionary serialized) : base(serialized)
         {
-            RecipeId = serialized["recipe_id"].ToInteger();
-            StageId = serialized["stage_id"].ToInteger();
+            _serializedStageId = serialized["stage_id"];
+            _serializedRecipeId = serialized["recipe_id"];
+        }
+
+        public CombinationEquipmentQuest(List serialized) : base(serialized)
+        {
+            _serializedRecipeId = serialized[7];
+            _serializedStageId = serialized[8];
         }
 
         //임시처리. 새 타입을 만들어서 위젯에 띄워줘야합니다.
@@ -58,14 +102,16 @@ namespace Nekoyume.Model.Quest
 
         public override IValue Serialize()
         {
-            var dict = new Dictionary<IKey, IValue>
-            {
-                [(Text) "recipe_id"] = RecipeId.Serialize(),
-                [(Text) "stage_id"] = StageId.Serialize(),
-            };
-#pragma warning disable LAA1002
-            return new Dictionary(dict.Union((Dictionary) base.Serialize()));
-#pragma warning restore LAA1002
+            return ((Dictionary) base.Serialize())
+                .Add("recipe_id", _serializedRecipeId ?? RecipeId.Serialize())
+                .Add("stage_id", _serializedStageId ?? StageId.Serialize());
+        }
+
+        public override IValue SerializeList()
+        {
+            return ((List) base.SerializeList())
+                .Add(_serializedRecipeId ?? (Integer)RecipeId)
+                .Add(_serializedStageId ?? (Integer)StageId);
         }
     }
 }

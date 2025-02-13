@@ -1,9 +1,7 @@
 namespace Lib9c.Tests.Model
 {
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
-    using System.Runtime.Serialization.Formatters.Binary;
     using Bencodex.Types;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Quest;
@@ -43,15 +41,6 @@ namespace Lib9c.Tests.Model
             var des = new ItemGradeQuest((Dictionary)quest.Serialize());
 
             Assert.Equal(expected, des.ItemIds);
-
-            var formatter = new BinaryFormatter();
-            using var ms = new MemoryStream();
-            formatter.Serialize(ms, quest);
-
-            ms.Seek(0, SeekOrigin.Begin);
-            var deserialized = (ItemGradeQuest)formatter.Deserialize(ms);
-
-            Assert.Equal(quest.ItemIds, deserialized.ItemIds);
         }
     }
 }

@@ -7,15 +7,15 @@ namespace Lib9c.Tests.Action.Scenario.Pet
     using System.Numerics;
     using Bencodex.Types;
     using Lib9c.Tests.Util;
-    using Libplanet;
-    using Libplanet.Assets;
-    using Libplanet.State;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Assets;
     using Nekoyume.Action;
     using Nekoyume.Model.Pet;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Xunit;
-    using static Lib9c.SerializeKeys;
 
     public class DiscountMaterialCostCrystalTest
     {
@@ -24,9 +24,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
 
         private readonly Address _agentAddr;
         private readonly Address _avatarAddr;
-        private readonly Address _inventoryAddr;
-        private readonly Address _worldInformationAddr;
-        private readonly IAccountStateDelta _initialStateV2;
+        private readonly IWorld _initialStateV2;
         private readonly TableSheets _tableSheets;
         private int? _petId;
 
@@ -36,11 +34,8 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 _tableSheets,
                 _agentAddr,
                 _avatarAddr,
-                _,
                 _initialStateV2
             ) = InitializeUtil.InitializeStates();
-            _inventoryAddr = _avatarAddr.Derive(LegacyInventoryKey);
-            _worldInformationAddr = _avatarAddr.Derive(LegacyWorldInformationKey);
         }
 
         [Theory]
@@ -64,7 +59,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             Assert.NotNull(recipe);
 
             // Get materials and stages
-            List<EquipmentItemSubRecipeSheet.MaterialInfo> materialList =
+            var materialList =
                 recipe.GetAllMaterials(_tableSheets.EquipmentItemSubRecipeSheetV2).ToList();
             var stageList = List.Empty;
             for (var i = 1; i < recipe.UnlockStage + 1; i++)
@@ -72,7 +67,8 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 stageList = stageList.Add(i.Serialize());
             }
 
-            var stateV2 = _initialStateV2.SetState(
+            var context = new ActionContext();
+            var stateV2 = _initialStateV2.SetLegacyState(
                 _avatarAddr.Derive("recipe_ids"),
                 stageList
             );
@@ -93,7 +89,7 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 );
 
                 _petId = petRow.PetId;
-                stateV2 = stateV2.SetState(
+                stateV2 = stateV2.SetLegacyState(
                     PetState.DeriveAddress(_avatarAddr, (int)_petId),
                     new List(_petId.Serialize(), petLevel.Serialize(), 0L.Serialize()));
                 expectedCrystal *= (BigInteger)(
@@ -103,12 +99,12 @@ namespace Lib9c.Tests.Action.Scenario.Pet
             }
 
             // Prepare
-            stateV2 = CraftUtil.PrepareCombinationSlot(stateV2, _avatarAddr, 0);
-            stateV2 = CurrencyUtil.AddCurrency(stateV2, _agentAddr, crystal, expectedCrystal);
+            stateV2 = CraftUtil.PrepareCombinationSlot(stateV2, _avatarAddr);
+            stateV2 = CurrencyUtil.AddCurrency(context, stateV2, _agentAddr, crystal, expectedCrystal);
             stateV2 = CraftUtil.UnlockStage(
                 stateV2,
                 _tableSheets,
-                _worldInformationAddr,
+                _avatarAddr,
                 recipe.UnlockStage
             );
 
@@ -123,13 +119,14 @@ namespace Lib9c.Tests.Action.Scenario.Pet
                 payByCrystal = true,
             };
 
-            stateV2 = action.Execute(new ActionContext
-            {
-                PreviousStates = stateV2,
-                Signer = _agentAddr,
-                BlockIndex = 0L,
-                Random = random,
-            });
+            stateV2 = action.Execute(
+                new ActionContext
+                {
+                    PreviousState = stateV2,
+                    Signer = _agentAddr,
+                    BlockIndex = 0L,
+                    RandomSeed = random.Seed,
+                });
 
             // TEST: All given crystals are used
             Assert.Equal(0 * crystal, stateV2.GetBalance(_agentAddr, crystal));

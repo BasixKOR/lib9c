@@ -1,56 +1,13 @@
 namespace Lib9c.Tests.Action
 {
-    using System;
-    using System.Linq;
-    using Libplanet.Assets;
+    using Libplanet.Types.Assets;
     using Nekoyume.Helper;
-    using Nekoyume.TableData;
+    using Nekoyume.Model.State;
     using Xunit;
 
     public class RuneHelperTest
     {
-        private readonly Currency _crystalCurrency = CrystalCalculator.CRYSTAL;
-
-        [Theory]
-        [InlineData(typeof(WorldBossRankRewardSheet))]
-        [InlineData(typeof(WorldBossKillRewardSheet))]
-        public void CalculateReward(Type sheetType)
-        {
-            var tableSheet = new TableSheets(TableSheetsImporter.ImportSheets());
-            var random = new TestRandom();
-            IWorldBossRewardSheet sheet;
-            if (sheetType == typeof(WorldBossRankRewardSheet))
-            {
-                sheet = tableSheet.WorldBossRankRewardSheet;
-            }
-            else
-            {
-                sheet = tableSheet.WorldBossKillRewardSheet;
-            }
-
-            foreach (var rewardRow in sheet.OrderedRows)
-            {
-                var bossId = rewardRow.BossId;
-                var rank = rewardRow.Rank;
-                var fungibleAssetValues = RuneHelper.CalculateReward(
-                    rank,
-                    bossId,
-                    tableSheet.RuneWeightSheet,
-                    sheet,
-                    tableSheet.RuneSheet,
-                    random
-                );
-                var expectedRune = rewardRow.Rune;
-                var expectedCrystal = rewardRow.Crystal * _crystalCurrency;
-                var crystal = fungibleAssetValues.First(f => f.Currency.Equals(_crystalCurrency));
-                var rune = fungibleAssetValues
-                    .Where(f => !f.Currency.Equals(_crystalCurrency))
-                    .Sum(r => (int)r.MajorUnit);
-
-                Assert.Equal(expectedCrystal, crystal);
-                Assert.Equal(expectedRune, rune);
-            }
-        }
+        private readonly TableSheets _tableSheets = new (TableSheetsImporter.ImportSheets());
 
         [Theory]
         [InlineData(50, 0)]
@@ -62,6 +19,22 @@ namespace Lib9c.Tests.Action
         {
             var ncgCurrency = Currency.Legacy("NCG", 2, null);
             Assert.Equal(expected * RuneHelper.StakeRune, RuneHelper.CalculateStakeReward(amountGold * ncgCurrency, 6000));
+        }
+
+        [Theory]
+        [InlineData(0, 0)]
+        [InlineData(1, 30000)]
+        [InlineData(100, 34554)] // 1*30000 + 99*46
+        [InlineData(130200, 1043056)] // Max level
+        public void CalculateRuneLevelBonus(int runeLevel, int expectedBonus)
+        {
+            var runeStates = new AllRuneState(30001, runeLevel);
+            var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(
+                runeStates,
+                _tableSheets.RuneListSheet,
+                _tableSheets.RuneLevelBonusSheet
+            );
+            Assert.Equal(expectedBonus, runeLevelBonus);
         }
     }
 }

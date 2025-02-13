@@ -3,14 +3,15 @@ namespace Lib9c.Tests.Action
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.State;
+    using Libplanet.Mocks;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Helper;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Xunit;
 
     public class PrepareRewardAssetsTest
@@ -21,8 +22,8 @@ namespace Lib9c.Tests.Action
         [InlineData(false, false, typeof(PermissionDeniedException))]
         public void Execute(bool admin, bool includeNcg, Type exc)
         {
-            var adminAddress = new PrivateKey().ToAddress();
-            var poolAddress = new PrivateKey().ToAddress();
+            var adminAddress = new PrivateKey().Address;
+            var poolAddress = new PrivateKey().Address;
             var adminState = new AdminState(adminAddress, 150L);
             var assets = new List<FungibleAssetValue>
             {
@@ -37,18 +38,19 @@ namespace Lib9c.Tests.Action
 #pragma warning restore CS0618
             }
 
-            IAccountStateDelta state = new State()
-                .SetState(Addresses.Admin, adminState.Serialize());
+            var state = new World(MockUtil.MockModernWorldState)
+                .SetLegacyState(Addresses.Admin, adminState.Serialize());
 
             var action = new PrepareRewardAssets(poolAddress, assets);
             if (exc is null)
             {
-                var nextState = action.Execute(new ActionContext
-                {
-                    Signer = admin ? adminAddress : poolAddress,
-                    BlockIndex = 1,
-                    PreviousStates = state,
-                });
+                var nextState = action.Execute(
+                    new ActionContext
+                    {
+                        Signer = admin ? adminAddress : poolAddress,
+                        BlockIndex = 1,
+                        PreviousState = state,
+                    });
                 foreach (var asset in assets)
                 {
                     Assert.Equal(asset, nextState.GetBalance(poolAddress, asset.Currency));
@@ -56,12 +58,15 @@ namespace Lib9c.Tests.Action
             }
             else
             {
-                Assert.Throws(exc, () => action.Execute(new ActionContext
-                {
-                    Signer = admin ? adminAddress : poolAddress,
-                    BlockIndex = 1,
-                    PreviousStates = state,
-                }));
+                Assert.Throws(
+                    exc,
+                    () => action.Execute(
+                        new ActionContext
+                        {
+                            Signer = admin ? adminAddress : poolAddress,
+                            BlockIndex = 1,
+                            PreviousState = state,
+                        }));
             }
         }
     }
