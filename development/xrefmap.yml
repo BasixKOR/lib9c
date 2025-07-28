@@ -38661,6 +38661,57 @@ references:
   commentId: F:Nekoyume.Helper.ItemOptionInfo.StatOptions
   fullName: Nekoyume.Helper.ItemOptionInfo.StatOptions
   nameWithType: ItemOptionInfo.StatOptions
+- uid: Nekoyume.Helper.NumberConversionHelper
+  name: NumberConversionHelper
+  href: api/Nekoyume.Helper.NumberConversionHelper.html
+  commentId: T:Nekoyume.Helper.NumberConversionHelper
+  fullName: Nekoyume.Helper.NumberConversionHelper
+  nameWithType: NumberConversionHelper
+- uid: Nekoyume.Helper.NumberConversionHelper.SafeBigIntegerToInt32(System.Numerics.BigInteger)
+  name: SafeBigIntegerToInt32(BigInteger)
+  href: api/Nekoyume.Helper.NumberConversionHelper.html#Nekoyume_Helper_NumberConversionHelper_SafeBigIntegerToInt32_System_Numerics_BigInteger_
+  commentId: M:Nekoyume.Helper.NumberConversionHelper.SafeBigIntegerToInt32(System.Numerics.BigInteger)
+  fullName: Nekoyume.Helper.NumberConversionHelper.SafeBigIntegerToInt32(System.Numerics.BigInteger)
+  nameWithType: NumberConversionHelper.SafeBigIntegerToInt32(BigInteger)
+- uid: Nekoyume.Helper.NumberConversionHelper.SafeBigIntegerToInt32*
+  name: SafeBigIntegerToInt32
+  href: api/Nekoyume.Helper.NumberConversionHelper.html#Nekoyume_Helper_NumberConversionHelper_SafeBigIntegerToInt32_
+  commentId: Overload:Nekoyume.Helper.NumberConversionHelper.SafeBigIntegerToInt32
+  isSpec: "True"
+  fullName: Nekoyume.Helper.NumberConversionHelper.SafeBigIntegerToInt32
+  nameWithType: NumberConversionHelper.SafeBigIntegerToInt32
+- uid: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt32(System.Decimal)
+  name: SafeDecimalToInt32(decimal)
+  href: api/Nekoyume.Helper.NumberConversionHelper.html#Nekoyume_Helper_NumberConversionHelper_SafeDecimalToInt32_System_Decimal_
+  commentId: M:Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt32(System.Decimal)
+  name.vb: SafeDecimalToInt32(Decimal)
+  fullName: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt32(decimal)
+  fullName.vb: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt32(Decimal)
+  nameWithType: NumberConversionHelper.SafeDecimalToInt32(decimal)
+  nameWithType.vb: NumberConversionHelper.SafeDecimalToInt32(Decimal)
+- uid: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt32*
+  name: SafeDecimalToInt32
+  href: api/Nekoyume.Helper.NumberConversionHelper.html#Nekoyume_Helper_NumberConversionHelper_SafeDecimalToInt32_
+  commentId: Overload:Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt32
+  isSpec: "True"
+  fullName: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt32
+  nameWithType: NumberConversionHelper.SafeDecimalToInt32
+- uid: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt64(System.Decimal)
+  name: SafeDecimalToInt64(decimal)
+  href: api/Nekoyume.Helper.NumberConversionHelper.html#Nekoyume_Helper_NumberConversionHelper_SafeDecimalToInt64_System_Decimal_
+  commentId: M:Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt64(System.Decimal)
+  name.vb: SafeDecimalToInt64(Decimal)
+  fullName: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt64(decimal)
+  fullName.vb: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt64(Decimal)
+  nameWithType: NumberConversionHelper.SafeDecimalToInt64(decimal)
+  nameWithType.vb: NumberConversionHelper.SafeDecimalToInt64(Decimal)
+- uid: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt64*
+  name: SafeDecimalToInt64
+  href: api/Nekoyume.Helper.NumberConversionHelper.html#Nekoyume_Helper_NumberConversionHelper_SafeDecimalToInt64_
+  commentId: Overload:Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt64
+  isSpec: "True"
+  fullName: Nekoyume.Helper.NumberConversionHelper.SafeDecimalToInt64
+  nameWithType: NumberConversionHelper.SafeDecimalToInt64
 - uid: Nekoyume.Helper.PetHelper
   name: PetHelper
   href: api/Nekoyume.Helper.PetHelper.html
@@ -46559,6 +46610,15 @@ references:
   fullName.vb: Nekoyume.Model.CollectionMap.New(Bencodex.Types.Dictionary)
   nameWithType: CollectionMap.CollectionMap(Dictionary)
   nameWithType.vb: CollectionMap.New(Dictionary)
+- uid: Nekoyume.Model.CollectionMap.#ctor(Bencodex.Types.IValue)
+  name: CollectionMap(IValue)
+  href: api/Nekoyume.Model.CollectionMap.html#Nekoyume_Model_CollectionMap__ctor_Bencodex_Types_IValue_
+  commentId: M:Nekoyume.Model.CollectionMap.#ctor(Bencodex.Types.IValue)
+  name.vb: New(IValue)
+  fullName: Nekoyume.Model.CollectionMap.CollectionMap(Bencodex.Types.IValue)
+  fullName.vb: Nekoyume.Model.CollectionMap.New(Bencodex.Types.IValue)
+  nameWithType: CollectionMap.CollectionMap(IValue)
+  nameWithType.vb: CollectionMap.New(IValue)
 - uid: Nekoyume.Model.CollectionMap.#ctor*
   name: CollectionMap
   href: api/Nekoyume.Model.CollectionMap.html#Nekoyume_Model_CollectionMap__ctor_
@@ -62270,12 +62330,12 @@ references:
   commentId: T:Nekoyume.Model.Skill.SkillFactory
   fullName: Nekoyume.Model.Skill.SkillFactory
   nameWithType: SkillFactory
-- uid: Nekoyume.Model.Skill.SkillFactory.Deserialize(Bencodex.Types.Dictionary)
-  name: Deserialize(Dictionary)
-  href: api/Nekoyume.Model.Skill.SkillFactory.html#Nekoyume_Model_Skill_SkillFactory_Deserialize_Bencodex_Types_Dictionary_
-  commentId: M:Nekoyume.Model.Skill.SkillFactory.Deserialize(Bencodex.Types.Dictionary)
-  fullName: Nekoyume.Model.Skill.SkillFactory.Deserialize(Bencodex.Types.Dictionary)
-  nameWithType: SkillFactory.Deserialize(Dictionary)
+- uid: Nekoyume.Model.Skill.SkillFactory.Deserialize(Bencodex.Types.IValue)
+  name: Deserialize(IValue)
+  href: api/Nekoyume.Model.Skill.SkillFactory.html#Nekoyume_Model_Skill_SkillFactory_Deserialize_Bencodex_Types_IValue_
+  commentId: M:Nekoyume.Model.Skill.SkillFactory.Deserialize(Bencodex.Types.IValue)
+  fullName: Nekoyume.Model.Skill.SkillFactory.Deserialize(Bencodex.Types.IValue)
+  nameWithType: SkillFactory.Deserialize(IValue)
 - uid: Nekoyume.Model.Skill.SkillFactory.Deserialize*
   name: Deserialize
   href: api/Nekoyume.Model.Skill.SkillFactory.html#Nekoyume_Model_Skill_SkillFactory_Deserialize_
@@ -62283,6 +62343,32 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.Skill.SkillFactory.Deserialize
   nameWithType: SkillFactory.Deserialize
+- uid: Nekoyume.Model.Skill.SkillFactory.DeserializeFromDictionary(Bencodex.Types.Dictionary)
+  name: DeserializeFromDictionary(Dictionary)
+  href: api/Nekoyume.Model.Skill.SkillFactory.html#Nekoyume_Model_Skill_SkillFactory_DeserializeFromDictionary_Bencodex_Types_Dictionary_
+  commentId: M:Nekoyume.Model.Skill.SkillFactory.DeserializeFromDictionary(Bencodex.Types.Dictionary)
+  fullName: Nekoyume.Model.Skill.SkillFactory.DeserializeFromDictionary(Bencodex.Types.Dictionary)
+  nameWithType: SkillFactory.DeserializeFromDictionary(Dictionary)
+- uid: Nekoyume.Model.Skill.SkillFactory.DeserializeFromDictionary*
+  name: DeserializeFromDictionary
+  href: api/Nekoyume.Model.Skill.SkillFactory.html#Nekoyume_Model_Skill_SkillFactory_DeserializeFromDictionary_
+  commentId: Overload:Nekoyume.Model.Skill.SkillFactory.DeserializeFromDictionary
+  isSpec: "True"
+  fullName: Nekoyume.Model.Skill.SkillFactory.DeserializeFromDictionary
+  nameWithType: SkillFactory.DeserializeFromDictionary
+- uid: Nekoyume.Model.Skill.SkillFactory.DeserializeFromList(Bencodex.Types.List)
+  name: DeserializeFromList(List)
+  href: api/Nekoyume.Model.Skill.SkillFactory.html#Nekoyume_Model_Skill_SkillFactory_DeserializeFromList_Bencodex_Types_List_
+  commentId: M:Nekoyume.Model.Skill.SkillFactory.DeserializeFromList(Bencodex.Types.List)
+  fullName: Nekoyume.Model.Skill.SkillFactory.DeserializeFromList(Bencodex.Types.List)
+  nameWithType: SkillFactory.DeserializeFromList(List)
+- uid: Nekoyume.Model.Skill.SkillFactory.DeserializeFromList*
+  name: DeserializeFromList
+  href: api/Nekoyume.Model.Skill.SkillFactory.html#Nekoyume_Model_Skill_SkillFactory_DeserializeFromList_
+  commentId: Overload:Nekoyume.Model.Skill.SkillFactory.DeserializeFromList
+  isSpec: "True"
+  fullName: Nekoyume.Model.Skill.SkillFactory.DeserializeFromList
+  nameWithType: SkillFactory.DeserializeFromList
 - uid: Nekoyume.Model.Skill.SkillFactory.Get(Nekoyume.TableData.SkillSheet.Row,System.Int64,System.Int32,System.Int32,Nekoyume.Model.Stat.StatType)
   name: Get(Row, long, int, int, StatType)
   href: api/Nekoyume.Model.Skill.SkillFactory.html#Nekoyume_Model_Skill_SkillFactory_Get_Nekoyume_TableData_SkillSheet_Row_System_Int64_System_Int32_System_Int32_Nekoyume_Model_Stat_StatType_
@@ -63837,6 +63923,15 @@ references:
   fullName.vb: Nekoyume.Model.Stat.DecimalStat.New(Bencodex.Types.Dictionary)
   nameWithType: DecimalStat.DecimalStat(Dictionary)
   nameWithType.vb: DecimalStat.New(Dictionary)
+- uid: Nekoyume.Model.Stat.DecimalStat.#ctor(Bencodex.Types.IValue)
+  name: DecimalStat(IValue)
+  href: api/Nekoyume.Model.Stat.DecimalStat.html#Nekoyume_Model_Stat_DecimalStat__ctor_Bencodex_Types_IValue_
+  commentId: M:Nekoyume.Model.Stat.DecimalStat.#ctor(Bencodex.Types.IValue)
+  name.vb: New(IValue)
+  fullName: Nekoyume.Model.Stat.DecimalStat.DecimalStat(Bencodex.Types.IValue)
+  fullName.vb: Nekoyume.Model.Stat.DecimalStat.New(Bencodex.Types.IValue)
+  nameWithType: DecimalStat.DecimalStat(IValue)
+  nameWithType.vb: DecimalStat.New(IValue)
 - uid: Nekoyume.Model.Stat.DecimalStat.#ctor(Nekoyume.Model.Stat.DecimalStat)
   name: DecimalStat(DecimalStat)
   href: api/Nekoyume.Model.Stat.DecimalStat.html#Nekoyume_Model_Stat_DecimalStat__ctor_Nekoyume_Model_Stat_DecimalStat_
@@ -64698,6 +64793,15 @@ references:
   fullName.vb: Nekoyume.Model.Stat.StatMap.New()
   nameWithType: StatMap.StatMap()
   nameWithType.vb: StatMap.New()
+- uid: Nekoyume.Model.Stat.StatMap.#ctor(Bencodex.Types.IValue)
+  name: StatMap(IValue)
+  href: api/Nekoyume.Model.Stat.StatMap.html#Nekoyume_Model_Stat_StatMap__ctor_Bencodex_Types_IValue_
+  commentId: M:Nekoyume.Model.Stat.StatMap.#ctor(Bencodex.Types.IValue)
+  name.vb: New(IValue)
+  fullName: Nekoyume.Model.Stat.StatMap.StatMap(Bencodex.Types.IValue)
+  fullName.vb: Nekoyume.Model.Stat.StatMap.New(Bencodex.Types.IValue)
+  nameWithType: StatMap.StatMap(IValue)
+  nameWithType.vb: StatMap.New(IValue)
 - uid: Nekoyume.Model.Stat.StatMap.#ctor(Nekoyume.Model.Stat.StatMap)
   name: StatMap(StatMap)
   href: api/Nekoyume.Model.Stat.StatMap.html#Nekoyume_Model_Stat_StatMap__ctor_Nekoyume_Model_Stat_StatMap_
@@ -65094,19 +65198,6 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.Stat.StatMap.DRV
   nameWithType: StatMap.DRV
-- uid: Nekoyume.Model.Stat.StatMap.Deserialize(Bencodex.Types.Dictionary)
-  name: Deserialize(Dictionary)
-  href: api/Nekoyume.Model.Stat.StatMap.html#Nekoyume_Model_Stat_StatMap_Deserialize_Bencodex_Types_Dictionary_
-  commentId: M:Nekoyume.Model.Stat.StatMap.Deserialize(Bencodex.Types.Dictionary)
-  fullName: Nekoyume.Model.Stat.StatMap.Deserialize(Bencodex.Types.Dictionary)
-  nameWithType: StatMap.Deserialize(Dictionary)
-- uid: Nekoyume.Model.Stat.StatMap.Deserialize*
-  name: Deserialize
-  href: api/Nekoyume.Model.Stat.StatMap.html#Nekoyume_Model_Stat_StatMap_Deserialize_
-  commentId: Overload:Nekoyume.Model.Stat.StatMap.Deserialize
-  isSpec: "True"
-  fullName: Nekoyume.Model.Stat.StatMap.Deserialize
-  nameWithType: StatMap.Deserialize
 - uid: Nekoyume.Model.Stat.StatMap.GetAdditionalStat(Nekoyume.Model.Stat.StatType)
   name: GetAdditionalStat(StatType)
   href: api/Nekoyume.Model.Stat.StatMap.html#Nekoyume_Model_Stat_StatMap_GetAdditionalStat_Nekoyume_Model_Stat_StatType_
@@ -66408,12 +66499,12 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.Stat.StatsMap.DRV
   nameWithType: StatsMap.DRV
-- uid: Nekoyume.Model.Stat.StatsMap.Deserialize(Bencodex.Types.Dictionary)
-  name: Deserialize(Dictionary)
-  href: api/Nekoyume.Model.Stat.StatsMap.html#Nekoyume_Model_Stat_StatsMap_Deserialize_Bencodex_Types_Dictionary_
-  commentId: M:Nekoyume.Model.Stat.StatsMap.Deserialize(Bencodex.Types.Dictionary)
-  fullName: Nekoyume.Model.Stat.StatsMap.Deserialize(Bencodex.Types.Dictionary)
-  nameWithType: StatsMap.Deserialize(Dictionary)
+- uid: Nekoyume.Model.Stat.StatsMap.Deserialize(Bencodex.Types.IValue)
+  name: Deserialize(IValue)
+  href: api/Nekoyume.Model.Stat.StatsMap.html#Nekoyume_Model_Stat_StatsMap_Deserialize_Bencodex_Types_IValue_
+  commentId: M:Nekoyume.Model.Stat.StatsMap.Deserialize(Bencodex.Types.IValue)
+  fullName: Nekoyume.Model.Stat.StatsMap.Deserialize(Bencodex.Types.IValue)
+  nameWithType: StatsMap.Deserialize(IValue)
 - uid: Nekoyume.Model.Stat.StatsMap.Deserialize*
   name: Deserialize
   href: api/Nekoyume.Model.Stat.StatsMap.html#Nekoyume_Model_Stat_StatsMap_Deserialize_
@@ -91918,6 +92009,15 @@ references:
   fullName.vb: Nekoyume.TableData.SkillSheet.Row.New(Bencodex.Types.Dictionary)
   nameWithType: SkillSheet.Row.Row(Dictionary)
   nameWithType.vb: SkillSheet.Row.New(Dictionary)
+- uid: Nekoyume.TableData.SkillSheet.Row.#ctor(Bencodex.Types.List)
+  name: Row(List)
+  href: api/Nekoyume.TableData.SkillSheet.Row.html#Nekoyume_TableData_SkillSheet_Row__ctor_Bencodex_Types_List_
+  commentId: M:Nekoyume.TableData.SkillSheet.Row.#ctor(Bencodex.Types.List)
+  name.vb: New(List)
+  fullName: Nekoyume.TableData.SkillSheet.Row.Row(Bencodex.Types.List)
+  fullName.vb: Nekoyume.TableData.SkillSheet.Row.New(Bencodex.Types.List)
+  nameWithType: SkillSheet.Row.Row(List)
+  nameWithType.vb: SkillSheet.Row.New(List)
 - uid: Nekoyume.TableData.SkillSheet.Row.#ctor*
   name: Row
   href: api/Nekoyume.TableData.SkillSheet.Row.html#Nekoyume_TableData_SkillSheet_Row__ctor_
@@ -91960,6 +92060,12 @@ references:
   commentId: M:Nekoyume.TableData.SkillSheet.Row.Deserialize(Bencodex.Types.Dictionary)
   fullName: Nekoyume.TableData.SkillSheet.Row.Deserialize(Bencodex.Types.Dictionary)
   nameWithType: SkillSheet.Row.Deserialize(Dictionary)
+- uid: Nekoyume.TableData.SkillSheet.Row.Deserialize(Bencodex.Types.IValue)
+  name: Deserialize(IValue)
+  href: api/Nekoyume.TableData.SkillSheet.Row.html#Nekoyume_TableData_SkillSheet_Row_Deserialize_Bencodex_Types_IValue_
+  commentId: M:Nekoyume.TableData.SkillSheet.Row.Deserialize(Bencodex.Types.IValue)
+  fullName: Nekoyume.TableData.SkillSheet.Row.Deserialize(Bencodex.Types.IValue)
+  nameWithType: SkillSheet.Row.Deserialize(IValue)
 - uid: Nekoyume.TableData.SkillSheet.Row.Deserialize*
   name: Deserialize
   href: api/Nekoyume.TableData.SkillSheet.Row.html#Nekoyume_TableData_SkillSheet_Row_Deserialize_
@@ -91967,6 +92073,32 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.SkillSheet.Row.Deserialize
   nameWithType: SkillSheet.Row.Deserialize
+- uid: Nekoyume.TableData.SkillSheet.Row.DeserializeFromDictionary(Bencodex.Types.Dictionary)
+  name: DeserializeFromDictionary(Dictionary)
+  href: api/Nekoyume.TableData.SkillSheet.Row.html#Nekoyume_TableData_SkillSheet_Row_DeserializeFromDictionary_Bencodex_Types_Dictionary_
+  commentId: M:Nekoyume.TableData.SkillSheet.Row.DeserializeFromDictionary(Bencodex.Types.Dictionary)
+  fullName: Nekoyume.TableData.SkillSheet.Row.DeserializeFromDictionary(Bencodex.Types.Dictionary)
+  nameWithType: SkillSheet.Row.DeserializeFromDictionary(Dictionary)
+- uid: Nekoyume.TableData.SkillSheet.Row.DeserializeFromDictionary*
+  name: DeserializeFromDictionary
+  href: api/Nekoyume.TableData.SkillSheet.Row.html#Nekoyume_TableData_SkillSheet_Row_DeserializeFromDictionary_
+  commentId: Overload:Nekoyume.TableData.SkillSheet.Row.DeserializeFromDictionary
+  isSpec: "True"
+  fullName: Nekoyume.TableData.SkillSheet.Row.DeserializeFromDictionary
+  nameWithType: SkillSheet.Row.DeserializeFromDictionary
+- uid: Nekoyume.TableData.SkillSheet.Row.DeserializeFromList(Bencodex.Types.List)
+  name: DeserializeFromList(List)
+  href: api/Nekoyume.TableData.SkillSheet.Row.html#Nekoyume_TableData_SkillSheet_Row_DeserializeFromList_Bencodex_Types_List_
+  commentId: M:Nekoyume.TableData.SkillSheet.Row.DeserializeFromList(Bencodex.Types.List)
+  fullName: Nekoyume.TableData.SkillSheet.Row.DeserializeFromList(Bencodex.Types.List)
+  nameWithType: SkillSheet.Row.DeserializeFromList(List)
+- uid: Nekoyume.TableData.SkillSheet.Row.DeserializeFromList*
+  name: DeserializeFromList
+  href: api/Nekoyume.TableData.SkillSheet.Row.html#Nekoyume_TableData_SkillSheet_Row_DeserializeFromList_
+  commentId: Overload:Nekoyume.TableData.SkillSheet.Row.DeserializeFromList
+  isSpec: "True"
+  fullName: Nekoyume.TableData.SkillSheet.Row.DeserializeFromList
+  nameWithType: SkillSheet.Row.DeserializeFromList
 - uid: Nekoyume.TableData.SkillSheet.Row.ElementalType
   name: ElementalType
   href: api/Nekoyume.TableData.SkillSheet.Row.html#Nekoyume_TableData_SkillSheet_Row_ElementalType
