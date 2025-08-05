@@ -18671,6 +18671,118 @@ references:
   commentId: F:Nekoyume.Action.PatchTableSheet.TableName
   fullName: Nekoyume.Action.PatchTableSheet.TableName
   nameWithType: PatchTableSheet.TableName
+- uid: Nekoyume.Action.PatchTableSheetCompressed
+  name: PatchTableSheetCompressed
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html
+  commentId: T:Nekoyume.Action.PatchTableSheetCompressed
+  fullName: Nekoyume.Action.PatchTableSheetCompressed
+  nameWithType: PatchTableSheetCompressed
+- uid: Nekoyume.Action.PatchTableSheetCompressed.CompressCsv(System.String)
+  name: CompressCsv(string)
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_CompressCsv_System_String_
+  commentId: M:Nekoyume.Action.PatchTableSheetCompressed.CompressCsv(System.String)
+  name.vb: CompressCsv(String)
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.CompressCsv(string)
+  fullName.vb: Nekoyume.Action.PatchTableSheetCompressed.CompressCsv(String)
+  nameWithType: PatchTableSheetCompressed.CompressCsv(string)
+  nameWithType.vb: PatchTableSheetCompressed.CompressCsv(String)
+- uid: Nekoyume.Action.PatchTableSheetCompressed.CompressCsv*
+  name: CompressCsv
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_CompressCsv_
+  commentId: Overload:Nekoyume.Action.PatchTableSheetCompressed.CompressCsv
+  isSpec: "True"
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.CompressCsv
+  nameWithType: PatchTableSheetCompressed.CompressCsv
+- uid: Nekoyume.Action.PatchTableSheetCompressed.CompressedTableCsv
+  name: CompressedTableCsv
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_CompressedTableCsv
+  commentId: P:Nekoyume.Action.PatchTableSheetCompressed.CompressedTableCsv
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.CompressedTableCsv
+  nameWithType: PatchTableSheetCompressed.CompressedTableCsv
+- uid: Nekoyume.Action.PatchTableSheetCompressed.CompressedTableCsv*
+  name: CompressedTableCsv
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_CompressedTableCsv_
+  commentId: Overload:Nekoyume.Action.PatchTableSheetCompressed.CompressedTableCsv
+  isSpec: "True"
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.CompressedTableCsv
+  nameWithType: PatchTableSheetCompressed.CompressedTableCsv
+- uid: Nekoyume.Action.PatchTableSheetCompressed.DecompressCsv(System.Byte[])
+  name: DecompressCsv(byte[])
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_DecompressCsv_System_Byte___
+  commentId: M:Nekoyume.Action.PatchTableSheetCompressed.DecompressCsv(System.Byte[])
+  name.vb: DecompressCsv(Byte())
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.DecompressCsv(byte[])
+  fullName.vb: Nekoyume.Action.PatchTableSheetCompressed.DecompressCsv(Byte())
+  nameWithType: PatchTableSheetCompressed.DecompressCsv(byte[])
+  nameWithType.vb: PatchTableSheetCompressed.DecompressCsv(Byte())
+- uid: Nekoyume.Action.PatchTableSheetCompressed.DecompressCsv*
+  name: DecompressCsv
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_DecompressCsv_
+  commentId: Overload:Nekoyume.Action.PatchTableSheetCompressed.DecompressCsv
+  isSpec: "True"
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.DecompressCsv
+  nameWithType: PatchTableSheetCompressed.DecompressCsv
+- uid: Nekoyume.Action.PatchTableSheetCompressed.Execute(Libplanet.Action.IActionContext)
+  name: Execute(IActionContext)
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_Execute_Libplanet_Action_IActionContext_
+  commentId: M:Nekoyume.Action.PatchTableSheetCompressed.Execute(Libplanet.Action.IActionContext)
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.Execute(Libplanet.Action.IActionContext)
+  nameWithType: PatchTableSheetCompressed.Execute(IActionContext)
+- uid: Nekoyume.Action.PatchTableSheetCompressed.Execute*
+  name: Execute
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_Execute_
+  commentId: Overload:Nekoyume.Action.PatchTableSheetCompressed.Execute
+  isSpec: "True"
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.Execute
+  nameWithType: PatchTableSheetCompressed.Execute
+- uid: Nekoyume.Action.PatchTableSheetCompressed.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary{System.String,Bencodex.Types.IValue})
+  name: LoadPlainValueInternal(IImmutableDictionary<string, IValue>)
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_LoadPlainValueInternal_System_Collections_Immutable_IImmutableDictionary_System_String_Bencodex_Types_IValue__
+  commentId: M:Nekoyume.Action.PatchTableSheetCompressed.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary{System.String,Bencodex.Types.IValue})
+  name.vb: LoadPlainValueInternal(IImmutableDictionary(Of String, IValue))
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary<string, Bencodex.Types.IValue>)
+  fullName.vb: Nekoyume.Action.PatchTableSheetCompressed.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary(Of String, Bencodex.Types.IValue))
+  nameWithType: PatchTableSheetCompressed.LoadPlainValueInternal(IImmutableDictionary<string, IValue>)
+  nameWithType.vb: PatchTableSheetCompressed.LoadPlainValueInternal(IImmutableDictionary(Of String, IValue))
+- uid: Nekoyume.Action.PatchTableSheetCompressed.LoadPlainValueInternal*
+  name: LoadPlainValueInternal
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_LoadPlainValueInternal_
+  commentId: Overload:Nekoyume.Action.PatchTableSheetCompressed.LoadPlainValueInternal
+  isSpec: "True"
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.LoadPlainValueInternal
+  nameWithType: PatchTableSheetCompressed.LoadPlainValueInternal
+- uid: Nekoyume.Action.PatchTableSheetCompressed.Operator
+  name: Operator
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_Operator
+  commentId: F:Nekoyume.Action.PatchTableSheetCompressed.Operator
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.Operator
+  nameWithType: PatchTableSheetCompressed.Operator
+- uid: Nekoyume.Action.PatchTableSheetCompressed.PlainValueInternal
+  name: PlainValueInternal
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_PlainValueInternal
+  commentId: P:Nekoyume.Action.PatchTableSheetCompressed.PlainValueInternal
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.PlainValueInternal
+  nameWithType: PatchTableSheetCompressed.PlainValueInternal
+- uid: Nekoyume.Action.PatchTableSheetCompressed.PlainValueInternal*
+  name: PlainValueInternal
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_PlainValueInternal_
+  commentId: Overload:Nekoyume.Action.PatchTableSheetCompressed.PlainValueInternal
+  isSpec: "True"
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.PlainValueInternal
+  nameWithType: PatchTableSheetCompressed.PlainValueInternal
+- uid: Nekoyume.Action.PatchTableSheetCompressed.TableName
+  name: TableName
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_TableName
+  commentId: P:Nekoyume.Action.PatchTableSheetCompressed.TableName
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.TableName
+  nameWithType: PatchTableSheetCompressed.TableName
+- uid: Nekoyume.Action.PatchTableSheetCompressed.TableName*
+  name: TableName
+  href: api/Nekoyume.Action.PatchTableSheetCompressed.html#Nekoyume_Action_PatchTableSheetCompressed_TableName_
+  commentId: Overload:Nekoyume.Action.PatchTableSheetCompressed.TableName
+  isSpec: "True"
+  fullName: Nekoyume.Action.PatchTableSheetCompressed.TableName
+  nameWithType: PatchTableSheetCompressed.TableName
 - uid: Nekoyume.Action.PendingActivationDoesNotExistsException
   name: PendingActivationDoesNotExistsException
   href: api/Nekoyume.Action.PendingActivationDoesNotExistsException.html
