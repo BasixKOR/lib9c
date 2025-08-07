@@ -90300,6 +90300,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.RuneCostSheet.Row.Cost
   nameWithType: RuneCostSheet.Row.Cost
+- uid: Nekoyume.TableData.RuneCostSheet.Row.GetCostsInRange(System.Int32,System.Int32)
+  name: GetCostsInRange(int, int)
+  href: api/Nekoyume.TableData.RuneCostSheet.Row.html#Nekoyume_TableData_RuneCostSheet_Row_GetCostsInRange_System_Int32_System_Int32_
+  commentId: M:Nekoyume.TableData.RuneCostSheet.Row.GetCostsInRange(System.Int32,System.Int32)
+  name.vb: GetCostsInRange(Integer, Integer)
+  fullName: Nekoyume.TableData.RuneCostSheet.Row.GetCostsInRange(int, int)
+  fullName.vb: Nekoyume.TableData.RuneCostSheet.Row.GetCostsInRange(Integer, Integer)
+  nameWithType: RuneCostSheet.Row.GetCostsInRange(int, int)
+  nameWithType.vb: RuneCostSheet.Row.GetCostsInRange(Integer, Integer)
+- uid: Nekoyume.TableData.RuneCostSheet.Row.GetCostsInRange*
+  name: GetCostsInRange
+  href: api/Nekoyume.TableData.RuneCostSheet.Row.html#Nekoyume_TableData_RuneCostSheet_Row_GetCostsInRange_
+  commentId: Overload:Nekoyume.TableData.RuneCostSheet.Row.GetCostsInRange
+  isSpec: "True"
+  fullName: Nekoyume.TableData.RuneCostSheet.Row.GetCostsInRange
+  nameWithType: RuneCostSheet.Row.GetCostsInRange
 - uid: Nekoyume.TableData.RuneCostSheet.Row.Key
   name: Key
   href: api/Nekoyume.TableData.RuneCostSheet.Row.html#Nekoyume_TableData_RuneCostSheet_Row_Key
@@ -90364,15 +90380,15 @@ references:
   commentId: T:Nekoyume.TableData.RuneCostSheet.RuneCostData
   fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData
   nameWithType: RuneCostSheet.RuneCostData
-- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)
-  name: RuneCostData(int, int, int, int, int)
-  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData__ctor_System_Int32_System_Int32_System_Int32_System_Int32_System_Int32_
-  commentId: M:Nekoyume.TableData.RuneCostSheet.RuneCostData.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)
-  name.vb: New(Integer, Integer, Integer, Integer, Integer)
-  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.RuneCostData(int, int, int, int, int)
-  fullName.vb: Nekoyume.TableData.RuneCostSheet.RuneCostData.New(Integer, Integer, Integer, Integer, Integer)
-  nameWithType: RuneCostSheet.RuneCostData.RuneCostData(int, int, int, int, int)
-  nameWithType.vb: RuneCostSheet.RuneCostData.New(Integer, Integer, Integer, Integer, Integer)
+- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)
+  name: RuneCostData(int, int, int, int, int, int)
+  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData__ctor_System_Int32_System_Int32_System_Int32_System_Int32_System_Int32_System_Int32_
+  commentId: M:Nekoyume.TableData.RuneCostSheet.RuneCostData.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)
+  name.vb: New(Integer, Integer, Integer, Integer, Integer, Integer)
+  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.RuneCostData(int, int, int, int, int, int)
+  fullName.vb: Nekoyume.TableData.RuneCostSheet.RuneCostData.New(Integer, Integer, Integer, Integer, Integer, Integer)
+  nameWithType: RuneCostSheet.RuneCostData.RuneCostData(int, int, int, int, int, int)
+  nameWithType.vb: RuneCostSheet.RuneCostData.New(Integer, Integer, Integer, Integer, Integer, Integer)
 - uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.#ctor*
   name: RuneCostData
   href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData__ctor_
@@ -90383,6 +90399,22 @@ references:
   fullName.vb: Nekoyume.TableData.RuneCostSheet.RuneCostData.New
   nameWithType: RuneCostSheet.RuneCostData.RuneCostData
   nameWithType.vb: RuneCostSheet.RuneCostData.New
+- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.ContainsLevel(System.Int32)
+  name: ContainsLevel(int)
+  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_ContainsLevel_System_Int32_
+  commentId: M:Nekoyume.TableData.RuneCostSheet.RuneCostData.ContainsLevel(System.Int32)
+  name.vb: ContainsLevel(Integer)
+  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.ContainsLevel(int)
+  fullName.vb: Nekoyume.TableData.RuneCostSheet.RuneCostData.ContainsLevel(Integer)
+  nameWithType: RuneCostSheet.RuneCostData.ContainsLevel(int)
+  nameWithType.vb: RuneCostSheet.RuneCostData.ContainsLevel(Integer)
+- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.ContainsLevel*
+  name: ContainsLevel
+  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_ContainsLevel_
+  commentId: Overload:Nekoyume.TableData.RuneCostSheet.RuneCostData.ContainsLevel
+  isSpec: "True"
+  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.ContainsLevel
+  nameWithType: RuneCostSheet.RuneCostData.ContainsLevel
 - uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.CrystalQuantity
   name: CrystalQuantity
   href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_CrystalQuantity
@@ -90396,19 +90428,32 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.CrystalQuantity
   nameWithType: RuneCostSheet.RuneCostData.CrystalQuantity
-- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.Level
-  name: Level
-  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_Level
-  commentId: P:Nekoyume.TableData.RuneCostSheet.RuneCostData.Level
-  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.Level
-  nameWithType: RuneCostSheet.RuneCostData.Level
-- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.Level*
-  name: Level
-  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_Level_
-  commentId: Overload:Nekoyume.TableData.RuneCostSheet.RuneCostData.Level
+- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelEnd
+  name: LevelEnd
+  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_LevelEnd
+  commentId: P:Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelEnd
+  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelEnd
+  nameWithType: RuneCostSheet.RuneCostData.LevelEnd
+- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelEnd*
+  name: LevelEnd
+  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_LevelEnd_
+  commentId: Overload:Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelEnd
   isSpec: "True"
-  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.Level
-  nameWithType: RuneCostSheet.RuneCostData.Level
+  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelEnd
+  nameWithType: RuneCostSheet.RuneCostData.LevelEnd
+- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelStart
+  name: LevelStart
+  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_LevelStart
+  commentId: P:Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelStart
+  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelStart
+  nameWithType: RuneCostSheet.RuneCostData.LevelStart
+- uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelStart*
+  name: LevelStart
+  href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_LevelStart_
+  commentId: Overload:Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelStart
+  isSpec: "True"
+  fullName: Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelStart
+  nameWithType: RuneCostSheet.RuneCostData.LevelStart
 - uid: Nekoyume.TableData.RuneCostSheet.RuneCostData.LevelUpSuccessRate
   name: LevelUpSuccessRate
   href: api/Nekoyume.TableData.RuneCostSheet.RuneCostData.html#Nekoyume_TableData_RuneCostSheet_RuneCostData_LevelUpSuccessRate
