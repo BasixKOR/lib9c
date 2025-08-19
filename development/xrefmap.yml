@@ -1465,15 +1465,15 @@ references:
   fullName.vb: Lib9c.Model.Order.OrderDigest.New(Bencodex.Types.Dictionary)
   nameWithType: OrderDigest.OrderDigest(Dictionary)
   nameWithType.vb: OrderDigest.New(Dictionary)
-- uid: Lib9c.Model.Order.OrderDigest.#ctor(Libplanet.Crypto.Address,System.Int64,System.Int64,System.Guid,System.Guid,Libplanet.Types.Assets.FungibleAssetValue,System.Int32,System.Int32,System.Int32,System.Int32)
-  name: OrderDigest(Address, long, long, Guid, Guid, FungibleAssetValue, int, int, int, int)
-  href: api/Lib9c.Model.Order.OrderDigest.html#Lib9c_Model_Order_OrderDigest__ctor_Libplanet_Crypto_Address_System_Int64_System_Int64_System_Guid_System_Guid_Libplanet_Types_Assets_FungibleAssetValue_System_Int32_System_Int32_System_Int32_System_Int32_
-  commentId: M:Lib9c.Model.Order.OrderDigest.#ctor(Libplanet.Crypto.Address,System.Int64,System.Int64,System.Guid,System.Guid,Libplanet.Types.Assets.FungibleAssetValue,System.Int32,System.Int32,System.Int32,System.Int32)
-  name.vb: New(Address, Long, Long, Guid, Guid, FungibleAssetValue, Integer, Integer, Integer, Integer)
-  fullName: Lib9c.Model.Order.OrderDigest.OrderDigest(Libplanet.Crypto.Address, long, long, System.Guid, System.Guid, Libplanet.Types.Assets.FungibleAssetValue, int, int, int, int)
-  fullName.vb: Lib9c.Model.Order.OrderDigest.New(Libplanet.Crypto.Address, Long, Long, System.Guid, System.Guid, Libplanet.Types.Assets.FungibleAssetValue, Integer, Integer, Integer, Integer)
-  nameWithType: OrderDigest.OrderDigest(Address, long, long, Guid, Guid, FungibleAssetValue, int, int, int, int)
-  nameWithType.vb: OrderDigest.New(Address, Long, Long, Guid, Guid, FungibleAssetValue, Integer, Integer, Integer, Integer)
+- uid: Lib9c.Model.Order.OrderDigest.#ctor(Libplanet.Crypto.Address,System.Int64,System.Int64,System.Guid,System.Guid,Libplanet.Types.Assets.FungibleAssetValue,System.Int64,System.Int32,System.Int32,System.Int32)
+  name: OrderDigest(Address, long, long, Guid, Guid, FungibleAssetValue, long, int, int, int)
+  href: api/Lib9c.Model.Order.OrderDigest.html#Lib9c_Model_Order_OrderDigest__ctor_Libplanet_Crypto_Address_System_Int64_System_Int64_System_Guid_System_Guid_Libplanet_Types_Assets_FungibleAssetValue_System_Int64_System_Int32_System_Int32_System_Int32_
+  commentId: M:Lib9c.Model.Order.OrderDigest.#ctor(Libplanet.Crypto.Address,System.Int64,System.Int64,System.Guid,System.Guid,Libplanet.Types.Assets.FungibleAssetValue,System.Int64,System.Int32,System.Int32,System.Int32)
+  name.vb: New(Address, Long, Long, Guid, Guid, FungibleAssetValue, Long, Integer, Integer, Integer)
+  fullName: Lib9c.Model.Order.OrderDigest.OrderDigest(Libplanet.Crypto.Address, long, long, System.Guid, System.Guid, Libplanet.Types.Assets.FungibleAssetValue, long, int, int, int)
+  fullName.vb: Lib9c.Model.Order.OrderDigest.New(Libplanet.Crypto.Address, Long, Long, System.Guid, System.Guid, Libplanet.Types.Assets.FungibleAssetValue, Long, Integer, Integer, Integer)
+  nameWithType: OrderDigest.OrderDigest(Address, long, long, Guid, Guid, FungibleAssetValue, long, int, int, int)
+  nameWithType.vb: OrderDigest.New(Address, Long, Long, Guid, Guid, FungibleAssetValue, Long, Integer, Integer, Integer)
 - uid: Lib9c.Model.Order.OrderDigest.#ctor*
   name: OrderDigest
   href: api/Lib9c.Model.Order.OrderDigest.html#Lib9c_Model_Order_OrderDigest__ctor_
@@ -27570,28 +27570,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Battle.CPHelper.ConvertCpToStat
   nameWithType: CPHelper.ConvertCpToStat
-- uid: Nekoyume.Battle.CPHelper.DecimalToInt(System.Decimal)
-  name: DecimalToInt(decimal)
-  href: api/Nekoyume.Battle.CPHelper.html#Nekoyume_Battle_CPHelper_DecimalToInt_System_Decimal_
-  commentId: M:Nekoyume.Battle.CPHelper.DecimalToInt(System.Decimal)
-  name.vb: DecimalToInt(Decimal)
-  fullName: Nekoyume.Battle.CPHelper.DecimalToInt(decimal)
-  fullName.vb: Nekoyume.Battle.CPHelper.DecimalToInt(Decimal)
-  nameWithType: CPHelper.DecimalToInt(decimal)
-  nameWithType.vb: CPHelper.DecimalToInt(Decimal)
-- uid: Nekoyume.Battle.CPHelper.DecimalToInt*
-  name: DecimalToInt
-  href: api/Nekoyume.Battle.CPHelper.html#Nekoyume_Battle_CPHelper_DecimalToInt_
-  commentId: Overload:Nekoyume.Battle.CPHelper.DecimalToInt
+- uid: Nekoyume.Battle.CPHelper.DecimalToLong(System.Decimal)
+  name: DecimalToLong(decimal)
+  href: api/Nekoyume.Battle.CPHelper.html#Nekoyume_Battle_CPHelper_DecimalToLong_System_Decimal_
+  commentId: M:Nekoyume.Battle.CPHelper.DecimalToLong(System.Decimal)
+  name.vb: DecimalToLong(Decimal)
+  fullName: Nekoyume.Battle.CPHelper.DecimalToLong(decimal)
+  fullName.vb: Nekoyume.Battle.CPHelper.DecimalToLong(Decimal)
+  nameWithType: CPHelper.DecimalToLong(decimal)
+  nameWithType.vb: CPHelper.DecimalToLong(Decimal)
+- uid: Nekoyume.Battle.CPHelper.DecimalToLong*
+  name: DecimalToLong
+  href: api/Nekoyume.Battle.CPHelper.html#Nekoyume_Battle_CPHelper_DecimalToLong_
+  commentId: Overload:Nekoyume.Battle.CPHelper.DecimalToLong
   isSpec: "True"
-  fullName: Nekoyume.Battle.CPHelper.DecimalToInt
-  nameWithType: CPHelper.DecimalToInt
-- uid: Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.Enemy)
-  name: GetCP(Enemy)
-  href: api/Nekoyume.Battle.CPHelper.html#Nekoyume_Battle_CPHelper_GetCP_Nekoyume_Model_Enemy_
-  commentId: M:Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.Enemy)
-  fullName: Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.Enemy)
-  nameWithType: CPHelper.GetCP(Enemy)
+  fullName: Nekoyume.Battle.CPHelper.DecimalToLong
+  nameWithType: CPHelper.DecimalToLong
 - uid: Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.Item.Costume,Nekoyume.TableData.CostumeStatSheet)
   name: GetCP(Costume, CostumeStatSheet)
   href: api/Nekoyume.Battle.CPHelper.html#Nekoyume_Battle_CPHelper_GetCP_Nekoyume_Model_Item_Costume_Nekoyume_TableData_CostumeStatSheet_
@@ -27610,12 +27604,6 @@ references:
   commentId: M:Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.Item.ItemUsable)
   fullName: Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.Item.ItemUsable)
   nameWithType: CPHelper.GetCP(ItemUsable)
-- uid: Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.Player,Nekoyume.TableData.CostumeStatSheet)
-  name: GetCP(Player, CostumeStatSheet)
-  href: api/Nekoyume.Battle.CPHelper.html#Nekoyume_Battle_CPHelper_GetCP_Nekoyume_Model_Player_Nekoyume_TableData_CostumeStatSheet_
-  commentId: M:Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.Player,Nekoyume.TableData.CostumeStatSheet)
-  fullName: Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.Player, Nekoyume.TableData.CostumeStatSheet)
-  nameWithType: CPHelper.GetCP(Player, CostumeStatSheet)
 - uid: Nekoyume.Battle.CPHelper.GetCP(Nekoyume.Model.State.AvatarState,Nekoyume.TableData.CharacterSheet)
   name: GetCP(AvatarState, CharacterSheet)
   href: api/Nekoyume.Battle.CPHelper.html#Nekoyume_Battle_CPHelper_GetCP_Nekoyume_Model_State_AvatarState_Nekoyume_TableData_CharacterSheet_
@@ -40587,6 +40575,15 @@ references:
   commentId: T:Nekoyume.Model.Arena.ArenaParticipant
   fullName: Nekoyume.Model.Arena.ArenaParticipant
   nameWithType: ArenaParticipant
+- uid: Nekoyume.Model.Arena.ArenaParticipant.#ctor
+  name: ArenaParticipant()
+  href: api/Nekoyume.Model.Arena.ArenaParticipant.html#Nekoyume_Model_Arena_ArenaParticipant__ctor
+  commentId: M:Nekoyume.Model.Arena.ArenaParticipant.#ctor
+  name.vb: New()
+  fullName: Nekoyume.Model.Arena.ArenaParticipant.ArenaParticipant()
+  fullName.vb: Nekoyume.Model.Arena.ArenaParticipant.New()
+  nameWithType: ArenaParticipant.ArenaParticipant()
+  nameWithType.vb: ArenaParticipant.New()
 - uid: Nekoyume.Model.Arena.ArenaParticipant.#ctor(Bencodex.Types.IValue)
   name: ArenaParticipant(IValue)
   href: api/Nekoyume.Model.Arena.ArenaParticipant.html#Nekoyume_Model_Arena_ArenaParticipant__ctor_Bencodex_Types_IValue_
@@ -40942,15 +40939,15 @@ references:
   fullName.vb: Nekoyume.Model.Arena.ArenaResult.New(Bencodex.Types.IValue)
   nameWithType: ArenaResult.ArenaResult(IValue)
   nameWithType.vb: ArenaResult.New(IValue)
-- uid: Nekoyume.Model.Arena.ArenaResult.#ctor(System.Boolean,System.Int32,System.Int32,System.Int32)
-  name: ArenaResult(bool, int, int, int)
-  href: api/Nekoyume.Model.Arena.ArenaResult.html#Nekoyume_Model_Arena_ArenaResult__ctor_System_Boolean_System_Int32_System_Int32_System_Int32_
-  commentId: M:Nekoyume.Model.Arena.ArenaResult.#ctor(System.Boolean,System.Int32,System.Int32,System.Int32)
-  name.vb: New(Boolean, Integer, Integer, Integer)
-  fullName: Nekoyume.Model.Arena.ArenaResult.ArenaResult(bool, int, int, int)
-  fullName.vb: Nekoyume.Model.Arena.ArenaResult.New(Boolean, Integer, Integer, Integer)
-  nameWithType: ArenaResult.ArenaResult(bool, int, int, int)
-  nameWithType.vb: ArenaResult.New(Boolean, Integer, Integer, Integer)
+- uid: Nekoyume.Model.Arena.ArenaResult.#ctor(System.Boolean,System.Int32,System.Int32,System.Int64)
+  name: ArenaResult(bool, int, int, long)
+  href: api/Nekoyume.Model.Arena.ArenaResult.html#Nekoyume_Model_Arena_ArenaResult__ctor_System_Boolean_System_Int32_System_Int32_System_Int64_
+  commentId: M:Nekoyume.Model.Arena.ArenaResult.#ctor(System.Boolean,System.Int32,System.Int32,System.Int64)
+  name.vb: New(Boolean, Integer, Integer, Long)
+  fullName: Nekoyume.Model.Arena.ArenaResult.ArenaResult(bool, int, int, long)
+  fullName.vb: Nekoyume.Model.Arena.ArenaResult.New(Boolean, Integer, Integer, Long)
+  nameWithType: ArenaResult.ArenaResult(bool, int, int, long)
+  nameWithType.vb: ArenaResult.New(Boolean, Integer, Integer, Long)
 - uid: Nekoyume.Model.Arena.ArenaResult.#ctor*
   name: ArenaResult
   href: api/Nekoyume.Model.Arena.ArenaResult.html#Nekoyume_Model_Arena_ArenaResult__ctor_
@@ -69216,15 +69213,15 @@ references:
   fullName.vb: Nekoyume.Model.State.CpState.New(Bencodex.Types.IValue)
   nameWithType: CpState.CpState(IValue)
   nameWithType.vb: CpState.New(IValue)
-- uid: Nekoyume.Model.State.CpState.#ctor(System.Int32)
-  name: CpState(int)
-  href: api/Nekoyume.Model.State.CpState.html#Nekoyume_Model_State_CpState__ctor_System_Int32_
-  commentId: M:Nekoyume.Model.State.CpState.#ctor(System.Int32)
-  name.vb: New(Integer)
-  fullName: Nekoyume.Model.State.CpState.CpState(int)
-  fullName.vb: Nekoyume.Model.State.CpState.New(Integer)
-  nameWithType: CpState.CpState(int)
-  nameWithType.vb: CpState.New(Integer)
+- uid: Nekoyume.Model.State.CpState.#ctor(System.Int64)
+  name: CpState(long)
+  href: api/Nekoyume.Model.State.CpState.html#Nekoyume_Model_State_CpState__ctor_System_Int64_
+  commentId: M:Nekoyume.Model.State.CpState.#ctor(System.Int64)
+  name.vb: New(Long)
+  fullName: Nekoyume.Model.State.CpState.CpState(long)
+  fullName.vb: Nekoyume.Model.State.CpState.New(Long)
+  nameWithType: CpState.CpState(long)
+  nameWithType.vb: CpState.New(Long)
 - uid: Nekoyume.Model.State.CpState.#ctor*
   name: CpState
   href: api/Nekoyume.Model.State.CpState.html#Nekoyume_Model_State_CpState__ctor_
@@ -72646,15 +72643,15 @@ references:
   commentId: F:Nekoyume.Model.State.RaiderState.TotalScore
   fullName: Nekoyume.Model.State.RaiderState.TotalScore
   nameWithType: RaiderState.TotalScore
-- uid: Nekoyume.Model.State.RaiderState.Update(Nekoyume.Model.State.AvatarState,System.Int32,System.Int64,System.Boolean,System.Int64)
-  name: Update(AvatarState, int, long, bool, long)
-  href: api/Nekoyume.Model.State.RaiderState.html#Nekoyume_Model_State_RaiderState_Update_Nekoyume_Model_State_AvatarState_System_Int32_System_Int64_System_Boolean_System_Int64_
-  commentId: M:Nekoyume.Model.State.RaiderState.Update(Nekoyume.Model.State.AvatarState,System.Int32,System.Int64,System.Boolean,System.Int64)
-  name.vb: Update(AvatarState, Integer, Long, Boolean, Long)
-  fullName: Nekoyume.Model.State.RaiderState.Update(Nekoyume.Model.State.AvatarState, int, long, bool, long)
-  fullName.vb: Nekoyume.Model.State.RaiderState.Update(Nekoyume.Model.State.AvatarState, Integer, Long, Boolean, Long)
-  nameWithType: RaiderState.Update(AvatarState, int, long, bool, long)
-  nameWithType.vb: RaiderState.Update(AvatarState, Integer, Long, Boolean, Long)
+- uid: Nekoyume.Model.State.RaiderState.Update(Nekoyume.Model.State.AvatarState,System.Int64,System.Int64,System.Boolean,System.Int64)
+  name: Update(AvatarState, long, long, bool, long)
+  href: api/Nekoyume.Model.State.RaiderState.html#Nekoyume_Model_State_RaiderState_Update_Nekoyume_Model_State_AvatarState_System_Int64_System_Int64_System_Boolean_System_Int64_
+  commentId: M:Nekoyume.Model.State.RaiderState.Update(Nekoyume.Model.State.AvatarState,System.Int64,System.Int64,System.Boolean,System.Int64)
+  name.vb: Update(AvatarState, Long, Long, Boolean, Long)
+  fullName: Nekoyume.Model.State.RaiderState.Update(Nekoyume.Model.State.AvatarState, long, long, bool, long)
+  fullName.vb: Nekoyume.Model.State.RaiderState.Update(Nekoyume.Model.State.AvatarState, Long, Long, Boolean, Long)
+  nameWithType: RaiderState.Update(AvatarState, long, long, bool, long)
+  nameWithType.vb: RaiderState.Update(AvatarState, Long, Long, Boolean, Long)
 - uid: Nekoyume.Model.State.RaiderState.Update*
   name: Update
   href: api/Nekoyume.Model.State.RaiderState.html#Nekoyume_Model_State_RaiderState_Update_
@@ -90585,24 +90582,24 @@ references:
   commentId: T:Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo
   fullName: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo
   nameWithType: RuneOptionSheet.Row.RuneOptionInfo
-- uid: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.#ctor(System.Int32,System.Collections.Generic.List{System.ValueTuple{Nekoyume.Model.Stat.DecimalStat,Nekoyume.Model.Stat.StatModifier.OperationType}})
-  name: RuneOptionInfo(int, List<(DecimalStat, OperationType)>)
-  href: api/Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.html#Nekoyume_TableData_RuneOptionSheet_Row_RuneOptionInfo__ctor_System_Int32_System_Collections_Generic_List_System_ValueTuple_Nekoyume_Model_Stat_DecimalStat_Nekoyume_Model_Stat_StatModifier_OperationType___
-  commentId: M:Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.#ctor(System.Int32,System.Collections.Generic.List{System.ValueTuple{Nekoyume.Model.Stat.DecimalStat,Nekoyume.Model.Stat.StatModifier.OperationType}})
-  name.vb: New(Integer, List(Of (DecimalStat, OperationType)))
-  fullName: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.RuneOptionInfo(int, System.Collections.Generic.List<(Nekoyume.Model.Stat.DecimalStat, Nekoyume.Model.Stat.StatModifier.OperationType)>)
-  fullName.vb: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.New(Integer, System.Collections.Generic.List(Of (Nekoyume.Model.Stat.DecimalStat, Nekoyume.Model.Stat.StatModifier.OperationType)))
-  nameWithType: RuneOptionSheet.Row.RuneOptionInfo.RuneOptionInfo(int, List<(DecimalStat, StatModifier.OperationType)>)
-  nameWithType.vb: RuneOptionSheet.Row.RuneOptionInfo.New(Integer, List(Of (DecimalStat, StatModifier.OperationType)))
-- uid: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.#ctor(System.Int32,System.Collections.Generic.List{System.ValueTuple{Nekoyume.Model.Stat.DecimalStat,Nekoyume.Model.Stat.StatModifier.OperationType}},System.Int32,System.Int32,System.Int32,System.Decimal,Nekoyume.Model.Stat.StatModifier.OperationType,Nekoyume.Model.Stat.StatType,Nekoyume.Model.EnumType.StatReferenceType,System.Int32)
-  name: RuneOptionInfo(int, List<(DecimalStat, OperationType)>, int, int, int, decimal, OperationType, StatType, StatReferenceType, int)
-  href: api/Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.html#Nekoyume_TableData_RuneOptionSheet_Row_RuneOptionInfo__ctor_System_Int32_System_Collections_Generic_List_System_ValueTuple_Nekoyume_Model_Stat_DecimalStat_Nekoyume_Model_Stat_StatModifier_OperationType___System_Int32_System_Int32_System_Int32_System_Decimal_Nekoyume_Model_Stat_StatModifier_OperationType_Nekoyume_Model_Stat_StatType_Nekoyume_Model_EnumType_StatReferenceType_System_Int32_
-  commentId: M:Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.#ctor(System.Int32,System.Collections.Generic.List{System.ValueTuple{Nekoyume.Model.Stat.DecimalStat,Nekoyume.Model.Stat.StatModifier.OperationType}},System.Int32,System.Int32,System.Int32,System.Decimal,Nekoyume.Model.Stat.StatModifier.OperationType,Nekoyume.Model.Stat.StatType,Nekoyume.Model.EnumType.StatReferenceType,System.Int32)
-  name.vb: New(Integer, List(Of (DecimalStat, OperationType)), Integer, Integer, Integer, Decimal, OperationType, StatType, StatReferenceType, Integer)
-  fullName: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.RuneOptionInfo(int, System.Collections.Generic.List<(Nekoyume.Model.Stat.DecimalStat, Nekoyume.Model.Stat.StatModifier.OperationType)>, int, int, int, decimal, Nekoyume.Model.Stat.StatModifier.OperationType, Nekoyume.Model.Stat.StatType, Nekoyume.Model.EnumType.StatReferenceType, int)
-  fullName.vb: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.New(Integer, System.Collections.Generic.List(Of (Nekoyume.Model.Stat.DecimalStat, Nekoyume.Model.Stat.StatModifier.OperationType)), Integer, Integer, Integer, Decimal, Nekoyume.Model.Stat.StatModifier.OperationType, Nekoyume.Model.Stat.StatType, Nekoyume.Model.EnumType.StatReferenceType, Integer)
-  nameWithType: RuneOptionSheet.Row.RuneOptionInfo.RuneOptionInfo(int, List<(DecimalStat, StatModifier.OperationType)>, int, int, int, decimal, StatModifier.OperationType, StatType, StatReferenceType, int)
-  nameWithType.vb: RuneOptionSheet.Row.RuneOptionInfo.New(Integer, List(Of (DecimalStat, StatModifier.OperationType)), Integer, Integer, Integer, Decimal, StatModifier.OperationType, StatType, StatReferenceType, Integer)
+- uid: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.#ctor(System.Int64,System.Collections.Generic.List{System.ValueTuple{Nekoyume.Model.Stat.DecimalStat,Nekoyume.Model.Stat.StatModifier.OperationType}})
+  name: RuneOptionInfo(long, List<(DecimalStat, OperationType)>)
+  href: api/Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.html#Nekoyume_TableData_RuneOptionSheet_Row_RuneOptionInfo__ctor_System_Int64_System_Collections_Generic_List_System_ValueTuple_Nekoyume_Model_Stat_DecimalStat_Nekoyume_Model_Stat_StatModifier_OperationType___
+  commentId: M:Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.#ctor(System.Int64,System.Collections.Generic.List{System.ValueTuple{Nekoyume.Model.Stat.DecimalStat,Nekoyume.Model.Stat.StatModifier.OperationType}})
+  name.vb: New(Long, List(Of (DecimalStat, OperationType)))
+  fullName: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.RuneOptionInfo(long, System.Collections.Generic.List<(Nekoyume.Model.Stat.DecimalStat, Nekoyume.Model.Stat.StatModifier.OperationType)>)
+  fullName.vb: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.New(Long, System.Collections.Generic.List(Of (Nekoyume.Model.Stat.DecimalStat, Nekoyume.Model.Stat.StatModifier.OperationType)))
+  nameWithType: RuneOptionSheet.Row.RuneOptionInfo.RuneOptionInfo(long, List<(DecimalStat, StatModifier.OperationType)>)
+  nameWithType.vb: RuneOptionSheet.Row.RuneOptionInfo.New(Long, List(Of (DecimalStat, StatModifier.OperationType)))
+- uid: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.#ctor(System.Int64,System.Collections.Generic.List{System.ValueTuple{Nekoyume.Model.Stat.DecimalStat,Nekoyume.Model.Stat.StatModifier.OperationType}},System.Int32,System.Int32,System.Int32,System.Decimal,Nekoyume.Model.Stat.StatModifier.OperationType,Nekoyume.Model.Stat.StatType,Nekoyume.Model.EnumType.StatReferenceType,System.Int32)
+  name: RuneOptionInfo(long, List<(DecimalStat, OperationType)>, int, int, int, decimal, OperationType, StatType, StatReferenceType, int)
+  href: api/Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.html#Nekoyume_TableData_RuneOptionSheet_Row_RuneOptionInfo__ctor_System_Int64_System_Collections_Generic_List_System_ValueTuple_Nekoyume_Model_Stat_DecimalStat_Nekoyume_Model_Stat_StatModifier_OperationType___System_Int32_System_Int32_System_Int32_System_Decimal_Nekoyume_Model_Stat_StatModifier_OperationType_Nekoyume_Model_Stat_StatType_Nekoyume_Model_EnumType_StatReferenceType_System_Int32_
+  commentId: M:Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.#ctor(System.Int64,System.Collections.Generic.List{System.ValueTuple{Nekoyume.Model.Stat.DecimalStat,Nekoyume.Model.Stat.StatModifier.OperationType}},System.Int32,System.Int32,System.Int32,System.Decimal,Nekoyume.Model.Stat.StatModifier.OperationType,Nekoyume.Model.Stat.StatType,Nekoyume.Model.EnumType.StatReferenceType,System.Int32)
+  name.vb: New(Long, List(Of (DecimalStat, OperationType)), Integer, Integer, Integer, Decimal, OperationType, StatType, StatReferenceType, Integer)
+  fullName: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.RuneOptionInfo(long, System.Collections.Generic.List<(Nekoyume.Model.Stat.DecimalStat, Nekoyume.Model.Stat.StatModifier.OperationType)>, int, int, int, decimal, Nekoyume.Model.Stat.StatModifier.OperationType, Nekoyume.Model.Stat.StatType, Nekoyume.Model.EnumType.StatReferenceType, int)
+  fullName.vb: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.New(Long, System.Collections.Generic.List(Of (Nekoyume.Model.Stat.DecimalStat, Nekoyume.Model.Stat.StatModifier.OperationType)), Integer, Integer, Integer, Decimal, Nekoyume.Model.Stat.StatModifier.OperationType, Nekoyume.Model.Stat.StatType, Nekoyume.Model.EnumType.StatReferenceType, Integer)
+  nameWithType: RuneOptionSheet.Row.RuneOptionInfo.RuneOptionInfo(long, List<(DecimalStat, StatModifier.OperationType)>, int, int, int, decimal, StatModifier.OperationType, StatType, StatReferenceType, int)
+  nameWithType.vb: RuneOptionSheet.Row.RuneOptionInfo.New(Long, List(Of (DecimalStat, StatModifier.OperationType)), Integer, Integer, Integer, Decimal, StatModifier.OperationType, StatType, StatReferenceType, Integer)
 - uid: Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.#ctor*
   name: RuneOptionInfo
   href: api/Nekoyume.TableData.RuneOptionSheet.Row.RuneOptionInfo.html#Nekoyume_TableData_RuneOptionSheet_Row_RuneOptionInfo__ctor_
