@@ -27930,6 +27930,38 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Battle.DamageHelper.GetDamageReductionRate
   nameWithType: DamageHelper.GetDamageReductionRate
+- uid: Nekoyume.Battle.DamageHelper.GetFinalDefense(System.Int64,System.Int64)
+  name: GetFinalDefense(long, long)
+  href: api/Nekoyume.Battle.DamageHelper.html#Nekoyume_Battle_DamageHelper_GetFinalDefense_System_Int64_System_Int64_
+  commentId: M:Nekoyume.Battle.DamageHelper.GetFinalDefense(System.Int64,System.Int64)
+  name.vb: GetFinalDefense(Long, Long)
+  fullName: Nekoyume.Battle.DamageHelper.GetFinalDefense(long, long)
+  fullName.vb: Nekoyume.Battle.DamageHelper.GetFinalDefense(Long, Long)
+  nameWithType: DamageHelper.GetFinalDefense(long, long)
+  nameWithType.vb: DamageHelper.GetFinalDefense(Long, Long)
+- uid: Nekoyume.Battle.DamageHelper.GetFinalDefense*
+  name: GetFinalDefense
+  href: api/Nekoyume.Battle.DamageHelper.html#Nekoyume_Battle_DamageHelper_GetFinalDefense_
+  commentId: Overload:Nekoyume.Battle.DamageHelper.GetFinalDefense
+  isSpec: "True"
+  fullName: Nekoyume.Battle.DamageHelper.GetFinalDefense
+  nameWithType: DamageHelper.GetFinalDefense
+- uid: Nekoyume.Battle.DamageHelper.GetReducedDamage(System.Int64,System.Int64,System.Int64)
+  name: GetReducedDamage(long, long, long)
+  href: api/Nekoyume.Battle.DamageHelper.html#Nekoyume_Battle_DamageHelper_GetReducedDamage_System_Int64_System_Int64_System_Int64_
+  commentId: M:Nekoyume.Battle.DamageHelper.GetReducedDamage(System.Int64,System.Int64,System.Int64)
+  name.vb: GetReducedDamage(Long, Long, Long)
+  fullName: Nekoyume.Battle.DamageHelper.GetReducedDamage(long, long, long)
+  fullName.vb: Nekoyume.Battle.DamageHelper.GetReducedDamage(Long, Long, Long)
+  nameWithType: DamageHelper.GetReducedDamage(long, long, long)
+  nameWithType.vb: DamageHelper.GetReducedDamage(Long, Long, Long)
+- uid: Nekoyume.Battle.DamageHelper.GetReducedDamage*
+  name: GetReducedDamage
+  href: api/Nekoyume.Battle.DamageHelper.html#Nekoyume_Battle_DamageHelper_GetReducedDamage_
+  commentId: Overload:Nekoyume.Battle.DamageHelper.GetReducedDamage
+  isSpec: "True"
+  fullName: Nekoyume.Battle.DamageHelper.GetReducedDamage
+  nameWithType: DamageHelper.GetReducedDamage
 - uid: Nekoyume.Battle.EnemyPlayerDigest
   name: EnemyPlayerDigest
   href: api/Nekoyume.Battle.EnemyPlayerDigest.html
@@ -61065,6 +61097,22 @@ references:
   fullName.vb: Nekoyume.Model.Skill.Arena.ArenaAttackSkill.New
   nameWithType: ArenaAttackSkill.ArenaAttackSkill
   nameWithType.vb: ArenaAttackSkill.New
+- uid: Nekoyume.Model.Skill.Arena.ArenaAttackSkill.GetMultiplier(System.Int32,System.Decimal)
+  name: GetMultiplier(int, decimal)
+  href: api/Nekoyume.Model.Skill.Arena.ArenaAttackSkill.html#Nekoyume_Model_Skill_Arena_ArenaAttackSkill_GetMultiplier_System_Int32_System_Decimal_
+  commentId: M:Nekoyume.Model.Skill.Arena.ArenaAttackSkill.GetMultiplier(System.Int32,System.Decimal)
+  name.vb: GetMultiplier(Integer, Decimal)
+  fullName: Nekoyume.Model.Skill.Arena.ArenaAttackSkill.GetMultiplier(int, decimal)
+  fullName.vb: Nekoyume.Model.Skill.Arena.ArenaAttackSkill.GetMultiplier(Integer, Decimal)
+  nameWithType: ArenaAttackSkill.GetMultiplier(int, decimal)
+  nameWithType.vb: ArenaAttackSkill.GetMultiplier(Integer, Decimal)
+- uid: Nekoyume.Model.Skill.Arena.ArenaAttackSkill.GetMultiplier*
+  name: GetMultiplier
+  href: api/Nekoyume.Model.Skill.Arena.ArenaAttackSkill.html#Nekoyume_Model_Skill_Arena_ArenaAttackSkill_GetMultiplier_
+  commentId: Overload:Nekoyume.Model.Skill.Arena.ArenaAttackSkill.GetMultiplier
+  isSpec: "True"
+  fullName: Nekoyume.Model.Skill.Arena.ArenaAttackSkill.GetMultiplier
+  nameWithType: ArenaAttackSkill.GetMultiplier
 - uid: Nekoyume.Model.Skill.Arena.ArenaAttackSkill.ProcessDamage(Nekoyume.Model.ArenaCharacter,Nekoyume.Model.ArenaCharacter,System.Int32,System.Boolean)
   name: ProcessDamage(ArenaCharacter, ArenaCharacter, int, bool)
   href: api/Nekoyume.Model.Skill.Arena.ArenaAttackSkill.html#Nekoyume_Model_Skill_Arena_ArenaAttackSkill_ProcessDamage_Nekoyume_Model_ArenaCharacter_Nekoyume_Model_ArenaCharacter_System_Int32_System_Boolean_
@@ -61605,6 +61653,22 @@ references:
   fullName.vb: Nekoyume.Model.Skill.AttackSkill.New
   nameWithType: AttackSkill.AttackSkill
   nameWithType.vb: AttackSkill.New
+- uid: Nekoyume.Model.Skill.AttackSkill.GetMultiplier(System.Int32,System.Decimal)
+  name: GetMultiplier(int, decimal)
+  href: api/Nekoyume.Model.Skill.AttackSkill.html#Nekoyume_Model_Skill_AttackSkill_GetMultiplier_System_Int32_System_Decimal_
+  commentId: M:Nekoyume.Model.Skill.AttackSkill.GetMultiplier(System.Int32,System.Decimal)
+  name.vb: GetMultiplier(Integer, Decimal)
+  fullName: Nekoyume.Model.Skill.AttackSkill.GetMultiplier(int, decimal)
+  fullName.vb: Nekoyume.Model.Skill.AttackSkill.GetMultiplier(Integer, Decimal)
+  nameWithType: AttackSkill.GetMultiplier(int, decimal)
+  nameWithType.vb: AttackSkill.GetMultiplier(Integer, Decimal)
+- uid: Nekoyume.Model.Skill.AttackSkill.GetMultiplier*
+  name: GetMultiplier
+  href: api/Nekoyume.Model.Skill.AttackSkill.html#Nekoyume_Model_Skill_AttackSkill_GetMultiplier_
+  commentId: Overload:Nekoyume.Model.Skill.AttackSkill.GetMultiplier
+  isSpec: "True"
+  fullName: Nekoyume.Model.Skill.AttackSkill.GetMultiplier
+  nameWithType: AttackSkill.GetMultiplier
 - uid: Nekoyume.Model.Skill.AttackSkill.ProcessDamage(Nekoyume.Model.CharacterBase,System.Int32,System.Boolean,System.Boolean)
   name: ProcessDamage(CharacterBase, int, bool, bool)
   href: api/Nekoyume.Model.Skill.AttackSkill.html#Nekoyume_Model_Skill_AttackSkill_ProcessDamage_Nekoyume_Model_CharacterBase_System_Int32_System_Boolean_System_Boolean_
