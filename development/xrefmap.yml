@@ -4716,15 +4716,15 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Action.AuraSummon.PlainValueInternal
   nameWithType: AuraSummon.PlainValueInternal
-- uid: Nekoyume.Action.AuraSummon.SimulateSummon(System.String,Nekoyume.Model.State.AgentState,Nekoyume.TableData.EquipmentItemRecipeSheet,Nekoyume.TableData.EquipmentItemSheet,Nekoyume.TableData.EquipmentItemSubRecipeSheetV2,Nekoyume.TableData.EquipmentItemOptionSheet,Nekoyume.TableData.SkillSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,System.Int64)
-  name: SimulateSummon(string, AgentState, EquipmentItemRecipeSheet, EquipmentItemSheet, EquipmentItemSubRecipeSheetV2, EquipmentItemOptionSheet, SkillSheet, Row, int, IRandom, long)
-  href: api/Nekoyume.Action.AuraSummon.html#Nekoyume_Action_AuraSummon_SimulateSummon_System_String_Nekoyume_Model_State_AgentState_Nekoyume_TableData_EquipmentItemRecipeSheet_Nekoyume_TableData_EquipmentItemSheet_Nekoyume_TableData_EquipmentItemSubRecipeSheetV2_Nekoyume_TableData_EquipmentItemOptionSheet_Nekoyume_TableData_SkillSheet_Nekoyume_TableData_Summon_SummonSheet_Row_System_Int32_Libplanet_Action_IRandom_System_Int64_
-  commentId: M:Nekoyume.Action.AuraSummon.SimulateSummon(System.String,Nekoyume.Model.State.AgentState,Nekoyume.TableData.EquipmentItemRecipeSheet,Nekoyume.TableData.EquipmentItemSheet,Nekoyume.TableData.EquipmentItemSubRecipeSheetV2,Nekoyume.TableData.EquipmentItemOptionSheet,Nekoyume.TableData.SkillSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,System.Int64)
-  name.vb: SimulateSummon(String, AgentState, EquipmentItemRecipeSheet, EquipmentItemSheet, EquipmentItemSubRecipeSheetV2, EquipmentItemOptionSheet, SkillSheet, Row, Integer, IRandom, Long)
-  fullName: Nekoyume.Action.AuraSummon.SimulateSummon(string, Nekoyume.Model.State.AgentState, Nekoyume.TableData.EquipmentItemRecipeSheet, Nekoyume.TableData.EquipmentItemSheet, Nekoyume.TableData.EquipmentItemSubRecipeSheetV2, Nekoyume.TableData.EquipmentItemOptionSheet, Nekoyume.TableData.SkillSheet, Nekoyume.TableData.Summon.SummonSheet.Row, int, Libplanet.Action.IRandom, long)
-  fullName.vb: Nekoyume.Action.AuraSummon.SimulateSummon(String, Nekoyume.Model.State.AgentState, Nekoyume.TableData.EquipmentItemRecipeSheet, Nekoyume.TableData.EquipmentItemSheet, Nekoyume.TableData.EquipmentItemSubRecipeSheetV2, Nekoyume.TableData.EquipmentItemOptionSheet, Nekoyume.TableData.SkillSheet, Nekoyume.TableData.Summon.SummonSheet.Row, Integer, Libplanet.Action.IRandom, Long)
-  nameWithType: AuraSummon.SimulateSummon(string, AgentState, EquipmentItemRecipeSheet, EquipmentItemSheet, EquipmentItemSubRecipeSheetV2, EquipmentItemOptionSheet, SkillSheet, SummonSheet.Row, int, IRandom, long)
-  nameWithType.vb: AuraSummon.SimulateSummon(String, AgentState, EquipmentItemRecipeSheet, EquipmentItemSheet, EquipmentItemSubRecipeSheetV2, EquipmentItemOptionSheet, SkillSheet, SummonSheet.Row, Integer, IRandom, Long)
+- uid: Nekoyume.Action.AuraSummon.SimulateSummon(System.String,Nekoyume.TableData.EquipmentItemRecipeSheet,Nekoyume.TableData.EquipmentItemSheet,Nekoyume.TableData.EquipmentItemSubRecipeSheetV2,Nekoyume.TableData.EquipmentItemOptionSheet,Nekoyume.TableData.SkillSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,System.Int64)
+  name: SimulateSummon(string, EquipmentItemRecipeSheet, EquipmentItemSheet, EquipmentItemSubRecipeSheetV2, EquipmentItemOptionSheet, SkillSheet, Row, int, IRandom, long)
+  href: api/Nekoyume.Action.AuraSummon.html#Nekoyume_Action_AuraSummon_SimulateSummon_System_String_Nekoyume_TableData_EquipmentItemRecipeSheet_Nekoyume_TableData_EquipmentItemSheet_Nekoyume_TableData_EquipmentItemSubRecipeSheetV2_Nekoyume_TableData_EquipmentItemOptionSheet_Nekoyume_TableData_SkillSheet_Nekoyume_TableData_Summon_SummonSheet_Row_System_Int32_Libplanet_Action_IRandom_System_Int64_
+  commentId: M:Nekoyume.Action.AuraSummon.SimulateSummon(System.String,Nekoyume.TableData.EquipmentItemRecipeSheet,Nekoyume.TableData.EquipmentItemSheet,Nekoyume.TableData.EquipmentItemSubRecipeSheetV2,Nekoyume.TableData.EquipmentItemOptionSheet,Nekoyume.TableData.SkillSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,System.Int64)
+  name.vb: SimulateSummon(String, EquipmentItemRecipeSheet, EquipmentItemSheet, EquipmentItemSubRecipeSheetV2, EquipmentItemOptionSheet, SkillSheet, Row, Integer, IRandom, Long)
+  fullName: Nekoyume.Action.AuraSummon.SimulateSummon(string, Nekoyume.TableData.EquipmentItemRecipeSheet, Nekoyume.TableData.EquipmentItemSheet, Nekoyume.TableData.EquipmentItemSubRecipeSheetV2, Nekoyume.TableData.EquipmentItemOptionSheet, Nekoyume.TableData.SkillSheet, Nekoyume.TableData.Summon.SummonSheet.Row, int, Libplanet.Action.IRandom, long)
+  fullName.vb: Nekoyume.Action.AuraSummon.SimulateSummon(String, Nekoyume.TableData.EquipmentItemRecipeSheet, Nekoyume.TableData.EquipmentItemSheet, Nekoyume.TableData.EquipmentItemSubRecipeSheetV2, Nekoyume.TableData.EquipmentItemOptionSheet, Nekoyume.TableData.SkillSheet, Nekoyume.TableData.Summon.SummonSheet.Row, Integer, Libplanet.Action.IRandom, Long)
+  nameWithType: AuraSummon.SimulateSummon(string, EquipmentItemRecipeSheet, EquipmentItemSheet, EquipmentItemSubRecipeSheetV2, EquipmentItemOptionSheet, SkillSheet, SummonSheet.Row, int, IRandom, long)
+  nameWithType.vb: AuraSummon.SimulateSummon(String, EquipmentItemRecipeSheet, EquipmentItemSheet, EquipmentItemSubRecipeSheetV2, EquipmentItemOptionSheet, SkillSheet, SummonSheet.Row, Integer, IRandom, Long)
 - uid: Nekoyume.Action.AuraSummon.SimulateSummon*
   name: SimulateSummon
   href: api/Nekoyume.Action.AuraSummon.html#Nekoyume_Action_AuraSummon_SimulateSummon_
@@ -21967,15 +21967,15 @@ references:
   commentId: F:Nekoyume.Action.RuneSummon.RuneQuantity
   fullName: Nekoyume.Action.RuneSummon.RuneQuantity
   nameWithType: RuneSummon.RuneQuantity
-- uid: Nekoyume.Action.RuneSummon.SimulateSummon(Nekoyume.TableData.RuneSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom)
-  name: SimulateSummon(RuneSheet, Row, int, IRandom)
-  href: api/Nekoyume.Action.RuneSummon.html#Nekoyume_Action_RuneSummon_SimulateSummon_Nekoyume_TableData_RuneSheet_Nekoyume_TableData_Summon_SummonSheet_Row_System_Int32_Libplanet_Action_IRandom_
-  commentId: M:Nekoyume.Action.RuneSummon.SimulateSummon(Nekoyume.TableData.RuneSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom)
-  name.vb: SimulateSummon(RuneSheet, Row, Integer, IRandom)
-  fullName: Nekoyume.Action.RuneSummon.SimulateSummon(Nekoyume.TableData.RuneSheet, Nekoyume.TableData.Summon.SummonSheet.Row, int, Libplanet.Action.IRandom)
-  fullName.vb: Nekoyume.Action.RuneSummon.SimulateSummon(Nekoyume.TableData.RuneSheet, Nekoyume.TableData.Summon.SummonSheet.Row, Integer, Libplanet.Action.IRandom)
-  nameWithType: RuneSummon.SimulateSummon(RuneSheet, SummonSheet.Row, int, IRandom)
-  nameWithType.vb: RuneSummon.SimulateSummon(RuneSheet, SummonSheet.Row, Integer, IRandom)
+- uid: Nekoyume.Action.RuneSummon.SimulateSummon(Nekoyume.TableData.RuneSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Nekoyume.TableData.Rune.RuneListSheet)
+  name: SimulateSummon(RuneSheet, Row, int, IRandom, RuneListSheet)
+  href: api/Nekoyume.Action.RuneSummon.html#Nekoyume_Action_RuneSummon_SimulateSummon_Nekoyume_TableData_RuneSheet_Nekoyume_TableData_Summon_SummonSheet_Row_System_Int32_Libplanet_Action_IRandom_Nekoyume_TableData_Rune_RuneListSheet_
+  commentId: M:Nekoyume.Action.RuneSummon.SimulateSummon(Nekoyume.TableData.RuneSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Nekoyume.TableData.Rune.RuneListSheet)
+  name.vb: SimulateSummon(RuneSheet, Row, Integer, IRandom, RuneListSheet)
+  fullName: Nekoyume.Action.RuneSummon.SimulateSummon(Nekoyume.TableData.RuneSheet, Nekoyume.TableData.Summon.SummonSheet.Row, int, Libplanet.Action.IRandom, Nekoyume.TableData.Rune.RuneListSheet)
+  fullName.vb: Nekoyume.Action.RuneSummon.SimulateSummon(Nekoyume.TableData.RuneSheet, Nekoyume.TableData.Summon.SummonSheet.Row, Integer, Libplanet.Action.IRandom, Nekoyume.TableData.Rune.RuneListSheet)
+  nameWithType: RuneSummon.SimulateSummon(RuneSheet, SummonSheet.Row, int, IRandom, RuneListSheet)
+  nameWithType.vb: RuneSummon.SimulateSummon(RuneSheet, SummonSheet.Row, Integer, IRandom, RuneListSheet)
 - uid: Nekoyume.Action.RuneSummon.SimulateSummon*
   name: SimulateSummon
   href: api/Nekoyume.Action.RuneSummon.html#Nekoyume_Action_RuneSummon_SimulateSummon_
@@ -39104,6 +39104,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Helper.SummonHelper.CheckSummonCountIsValid
   nameWithType: SummonHelper.CheckSummonCountIsValid
+- uid: Nekoyume.Helper.SummonHelper.GetGuaranteeSettings(Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32)
+  name: GetGuaranteeSettings(Row, int)
+  href: api/Nekoyume.Helper.SummonHelper.html#Nekoyume_Helper_SummonHelper_GetGuaranteeSettings_Nekoyume_TableData_Summon_SummonSheet_Row_System_Int32_
+  commentId: M:Nekoyume.Helper.SummonHelper.GetGuaranteeSettings(Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32)
+  name.vb: GetGuaranteeSettings(Row, Integer)
+  fullName: Nekoyume.Helper.SummonHelper.GetGuaranteeSettings(Nekoyume.TableData.Summon.SummonSheet.Row, int)
+  fullName.vb: Nekoyume.Helper.SummonHelper.GetGuaranteeSettings(Nekoyume.TableData.Summon.SummonSheet.Row, Integer)
+  nameWithType: SummonHelper.GetGuaranteeSettings(SummonSheet.Row, int)
+  nameWithType.vb: SummonHelper.GetGuaranteeSettings(SummonSheet.Row, Integer)
+- uid: Nekoyume.Helper.SummonHelper.GetGuaranteeSettings*
+  name: GetGuaranteeSettings
+  href: api/Nekoyume.Helper.SummonHelper.html#Nekoyume_Helper_SummonHelper_GetGuaranteeSettings_
+  commentId: Overload:Nekoyume.Helper.SummonHelper.GetGuaranteeSettings
+  isSpec: "True"
+  fullName: Nekoyume.Helper.SummonHelper.GetGuaranteeSettings
+  nameWithType: SummonHelper.GetGuaranteeSettings
 - uid: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdByRandom(Nekoyume.TableData.Summon.SummonSheet.Row,Libplanet.Action.IRandom)
   name: GetSummonRecipeIdByRandom(Row, IRandom)
   href: api/Nekoyume.Helper.SummonHelper.html#Nekoyume_Helper_SummonHelper_GetSummonRecipeIdByRandom_Nekoyume_TableData_Summon_SummonSheet_Row_Libplanet_Action_IRandom_
@@ -39117,6 +39133,31 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdByRandom
   nameWithType: SummonHelper.GetSummonRecipeIdByRandom
+- uid: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Nekoyume.TableData.CostumeItemSheet,Nekoyume.TableData.EquipmentItemRecipeSheet)
+  name: GetSummonRecipeIdsWithGradeGuarantee(Row, int, IRandom, CostumeItemSheet, EquipmentItemRecipeSheet)
+  href: api/Nekoyume.Helper.SummonHelper.html#Nekoyume_Helper_SummonHelper_GetSummonRecipeIdsWithGradeGuarantee_Nekoyume_TableData_Summon_SummonSheet_Row_System_Int32_Libplanet_Action_IRandom_Nekoyume_TableData_CostumeItemSheet_Nekoyume_TableData_EquipmentItemRecipeSheet_
+  commentId: M:Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Nekoyume.TableData.CostumeItemSheet,Nekoyume.TableData.EquipmentItemRecipeSheet)
+  name.vb: GetSummonRecipeIdsWithGradeGuarantee(Row, Integer, IRandom, CostumeItemSheet, EquipmentItemRecipeSheet)
+  fullName: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(Nekoyume.TableData.Summon.SummonSheet.Row, int, Libplanet.Action.IRandom, Nekoyume.TableData.CostumeItemSheet, Nekoyume.TableData.EquipmentItemRecipeSheet)
+  fullName.vb: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(Nekoyume.TableData.Summon.SummonSheet.Row, Integer, Libplanet.Action.IRandom, Nekoyume.TableData.CostumeItemSheet, Nekoyume.TableData.EquipmentItemRecipeSheet)
+  nameWithType: SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(SummonSheet.Row, int, IRandom, CostumeItemSheet, EquipmentItemRecipeSheet)
+  nameWithType.vb: SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(SummonSheet.Row, Integer, IRandom, CostumeItemSheet, EquipmentItemRecipeSheet)
+- uid: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Nekoyume.TableData.EquipmentItemSheet,Nekoyume.TableData.EquipmentItemRecipeSheet)
+  name: GetSummonRecipeIdsWithGradeGuarantee(Row, int, IRandom, EquipmentItemSheet, EquipmentItemRecipeSheet)
+  href: api/Nekoyume.Helper.SummonHelper.html#Nekoyume_Helper_SummonHelper_GetSummonRecipeIdsWithGradeGuarantee_Nekoyume_TableData_Summon_SummonSheet_Row_System_Int32_Libplanet_Action_IRandom_Nekoyume_TableData_EquipmentItemSheet_Nekoyume_TableData_EquipmentItemRecipeSheet_
+  commentId: M:Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Nekoyume.TableData.EquipmentItemSheet,Nekoyume.TableData.EquipmentItemRecipeSheet)
+  name.vb: GetSummonRecipeIdsWithGradeGuarantee(Row, Integer, IRandom, EquipmentItemSheet, EquipmentItemRecipeSheet)
+  fullName: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(Nekoyume.TableData.Summon.SummonSheet.Row, int, Libplanet.Action.IRandom, Nekoyume.TableData.EquipmentItemSheet, Nekoyume.TableData.EquipmentItemRecipeSheet)
+  fullName.vb: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(Nekoyume.TableData.Summon.SummonSheet.Row, Integer, Libplanet.Action.IRandom, Nekoyume.TableData.EquipmentItemSheet, Nekoyume.TableData.EquipmentItemRecipeSheet)
+  nameWithType: SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(SummonSheet.Row, int, IRandom, EquipmentItemSheet, EquipmentItemRecipeSheet)
+  nameWithType.vb: SummonHelper.GetSummonRecipeIdsWithGradeGuarantee(SummonSheet.Row, Integer, IRandom, EquipmentItemSheet, EquipmentItemRecipeSheet)
+- uid: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee*
+  name: GetSummonRecipeIdsWithGradeGuarantee
+  href: api/Nekoyume.Helper.SummonHelper.html#Nekoyume_Helper_SummonHelper_GetSummonRecipeIdsWithGradeGuarantee_
+  commentId: Overload:Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee
+  isSpec: "True"
+  fullName: Nekoyume.Helper.SummonHelper.GetSummonRecipeIdsWithGradeGuarantee
+  nameWithType: SummonHelper.GetSummonRecipeIdsWithGradeGuarantee
 - uid: Nekoyume.Helper.SynthesizeResult
   name: SynthesizeResult
   href: api/Nekoyume.Helper.SynthesizeResult.html
@@ -94610,6 +94651,32 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.Summon.SummonSheet.Row.GroupId
   nameWithType: SummonSheet.Row.GroupId
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount11
+  name: GuaranteeCount11
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_GuaranteeCount11
+  commentId: P:Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount11
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount11
+  nameWithType: SummonSheet.Row.GuaranteeCount11
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount11*
+  name: GuaranteeCount11
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_GuaranteeCount11_
+  commentId: Overload:Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount11
+  isSpec: "True"
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount11
+  nameWithType: SummonSheet.Row.GuaranteeCount11
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount110
+  name: GuaranteeCount110
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_GuaranteeCount110
+  commentId: P:Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount110
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount110
+  nameWithType: SummonSheet.Row.GuaranteeCount110
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount110*
+  name: GuaranteeCount110
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_GuaranteeCount110_
+  commentId: Overload:Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount110
+  isSpec: "True"
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.GuaranteeCount110
+  nameWithType: SummonSheet.Row.GuaranteeCount110
 - uid: Nekoyume.TableData.Summon.SummonSheet.Row.Key
   name: Key
   href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_Key
@@ -94629,6 +94696,32 @@ references:
   commentId: F:Nekoyume.TableData.Summon.SummonSheet.Row.MaxRecipeCount
   fullName: Nekoyume.TableData.Summon.SummonSheet.Row.MaxRecipeCount
   nameWithType: SummonSheet.Row.MaxRecipeCount
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade11
+  name: MinimumGrade11
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_MinimumGrade11
+  commentId: P:Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade11
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade11
+  nameWithType: SummonSheet.Row.MinimumGrade11
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade11*
+  name: MinimumGrade11
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_MinimumGrade11_
+  commentId: Overload:Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade11
+  isSpec: "True"
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade11
+  nameWithType: SummonSheet.Row.MinimumGrade11
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade110
+  name: MinimumGrade110
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_MinimumGrade110
+  commentId: P:Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade110
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade110
+  nameWithType: SummonSheet.Row.MinimumGrade110
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade110*
+  name: MinimumGrade110
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_MinimumGrade110_
+  commentId: Overload:Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade110
+  isSpec: "True"
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.MinimumGrade110
+  nameWithType: SummonSheet.Row.MinimumGrade110
 - uid: Nekoyume.TableData.Summon.SummonSheet.Row.Recipes
   name: Recipes
   href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_Recipes
@@ -94664,6 +94757,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.Summon.SummonSheet.Row.TotalRatio
   nameWithType: SummonSheet.Row.TotalRatio
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.UseGradeGuarantee(System.Int32)
+  name: UseGradeGuarantee(int)
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_UseGradeGuarantee_System_Int32_
+  commentId: M:Nekoyume.TableData.Summon.SummonSheet.Row.UseGradeGuarantee(System.Int32)
+  name.vb: UseGradeGuarantee(Integer)
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.UseGradeGuarantee(int)
+  fullName.vb: Nekoyume.TableData.Summon.SummonSheet.Row.UseGradeGuarantee(Integer)
+  nameWithType: SummonSheet.Row.UseGradeGuarantee(int)
+  nameWithType.vb: SummonSheet.Row.UseGradeGuarantee(Integer)
+- uid: Nekoyume.TableData.Summon.SummonSheet.Row.UseGradeGuarantee*
+  name: UseGradeGuarantee
+  href: api/Nekoyume.TableData.Summon.SummonSheet.Row.html#Nekoyume_TableData_Summon_SummonSheet_Row_UseGradeGuarantee_
+  commentId: Overload:Nekoyume.TableData.Summon.SummonSheet.Row.UseGradeGuarantee
+  isSpec: "True"
+  fullName: Nekoyume.TableData.Summon.SummonSheet.Row.UseGradeGuarantee
+  nameWithType: SummonSheet.Row.UseGradeGuarantee
 - uid: Nekoyume.TableData.Swap
   name: Nekoyume.TableData.Swap
   href: api/Nekoyume.TableData.Swap.html
