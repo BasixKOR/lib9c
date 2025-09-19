@@ -21983,15 +21983,15 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Action.RuneSummon.SimulateSummon
   nameWithType: RuneSummon.SimulateSummon
-- uid: Nekoyume.Action.RuneSummon.Summon(Libplanet.Action.IActionContext,Libplanet.Crypto.Address,Nekoyume.TableData.RuneSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Libplanet.Action.State.IWorld)
-  name: Summon(IActionContext, Address, RuneSheet, Row, int, IRandom, IWorld)
-  href: api/Nekoyume.Action.RuneSummon.html#Nekoyume_Action_RuneSummon_Summon_Libplanet_Action_IActionContext_Libplanet_Crypto_Address_Nekoyume_TableData_RuneSheet_Nekoyume_TableData_Summon_SummonSheet_Row_System_Int32_Libplanet_Action_IRandom_Libplanet_Action_State_IWorld_
-  commentId: M:Nekoyume.Action.RuneSummon.Summon(Libplanet.Action.IActionContext,Libplanet.Crypto.Address,Nekoyume.TableData.RuneSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Libplanet.Action.State.IWorld)
-  name.vb: Summon(IActionContext, Address, RuneSheet, Row, Integer, IRandom, IWorld)
-  fullName: Nekoyume.Action.RuneSummon.Summon(Libplanet.Action.IActionContext, Libplanet.Crypto.Address, Nekoyume.TableData.RuneSheet, Nekoyume.TableData.Summon.SummonSheet.Row, int, Libplanet.Action.IRandom, Libplanet.Action.State.IWorld)
-  fullName.vb: Nekoyume.Action.RuneSummon.Summon(Libplanet.Action.IActionContext, Libplanet.Crypto.Address, Nekoyume.TableData.RuneSheet, Nekoyume.TableData.Summon.SummonSheet.Row, Integer, Libplanet.Action.IRandom, Libplanet.Action.State.IWorld)
-  nameWithType: RuneSummon.Summon(IActionContext, Address, RuneSheet, SummonSheet.Row, int, IRandom, IWorld)
-  nameWithType.vb: RuneSummon.Summon(IActionContext, Address, RuneSheet, SummonSheet.Row, Integer, IRandom, IWorld)
+- uid: Nekoyume.Action.RuneSummon.Summon(Libplanet.Action.IActionContext,Libplanet.Crypto.Address,Nekoyume.TableData.RuneSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Libplanet.Action.State.IWorld,Nekoyume.TableData.Rune.RuneListSheet)
+  name: Summon(IActionContext, Address, RuneSheet, Row, int, IRandom, IWorld, RuneListSheet)
+  href: api/Nekoyume.Action.RuneSummon.html#Nekoyume_Action_RuneSummon_Summon_Libplanet_Action_IActionContext_Libplanet_Crypto_Address_Nekoyume_TableData_RuneSheet_Nekoyume_TableData_Summon_SummonSheet_Row_System_Int32_Libplanet_Action_IRandom_Libplanet_Action_State_IWorld_Nekoyume_TableData_Rune_RuneListSheet_
+  commentId: M:Nekoyume.Action.RuneSummon.Summon(Libplanet.Action.IActionContext,Libplanet.Crypto.Address,Nekoyume.TableData.RuneSheet,Nekoyume.TableData.Summon.SummonSheet.Row,System.Int32,Libplanet.Action.IRandom,Libplanet.Action.State.IWorld,Nekoyume.TableData.Rune.RuneListSheet)
+  name.vb: Summon(IActionContext, Address, RuneSheet, Row, Integer, IRandom, IWorld, RuneListSheet)
+  fullName: Nekoyume.Action.RuneSummon.Summon(Libplanet.Action.IActionContext, Libplanet.Crypto.Address, Nekoyume.TableData.RuneSheet, Nekoyume.TableData.Summon.SummonSheet.Row, int, Libplanet.Action.IRandom, Libplanet.Action.State.IWorld, Nekoyume.TableData.Rune.RuneListSheet)
+  fullName.vb: Nekoyume.Action.RuneSummon.Summon(Libplanet.Action.IActionContext, Libplanet.Crypto.Address, Nekoyume.TableData.RuneSheet, Nekoyume.TableData.Summon.SummonSheet.Row, Integer, Libplanet.Action.IRandom, Libplanet.Action.State.IWorld, Nekoyume.TableData.Rune.RuneListSheet)
+  nameWithType: RuneSummon.Summon(IActionContext, Address, RuneSheet, SummonSheet.Row, int, IRandom, IWorld, RuneListSheet)
+  nameWithType.vb: RuneSummon.Summon(IActionContext, Address, RuneSheet, SummonSheet.Row, Integer, IRandom, IWorld, RuneListSheet)
 - uid: Nekoyume.Action.RuneSummon.Summon*
   name: Summon
   href: api/Nekoyume.Action.RuneSummon.html#Nekoyume_Action_RuneSummon_Summon_
