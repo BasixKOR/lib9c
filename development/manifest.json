@@ -3042,6 +3042,16 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/Nekoyume.Action.SetAddressStateCompressed.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Nekoyume.Action.SetAddressStateCompressed.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/Nekoyume.Action.ShopErrorType.yml",
       "output": {
         ".html": {

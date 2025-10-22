@@ -1067,6 +1067,21 @@ Throws an exception if the state already exists for the target address.</p>
 </dd>
     </dl>
     <dl class="jumplist">
+      <dt><a class="xref" href="Nekoyume.Action.SetAddressStateCompressed.html">SetAddressStateCompressed</a></dt>
+      <dd><p>Compressed version of SetAddressState to reduce transaction size for large state data.
+Uses GZip compression to minimize the size of state data in transactions.</p>
+<p>This action is particularly useful when setting large state data that would exceed
+transaction policy size limits. The compression can reduce state data size by 60-80%
+depending on the content structure and redundancy.</p>
+<p>Example usage:</p>
+<pre><code class="lang-csharp">var states = new List&lt;(Address, Address, IValue)&gt;
+{
+    (accountAddress, targetAddress, largeStateValue),
+};
+var compressedAction = new SetAddressStateCompressed(states);</code></pre>
+</dd>
+    </dl>
+    <dl class="jumplist">
       <dt><a class="xref" href="Nekoyume.Action.ShopItemExpiredException.html">ShopItemExpiredException</a></dt>
       <dd></dd>
     </dl>

@@ -22533,6 +22533,136 @@ references:
   commentId: F:Nekoyume.Action.SetAddressState.TypeId
   fullName: Nekoyume.Action.SetAddressState.TypeId
   nameWithType: SetAddressState.TypeId
+- uid: Nekoyume.Action.SetAddressStateCompressed
+  name: SetAddressStateCompressed
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html
+  commentId: T:Nekoyume.Action.SetAddressStateCompressed
+  fullName: Nekoyume.Action.SetAddressStateCompressed
+  nameWithType: SetAddressStateCompressed
+- uid: Nekoyume.Action.SetAddressStateCompressed.#ctor
+  name: SetAddressStateCompressed()
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed__ctor
+  commentId: M:Nekoyume.Action.SetAddressStateCompressed.#ctor
+  name.vb: New()
+  fullName: Nekoyume.Action.SetAddressStateCompressed.SetAddressStateCompressed()
+  fullName.vb: Nekoyume.Action.SetAddressStateCompressed.New()
+  nameWithType: SetAddressStateCompressed.SetAddressStateCompressed()
+  nameWithType.vb: SetAddressStateCompressed.New()
+- uid: Nekoyume.Action.SetAddressStateCompressed.#ctor(System.Collections.Generic.IReadOnlyList{System.ValueTuple{Libplanet.Crypto.Address,Libplanet.Crypto.Address,Bencodex.Types.IValue}})
+  name: SetAddressStateCompressed(IReadOnlyList<(Address accountAddress, Address targetAddress, IValue state)>)
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed__ctor_System_Collections_Generic_IReadOnlyList_System_ValueTuple_Libplanet_Crypto_Address_Libplanet_Crypto_Address_Bencodex_Types_IValue___
+  commentId: M:Nekoyume.Action.SetAddressStateCompressed.#ctor(System.Collections.Generic.IReadOnlyList{System.ValueTuple{Libplanet.Crypto.Address,Libplanet.Crypto.Address,Bencodex.Types.IValue}})
+  name.vb: New(IReadOnlyList(Of (accountAddress As Address, targetAddress As Address, state As IValue)))
+  fullName: Nekoyume.Action.SetAddressStateCompressed.SetAddressStateCompressed(System.Collections.Generic.IReadOnlyList<(Libplanet.Crypto.Address accountAddress, Libplanet.Crypto.Address targetAddress, Bencodex.Types.IValue state)>)
+  fullName.vb: Nekoyume.Action.SetAddressStateCompressed.New(System.Collections.Generic.IReadOnlyList(Of (accountAddress As Libplanet.Crypto.Address, targetAddress As Libplanet.Crypto.Address, state As Bencodex.Types.IValue)))
+  nameWithType: SetAddressStateCompressed.SetAddressStateCompressed(IReadOnlyList<(Address accountAddress, Address targetAddress, IValue state)>)
+  nameWithType.vb: SetAddressStateCompressed.New(IReadOnlyList(Of (accountAddress As Address, targetAddress As Address, state As IValue)))
+- uid: Nekoyume.Action.SetAddressStateCompressed.#ctor(System.Collections.Generic.IReadOnlyList{System.ValueTuple{Libplanet.Crypto.Address,Libplanet.Crypto.Address,System.Byte[]}})
+  name: SetAddressStateCompressed(IReadOnlyList<(Address accountAddress, Address targetAddress, byte[] compressedState)>)
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed__ctor_System_Collections_Generic_IReadOnlyList_System_ValueTuple_Libplanet_Crypto_Address_Libplanet_Crypto_Address_System_Byte_____
+  commentId: M:Nekoyume.Action.SetAddressStateCompressed.#ctor(System.Collections.Generic.IReadOnlyList{System.ValueTuple{Libplanet.Crypto.Address,Libplanet.Crypto.Address,System.Byte[]}})
+  name.vb: New(IReadOnlyList(Of (accountAddress As Address, targetAddress As Address, compressedState As Byte())))
+  fullName: Nekoyume.Action.SetAddressStateCompressed.SetAddressStateCompressed(System.Collections.Generic.IReadOnlyList<(Libplanet.Crypto.Address accountAddress, Libplanet.Crypto.Address targetAddress, byte[] compressedState)>)
+  fullName.vb: Nekoyume.Action.SetAddressStateCompressed.New(System.Collections.Generic.IReadOnlyList(Of (accountAddress As Libplanet.Crypto.Address, targetAddress As Libplanet.Crypto.Address, compressedState As Byte())))
+  nameWithType: SetAddressStateCompressed.SetAddressStateCompressed(IReadOnlyList<(Address accountAddress, Address targetAddress, byte[] compressedState)>)
+  nameWithType.vb: SetAddressStateCompressed.New(IReadOnlyList(Of (accountAddress As Address, targetAddress As Address, compressedState As Byte())))
+- uid: Nekoyume.Action.SetAddressStateCompressed.#ctor*
+  name: SetAddressStateCompressed
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed__ctor_
+  commentId: Overload:Nekoyume.Action.SetAddressStateCompressed.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: Nekoyume.Action.SetAddressStateCompressed.SetAddressStateCompressed
+  fullName.vb: Nekoyume.Action.SetAddressStateCompressed.New
+  nameWithType: SetAddressStateCompressed.SetAddressStateCompressed
+  nameWithType.vb: SetAddressStateCompressed.New
+- uid: Nekoyume.Action.SetAddressStateCompressed.CompressState(Bencodex.Types.IValue)
+  name: CompressState(IValue)
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_CompressState_Bencodex_Types_IValue_
+  commentId: M:Nekoyume.Action.SetAddressStateCompressed.CompressState(Bencodex.Types.IValue)
+  fullName: Nekoyume.Action.SetAddressStateCompressed.CompressState(Bencodex.Types.IValue)
+  nameWithType: SetAddressStateCompressed.CompressState(IValue)
+- uid: Nekoyume.Action.SetAddressStateCompressed.CompressState*
+  name: CompressState
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_CompressState_
+  commentId: Overload:Nekoyume.Action.SetAddressStateCompressed.CompressState
+  isSpec: "True"
+  fullName: Nekoyume.Action.SetAddressStateCompressed.CompressState
+  nameWithType: SetAddressStateCompressed.CompressState
+- uid: Nekoyume.Action.SetAddressStateCompressed.CompressedStates
+  name: CompressedStates
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_CompressedStates
+  commentId: P:Nekoyume.Action.SetAddressStateCompressed.CompressedStates
+  fullName: Nekoyume.Action.SetAddressStateCompressed.CompressedStates
+  nameWithType: SetAddressStateCompressed.CompressedStates
+- uid: Nekoyume.Action.SetAddressStateCompressed.CompressedStates*
+  name: CompressedStates
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_CompressedStates_
+  commentId: Overload:Nekoyume.Action.SetAddressStateCompressed.CompressedStates
+  isSpec: "True"
+  fullName: Nekoyume.Action.SetAddressStateCompressed.CompressedStates
+  nameWithType: SetAddressStateCompressed.CompressedStates
+- uid: Nekoyume.Action.SetAddressStateCompressed.DecompressState(System.Byte[])
+  name: DecompressState(byte[])
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_DecompressState_System_Byte___
+  commentId: M:Nekoyume.Action.SetAddressStateCompressed.DecompressState(System.Byte[])
+  name.vb: DecompressState(Byte())
+  fullName: Nekoyume.Action.SetAddressStateCompressed.DecompressState(byte[])
+  fullName.vb: Nekoyume.Action.SetAddressStateCompressed.DecompressState(Byte())
+  nameWithType: SetAddressStateCompressed.DecompressState(byte[])
+  nameWithType.vb: SetAddressStateCompressed.DecompressState(Byte())
+- uid: Nekoyume.Action.SetAddressStateCompressed.DecompressState*
+  name: DecompressState
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_DecompressState_
+  commentId: Overload:Nekoyume.Action.SetAddressStateCompressed.DecompressState
+  isSpec: "True"
+  fullName: Nekoyume.Action.SetAddressStateCompressed.DecompressState
+  nameWithType: SetAddressStateCompressed.DecompressState
+- uid: Nekoyume.Action.SetAddressStateCompressed.Execute(Libplanet.Action.IActionContext)
+  name: Execute(IActionContext)
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_Execute_Libplanet_Action_IActionContext_
+  commentId: M:Nekoyume.Action.SetAddressStateCompressed.Execute(Libplanet.Action.IActionContext)
+  fullName: Nekoyume.Action.SetAddressStateCompressed.Execute(Libplanet.Action.IActionContext)
+  nameWithType: SetAddressStateCompressed.Execute(IActionContext)
+- uid: Nekoyume.Action.SetAddressStateCompressed.Execute*
+  name: Execute
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_Execute_
+  commentId: Overload:Nekoyume.Action.SetAddressStateCompressed.Execute
+  isSpec: "True"
+  fullName: Nekoyume.Action.SetAddressStateCompressed.Execute
+  nameWithType: SetAddressStateCompressed.Execute
+- uid: Nekoyume.Action.SetAddressStateCompressed.LoadPlainValue(Bencodex.Types.IValue)
+  name: LoadPlainValue(IValue)
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_LoadPlainValue_Bencodex_Types_IValue_
+  commentId: M:Nekoyume.Action.SetAddressStateCompressed.LoadPlainValue(Bencodex.Types.IValue)
+  fullName: Nekoyume.Action.SetAddressStateCompressed.LoadPlainValue(Bencodex.Types.IValue)
+  nameWithType: SetAddressStateCompressed.LoadPlainValue(IValue)
+- uid: Nekoyume.Action.SetAddressStateCompressed.LoadPlainValue*
+  name: LoadPlainValue
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_LoadPlainValue_
+  commentId: Overload:Nekoyume.Action.SetAddressStateCompressed.LoadPlainValue
+  isSpec: "True"
+  fullName: Nekoyume.Action.SetAddressStateCompressed.LoadPlainValue
+  nameWithType: SetAddressStateCompressed.LoadPlainValue
+- uid: Nekoyume.Action.SetAddressStateCompressed.PlainValue
+  name: PlainValue
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_PlainValue
+  commentId: P:Nekoyume.Action.SetAddressStateCompressed.PlainValue
+  fullName: Nekoyume.Action.SetAddressStateCompressed.PlainValue
+  nameWithType: SetAddressStateCompressed.PlainValue
+- uid: Nekoyume.Action.SetAddressStateCompressed.PlainValue*
+  name: PlainValue
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_PlainValue_
+  commentId: Overload:Nekoyume.Action.SetAddressStateCompressed.PlainValue
+  isSpec: "True"
+  fullName: Nekoyume.Action.SetAddressStateCompressed.PlainValue
+  nameWithType: SetAddressStateCompressed.PlainValue
+- uid: Nekoyume.Action.SetAddressStateCompressed.TypeId
+  name: TypeId
+  href: api/Nekoyume.Action.SetAddressStateCompressed.html#Nekoyume_Action_SetAddressStateCompressed_TypeId
+  commentId: F:Nekoyume.Action.SetAddressStateCompressed.TypeId
+  fullName: Nekoyume.Action.SetAddressStateCompressed.TypeId
+  nameWithType: SetAddressStateCompressed.TypeId
 - uid: Nekoyume.Action.ShopErrorType
   name: ShopErrorType
   href: api/Nekoyume.Action.ShopErrorType.html
