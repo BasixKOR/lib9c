@@ -249,7 +249,7 @@ Handles turn-based combat with wave progression, special conditions, and reward 
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public InfiniteTowerSimulator(IRandom random, AvatarState avatarState, List&lt;Guid&gt; foods, AllRuneState runeStates, RuneSlotState runeSlotState, int infiniteTowerId, int floorId, InfiniteTowerFloorSheet.Row floorRow, List&lt;InfiniteTowerFloorWaveSheet.WaveData&gt; waveRows, bool isCleared, int exp, SimulatorSheets simulatorSheets, EnemySkillSheet enemySkillSheet, CostumeStatSheet costumeStatSheet, ItemSheet itemSheet, List&lt;StatModifier&gt; collectionModifiers, BuffLimitSheet buffLimitSheet, BuffLinkSheet buffLinkSheet, List&lt;InfiniteTowerCondition&gt; conditions, int shatterStrikeMaxDamage, int turnLimit = 200, bool logEvent = true)</code></pre>
+    <pre><code class="lang-csharp hljs">public InfiniteTowerSimulator(IRandom random, AvatarState avatarState, List&lt;Guid&gt; foods, AllRuneState runeStates, RuneSlotState runeSlotState, int infiniteTowerId, int floorId, InfiniteTowerFloorSheet.Row floorRow, List&lt;InfiniteTowerFloorWaveSheet.WaveData&gt; waveRows, bool isCleared, int exp, SimulatorSheets simulatorSheets, EnemySkillSheet enemySkillSheet, CostumeStatSheet costumeStatSheet, ItemSheet itemSheet, List&lt;StatModifier&gt; collectionModifiers, BuffLimitSheet buffLimitSheet, BuffLinkSheet buffLinkSheet, List&lt;InfiniteTowerCondition&gt; conditions, int shatterStrikeMaxDamage, int turnLimit = 150, bool logEvent = false)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
@@ -757,7 +757,7 @@ Handles turn-based combat with wave progression, special conditions, and reward 
 
   <h3 id="Nekoyume_Battle_InfiniteTowerSimulator_Reward" data-uid="Nekoyume.Battle.InfiniteTowerSimulator.Reward">
   Reward
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Battle/InfiniteTowerSimulator.cs/#L615"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Battle/InfiniteTowerSimulator.cs/#L630"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the reward items obtained from this floor.
@@ -1018,7 +1018,7 @@ Returns the list of items that were dropped during the battle.</p>
 
   <h3 id="Nekoyume_Battle_InfiniteTowerSimulator_ApplyConditionsToCharacter_Nekoyume_Model_CharacterBase_System_Boolean_" data-uid="Nekoyume.Battle.InfiniteTowerSimulator.ApplyConditionsToCharacter(Nekoyume.Model.CharacterBase,System.Boolean)">
   ApplyConditionsToCharacter(CharacterBase, bool)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Battle/InfiniteTowerSimulator.cs/#L481"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Battle/InfiniteTowerSimulator.cs/#L479"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Applies infinite tower conditions to any character (Player, Enemy, Boss, etc.).

@@ -43,6 +43,22 @@ references:
   commentId: F:Lib9c.Currencies.Garage
   fullName: Lib9c.Currencies.Garage
   nameWithType: Currencies.Garage
+- uid: Lib9c.Currencies.GetCurrencyByTicker(System.String)
+  name: GetCurrencyByTicker(string)
+  href: api/Lib9c.Currencies.html#Lib9c_Currencies_GetCurrencyByTicker_System_String_
+  commentId: M:Lib9c.Currencies.GetCurrencyByTicker(System.String)
+  name.vb: GetCurrencyByTicker(String)
+  fullName: Lib9c.Currencies.GetCurrencyByTicker(string)
+  fullName.vb: Lib9c.Currencies.GetCurrencyByTicker(String)
+  nameWithType: Currencies.GetCurrencyByTicker(string)
+  nameWithType.vb: Currencies.GetCurrencyByTicker(String)
+- uid: Lib9c.Currencies.GetCurrencyByTicker*
+  name: GetCurrencyByTicker
+  href: api/Lib9c.Currencies.html#Lib9c_Currencies_GetCurrencyByTicker_
+  commentId: Overload:Lib9c.Currencies.GetCurrencyByTicker
+  isSpec: "True"
+  fullName: Lib9c.Currencies.GetCurrencyByTicker
+  nameWithType: Currencies.GetCurrencyByTicker
 - uid: Lib9c.Currencies.GetItemCurrency(System.Int32,System.Boolean)
   name: GetItemCurrency(int, bool)
   href: api/Lib9c.Currencies.html#Lib9c_Currencies_GetItemCurrency_System_Int32_System_Boolean_
@@ -51633,6 +51649,15 @@ references:
   commentId: T:Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition
   fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition
   nameWithType: InfiniteTowerBattleCondition
+- uid: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.#ctor(System.Collections.Generic.List{Nekoyume.Model.Elemental.ElementalType},System.Boolean)
+  name: InfiniteTowerBattleCondition(List<ElementalType>, bool)
+  href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.html#Nekoyume_Model_InfiniteTower_InfiniteTowerBattleCondition__ctor_System_Collections_Generic_List_Nekoyume_Model_Elemental_ElementalType__System_Boolean_
+  commentId: M:Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.#ctor(System.Collections.Generic.List{Nekoyume.Model.Elemental.ElementalType},System.Boolean)
+  name.vb: New(List(Of ElementalType), Boolean)
+  fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.InfiniteTowerBattleCondition(System.Collections.Generic.List<Nekoyume.Model.Elemental.ElementalType>, bool)
+  fullName.vb: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.New(System.Collections.Generic.List(Of Nekoyume.Model.Elemental.ElementalType), Boolean)
+  nameWithType: InfiniteTowerBattleCondition.InfiniteTowerBattleCondition(List<ElementalType>, bool)
+  nameWithType.vb: InfiniteTowerBattleCondition.New(List(Of ElementalType), Boolean)
 - uid: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.#ctor(System.Collections.Generic.List{Nekoyume.Model.EnumType.RuneType})
   name: InfiniteTowerBattleCondition(List<RuneType>)
   href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.html#Nekoyume_Model_InfiniteTower_InfiniteTowerBattleCondition__ctor_System_Collections_Generic_List_Nekoyume_Model_EnumType_RuneType__
@@ -51651,15 +51676,6 @@ references:
   fullName.vb: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.New(System.Collections.Generic.List(Of Nekoyume.Model.Item.ItemSubType), Boolean)
   nameWithType: InfiniteTowerBattleCondition.InfiniteTowerBattleCondition(List<ItemSubType>, bool)
   nameWithType.vb: InfiniteTowerBattleCondition.New(List(Of ItemSubType), Boolean)
-- uid: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.#ctor(System.Nullable{Nekoyume.Model.Elemental.ElementalType},System.Boolean)
-  name: InfiniteTowerBattleCondition(ElementalType?, bool)
-  href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.html#Nekoyume_Model_InfiniteTower_InfiniteTowerBattleCondition__ctor_System_Nullable_Nekoyume_Model_Elemental_ElementalType__System_Boolean_
-  commentId: M:Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.#ctor(System.Nullable{Nekoyume.Model.Elemental.ElementalType},System.Boolean)
-  name.vb: New(ElementalType?, Boolean)
-  fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.InfiniteTowerBattleCondition(Nekoyume.Model.Elemental.ElementalType?, bool)
-  fullName.vb: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.New(Nekoyume.Model.Elemental.ElementalType?, Boolean)
-  nameWithType: InfiniteTowerBattleCondition.InfiniteTowerBattleCondition(ElementalType?, bool)
-  nameWithType.vb: InfiniteTowerBattleCondition.New(ElementalType?, Boolean)
 - uid: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.#ctor(System.Nullable{System.Int32},System.Nullable{System.Int32})
   name: InfiniteTowerBattleCondition(int?, int?)
   href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.html#Nekoyume_Model_InfiniteTower_InfiniteTowerBattleCondition__ctor_System_Nullable_System_Int32__System_Nullable_System_Int32__
@@ -51814,19 +51830,19 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredCp
   nameWithType: InfiniteTowerBattleCondition.RequiredCp
-- uid: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalType
-  name: RequiredElementalType
-  href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.html#Nekoyume_Model_InfiniteTower_InfiniteTowerBattleCondition_RequiredElementalType
-  commentId: P:Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalType
-  fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalType
-  nameWithType: InfiniteTowerBattleCondition.RequiredElementalType
-- uid: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalType*
-  name: RequiredElementalType
-  href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.html#Nekoyume_Model_InfiniteTower_InfiniteTowerBattleCondition_RequiredElementalType_
-  commentId: Overload:Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalType
+- uid: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalTypes
+  name: RequiredElementalTypes
+  href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.html#Nekoyume_Model_InfiniteTower_InfiniteTowerBattleCondition_RequiredElementalTypes
+  commentId: P:Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalTypes
+  fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalTypes
+  nameWithType: InfiniteTowerBattleCondition.RequiredElementalTypes
+- uid: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalTypes*
+  name: RequiredElementalTypes
+  href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.html#Nekoyume_Model_InfiniteTower_InfiniteTowerBattleCondition_RequiredElementalTypes_
+  commentId: Overload:Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalTypes
   isSpec: "True"
-  fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalType
-  nameWithType: InfiniteTowerBattleCondition.RequiredElementalType
+  fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.RequiredElementalTypes
+  nameWithType: InfiniteTowerBattleCondition.RequiredElementalTypes
 - uid: Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.ToString
   name: ToString()
   href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerBattleCondition.html#Nekoyume_Model_InfiniteTower_InfiniteTowerBattleCondition_ToString
@@ -52010,15 +52026,15 @@ references:
   fullName.vb: Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.New(Bencodex.Types.List)
   nameWithType: InfiniteTowerInfo.InfiniteTowerInfo(List)
   nameWithType.vb: InfiniteTowerInfo.New(List)
-- uid: Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.#ctor(Libplanet.Crypto.Address,System.Int32)
-  name: InfiniteTowerInfo(Address, int)
-  href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.html#Nekoyume_Model_InfiniteTower_InfiniteTowerInfo__ctor_Libplanet_Crypto_Address_System_Int32_
-  commentId: M:Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.#ctor(Libplanet.Crypto.Address,System.Int32)
-  name.vb: New(Address, Integer)
-  fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.InfiniteTowerInfo(Libplanet.Crypto.Address, int)
-  fullName.vb: Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.New(Libplanet.Crypto.Address, Integer)
-  nameWithType: InfiniteTowerInfo.InfiniteTowerInfo(Address, int)
-  nameWithType.vb: InfiniteTowerInfo.New(Address, Integer)
+- uid: Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.#ctor(Libplanet.Crypto.Address,System.Int32,System.Int32)
+  name: InfiniteTowerInfo(Address, int, int)
+  href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.html#Nekoyume_Model_InfiniteTower_InfiniteTowerInfo__ctor_Libplanet_Crypto_Address_System_Int32_System_Int32_
+  commentId: M:Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.#ctor(Libplanet.Crypto.Address,System.Int32,System.Int32)
+  name.vb: New(Address, Integer, Integer)
+  fullName: Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.InfiniteTowerInfo(Libplanet.Crypto.Address, int, int)
+  fullName.vb: Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.New(Libplanet.Crypto.Address, Integer, Integer)
+  nameWithType: InfiniteTowerInfo.InfiniteTowerInfo(Address, int, int)
+  nameWithType.vb: InfiniteTowerInfo.New(Address, Integer, Integer)
 - uid: Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.#ctor*
   name: InfiniteTowerInfo
   href: api/Nekoyume.Model.InfiniteTower.InfiniteTowerInfo.html#Nekoyume_Model_InfiniteTower_InfiniteTowerInfo__ctor_
@@ -90108,6 +90124,19 @@ references:
   commentId: T:Nekoyume.TableData.InfiniteTowerFloorSheet.Row
   fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row
   nameWithType: InfiniteTowerFloorSheet.Row
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.EnemyInitialStatModifiers
+  name: EnemyInitialStatModifiers
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_EnemyInitialStatModifiers
+  commentId: P:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.EnemyInitialStatModifiers
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.EnemyInitialStatModifiers
+  nameWithType: InfiniteTowerFloorSheet.Row.EnemyInitialStatModifiers
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.EnemyInitialStatModifiers*
+  name: EnemyInitialStatModifiers
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_EnemyInitialStatModifiers_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.EnemyInitialStatModifiers
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.EnemyInitialStatModifiers
+  nameWithType: InfiniteTowerFloorSheet.Row.EnemyInitialStatModifiers
 - uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.Floor
   name: Floor
   href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_Floor
@@ -90329,6 +90358,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.GetItemRewards
   nameWithType: InfiniteTowerFloorSheet.Row.GetItemRewards
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.GetRandomConditions(Nekoyume.TableData.InfiniteTowerConditionSheet,Libplanet.Action.IRandom,System.Nullable{System.Int32})
+  name: GetRandomConditions(InfiniteTowerConditionSheet, IRandom, int?)
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_GetRandomConditions_Nekoyume_TableData_InfiniteTowerConditionSheet_Libplanet_Action_IRandom_System_Nullable_System_Int32__
+  commentId: M:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.GetRandomConditions(Nekoyume.TableData.InfiniteTowerConditionSheet,Libplanet.Action.IRandom,System.Nullable{System.Int32})
+  name.vb: GetRandomConditions(InfiniteTowerConditionSheet, IRandom, Integer?)
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.GetRandomConditions(Nekoyume.TableData.InfiniteTowerConditionSheet, Libplanet.Action.IRandom, int?)
+  fullName.vb: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.GetRandomConditions(Nekoyume.TableData.InfiniteTowerConditionSheet, Libplanet.Action.IRandom, Integer?)
+  nameWithType: InfiniteTowerFloorSheet.Row.GetRandomConditions(InfiniteTowerConditionSheet, IRandom, int?)
+  nameWithType.vb: InfiniteTowerFloorSheet.Row.GetRandomConditions(InfiniteTowerConditionSheet, IRandom, Integer?)
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.GetRandomConditions*
+  name: GetRandomConditions
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_GetRandomConditions_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.GetRandomConditions
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.GetRandomConditions
+  nameWithType: InfiniteTowerFloorSheet.Row.GetRandomConditions
 - uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.GetRandomConditionsWithWeights
   name: GetRandomConditionsWithWeights()
   href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_GetRandomConditionsWithWeights
@@ -90377,19 +90422,6 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.Id
   nameWithType: InfiniteTowerFloorSheet.Row.Id
-- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.InfiniteTowerId
-  name: InfiniteTowerId
-  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_InfiniteTowerId
-  commentId: P:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.InfiniteTowerId
-  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.InfiniteTowerId
-  nameWithType: InfiniteTowerFloorSheet.Row.InfiniteTowerId
-- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.InfiniteTowerId*
-  name: InfiniteTowerId
-  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_InfiniteTowerId_
-  commentId: Overload:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.InfiniteTowerId
-  isSpec: "True"
-  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.InfiniteTowerId
-  nameWithType: InfiniteTowerFloorSheet.Row.InfiniteTowerId
 - uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ItemRewardCount1
   name: ItemRewardCount1
   href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_ItemRewardCount1
@@ -90663,6 +90695,19 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.NcgCost
   nameWithType: InfiniteTowerFloorSheet.Row.NcgCost
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ProcessRewards(Libplanet.Action.IActionContext,Libplanet.Action.State.IWorld,Nekoyume.Model.State.AvatarState,Libplanet.Crypto.Address,Nekoyume.TableData.EquipmentItemSheet,Nekoyume.TableData.MaterialItemSheet,Nekoyume.TableData.ConsumableItemSheet,Nekoyume.TableData.CostumeItemSheet,Libplanet.Action.IRandom)
+  name: ProcessRewards(IActionContext, IWorld, AvatarState, Address, EquipmentItemSheet, MaterialItemSheet, ConsumableItemSheet, CostumeItemSheet, IRandom)
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_ProcessRewards_Libplanet_Action_IActionContext_Libplanet_Action_State_IWorld_Nekoyume_Model_State_AvatarState_Libplanet_Crypto_Address_Nekoyume_TableData_EquipmentItemSheet_Nekoyume_TableData_MaterialItemSheet_Nekoyume_TableData_ConsumableItemSheet_Nekoyume_TableData_CostumeItemSheet_Libplanet_Action_IRandom_
+  commentId: M:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ProcessRewards(Libplanet.Action.IActionContext,Libplanet.Action.State.IWorld,Nekoyume.Model.State.AvatarState,Libplanet.Crypto.Address,Nekoyume.TableData.EquipmentItemSheet,Nekoyume.TableData.MaterialItemSheet,Nekoyume.TableData.ConsumableItemSheet,Nekoyume.TableData.CostumeItemSheet,Libplanet.Action.IRandom)
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ProcessRewards(Libplanet.Action.IActionContext, Libplanet.Action.State.IWorld, Nekoyume.Model.State.AvatarState, Libplanet.Crypto.Address, Nekoyume.TableData.EquipmentItemSheet, Nekoyume.TableData.MaterialItemSheet, Nekoyume.TableData.ConsumableItemSheet, Nekoyume.TableData.CostumeItemSheet, Libplanet.Action.IRandom)
+  nameWithType: InfiniteTowerFloorSheet.Row.ProcessRewards(IActionContext, IWorld, AvatarState, Address, EquipmentItemSheet, MaterialItemSheet, ConsumableItemSheet, CostumeItemSheet, IRandom)
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ProcessRewards*
+  name: ProcessRewards
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_ProcessRewards_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ProcessRewards
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ProcessRewards
+  nameWithType: InfiniteTowerFloorSheet.Row.ProcessRewards
 - uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RandomConditionId1
   name: RandomConditionId1
   href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_RandomConditionId1
@@ -90806,19 +90851,19 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredCp
   nameWithType: InfiniteTowerFloorSheet.Row.RequiredCp
-- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalType
-  name: RequiredElementalType
-  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_RequiredElementalType
-  commentId: P:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalType
-  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalType
-  nameWithType: InfiniteTowerFloorSheet.Row.RequiredElementalType
-- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalType*
-  name: RequiredElementalType
-  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_RequiredElementalType_
-  commentId: Overload:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalType
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalTypes
+  name: RequiredElementalTypes
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_RequiredElementalTypes
+  commentId: P:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalTypes
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalTypes
+  nameWithType: InfiniteTowerFloorSheet.Row.RequiredElementalTypes
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalTypes*
+  name: RequiredElementalTypes
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_RequiredElementalTypes_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalTypes
   isSpec: "True"
-  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalType
-  nameWithType: InfiniteTowerFloorSheet.Row.RequiredElementalType
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.RequiredElementalTypes
+  nameWithType: InfiniteTowerFloorSheet.Row.RequiredElementalTypes
 - uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.Set(System.Collections.Generic.IReadOnlyList{System.String})
   name: Set(IReadOnlyList<string>)
   href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_Set_System_Collections_Generic_IReadOnlyList_System_String__
@@ -90851,14 +90896,30 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateCpRequirements
   nameWithType: InfiniteTowerFloorSheet.Row.ValidateCpRequirements
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase(Libplanet.Action.IActionContext,Libplanet.Action.State.IWorld,Libplanet.Crypto.Address,System.Boolean,System.String)
+  name: ValidateCurrencyForTicketPurchase(IActionContext, IWorld, Address, bool, string)
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_ValidateCurrencyForTicketPurchase_Libplanet_Action_IActionContext_Libplanet_Action_State_IWorld_Libplanet_Crypto_Address_System_Boolean_System_String_
+  commentId: M:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase(Libplanet.Action.IActionContext,Libplanet.Action.State.IWorld,Libplanet.Crypto.Address,System.Boolean,System.String)
+  name.vb: ValidateCurrencyForTicketPurchase(IActionContext, IWorld, Address, Boolean, String)
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase(Libplanet.Action.IActionContext, Libplanet.Action.State.IWorld, Libplanet.Crypto.Address, bool, string)
+  fullName.vb: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase(Libplanet.Action.IActionContext, Libplanet.Action.State.IWorld, Libplanet.Crypto.Address, Boolean, String)
+  nameWithType: InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase(IActionContext, IWorld, Address, bool, string)
+  nameWithType.vb: InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase(IActionContext, IWorld, Address, Boolean, String)
+- uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase*
+  name: ValidateCurrencyForTicketPurchase
+  href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_ValidateCurrencyForTicketPurchase_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase
+  nameWithType: InfiniteTowerFloorSheet.Row.ValidateCurrencyForTicketPurchase
 - uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateEquipmentElementalType(System.Collections.Generic.List{Nekoyume.Model.Item.Equipment})
-  name: ValidateEquipmentElementalType(List<Equipment>)
+  name: ValidateEquipmentElementalType(List<Equipment>?)
   href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_ValidateEquipmentElementalType_System_Collections_Generic_List_Nekoyume_Model_Item_Equipment__
   commentId: M:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateEquipmentElementalType(System.Collections.Generic.List{Nekoyume.Model.Item.Equipment})
   name.vb: ValidateEquipmentElementalType(List(Of Equipment))
-  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateEquipmentElementalType(System.Collections.Generic.List<Nekoyume.Model.Item.Equipment>)
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateEquipmentElementalType(System.Collections.Generic.List<Nekoyume.Model.Item.Equipment>?)
   fullName.vb: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateEquipmentElementalType(System.Collections.Generic.List(Of Nekoyume.Model.Item.Equipment))
-  nameWithType: InfiniteTowerFloorSheet.Row.ValidateEquipmentElementalType(List<Equipment>)
+  nameWithType: InfiniteTowerFloorSheet.Row.ValidateEquipmentElementalType(List<Equipment>?)
   nameWithType.vb: InfiniteTowerFloorSheet.Row.ValidateEquipmentElementalType(List(Of Equipment))
 - uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateEquipmentElementalType*
   name: ValidateEquipmentElementalType
@@ -90941,13 +91002,13 @@ references:
   nameWithType: InfiniteTowerFloorSheet.Row.ValidateItemTypeRestrictions<T>(List<T>)
   nameWithType.vb: InfiniteTowerFloorSheet.Row.ValidateItemTypeRestrictions(Of T)(List(Of T))
 - uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateRuneTypes(System.Collections.Generic.List{Nekoyume.Action.RuneSlotInfo},Nekoyume.TableData.Rune.RuneListSheet)
-  name: ValidateRuneTypes(List<RuneSlotInfo>, RuneListSheet)
+  name: ValidateRuneTypes(List<RuneSlotInfo>?, RuneListSheet)
   href: api/Nekoyume.TableData.InfiniteTowerFloorSheet.Row.html#Nekoyume_TableData_InfiniteTowerFloorSheet_Row_ValidateRuneTypes_System_Collections_Generic_List_Nekoyume_Action_RuneSlotInfo__Nekoyume_TableData_Rune_RuneListSheet_
   commentId: M:Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateRuneTypes(System.Collections.Generic.List{Nekoyume.Action.RuneSlotInfo},Nekoyume.TableData.Rune.RuneListSheet)
   name.vb: ValidateRuneTypes(List(Of RuneSlotInfo), RuneListSheet)
-  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateRuneTypes(System.Collections.Generic.List<Nekoyume.Action.RuneSlotInfo>, Nekoyume.TableData.Rune.RuneListSheet)
+  fullName: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateRuneTypes(System.Collections.Generic.List<Nekoyume.Action.RuneSlotInfo>?, Nekoyume.TableData.Rune.RuneListSheet)
   fullName.vb: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateRuneTypes(System.Collections.Generic.List(Of Nekoyume.Action.RuneSlotInfo), Nekoyume.TableData.Rune.RuneListSheet)
-  nameWithType: InfiniteTowerFloorSheet.Row.ValidateRuneTypes(List<RuneSlotInfo>, RuneListSheet)
+  nameWithType: InfiniteTowerFloorSheet.Row.ValidateRuneTypes(List<RuneSlotInfo>?, RuneListSheet)
   nameWithType.vb: InfiniteTowerFloorSheet.Row.ValidateRuneTypes(List(Of RuneSlotInfo), RuneListSheet)
 - uid: Nekoyume.TableData.InfiniteTowerFloorSheet.Row.ValidateRuneTypes*
   name: ValidateRuneTypes
@@ -91282,6 +91343,45 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.EndBlockIndex
   nameWithType: InfiniteTowerScheduleSheet.Row.EndBlockIndex
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorBegin
+  name: FloorBegin
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_FloorBegin
+  commentId: P:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorBegin
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorBegin
+  nameWithType: InfiniteTowerScheduleSheet.Row.FloorBegin
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorBegin*
+  name: FloorBegin
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_FloorBegin_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorBegin
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorBegin
+  nameWithType: InfiniteTowerScheduleSheet.Row.FloorBegin
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorEnd
+  name: FloorEnd
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_FloorEnd
+  commentId: P:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorEnd
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorEnd
+  nameWithType: InfiniteTowerScheduleSheet.Row.FloorEnd
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorEnd*
+  name: FloorEnd
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_FloorEnd_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorEnd
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorEnd
+  nameWithType: InfiniteTowerScheduleSheet.Row.FloorEnd
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorsCount
+  name: FloorsCount
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_FloorsCount
+  commentId: P:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorsCount
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorsCount
+  nameWithType: InfiniteTowerScheduleSheet.Row.FloorsCount
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorsCount*
+  name: FloorsCount
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_FloorsCount_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorsCount
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.FloorsCount
+  nameWithType: InfiniteTowerScheduleSheet.Row.FloorsCount
 - uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.GetRemainingBlocks(System.Int64)
   name: GetRemainingBlocks(long)
   href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_GetRemainingBlocks_System_Int64_
@@ -91440,6 +91540,54 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.StartBlockIndex
   nameWithType: InfiniteTowerScheduleSheet.Row.StartBlockIndex
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateFloorRange(System.Int32,System.String)
+  name: ValidateFloorRange(int, string)
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_ValidateFloorRange_System_Int32_System_String_
+  commentId: M:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateFloorRange(System.Int32,System.String)
+  name.vb: ValidateFloorRange(Integer, String)
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateFloorRange(int, string)
+  fullName.vb: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateFloorRange(Integer, String)
+  nameWithType: InfiniteTowerScheduleSheet.Row.ValidateFloorRange(int, string)
+  nameWithType.vb: InfiniteTowerScheduleSheet.Row.ValidateFloorRange(Integer, String)
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateFloorRange*
+  name: ValidateFloorRange
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_ValidateFloorRange_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateFloorRange
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateFloorRange
+  nameWithType: InfiniteTowerScheduleSheet.Row.ValidateFloorRange
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId(System.Int32,System.String)
+  name: ValidateInfiniteTowerId(int, string)
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_ValidateInfiniteTowerId_System_Int32_System_String_
+  commentId: M:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId(System.Int32,System.String)
+  name.vb: ValidateInfiniteTowerId(Integer, String)
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId(int, string)
+  fullName.vb: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId(Integer, String)
+  nameWithType: InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId(int, string)
+  nameWithType.vb: InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId(Integer, String)
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId*
+  name: ValidateInfiniteTowerId
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_ValidateInfiniteTowerId_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId
+  nameWithType: InfiniteTowerScheduleSheet.Row.ValidateInfiniteTowerId
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming(System.Int64,System.Int32,System.String)
+  name: ValidateScheduleTiming(long, int, string)
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_ValidateScheduleTiming_System_Int64_System_Int32_System_String_
+  commentId: M:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming(System.Int64,System.Int32,System.String)
+  name.vb: ValidateScheduleTiming(Long, Integer, String)
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming(long, int, string)
+  fullName.vb: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming(Long, Integer, String)
+  nameWithType: InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming(long, int, string)
+  nameWithType.vb: InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming(Long, Integer, String)
+- uid: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming*
+  name: ValidateScheduleTiming
+  href: api/Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.html#Nekoyume_TableData_InfiniteTowerScheduleSheet_Row_ValidateScheduleTiming_
+  commentId: Overload:Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming
+  isSpec: "True"
+  fullName: Nekoyume.TableData.InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming
+  nameWithType: InfiniteTowerScheduleSheet.Row.ValidateScheduleTiming
 - uid: Nekoyume.TableData.ItemConfigForGradeSheet
   name: ItemConfigForGradeSheet
   href: api/Nekoyume.TableData.ItemConfigForGradeSheet.html
@@ -99425,6 +99573,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.TableExtensions.ParseDecimal
   nameWithType: TableExtensions.ParseDecimal
+- uid: Nekoyume.TableData.TableExtensions.ParseElementalTypes(System.String)
+  name: ParseElementalTypes(string)
+  href: api/Nekoyume.TableData.TableExtensions.html#Nekoyume_TableData_TableExtensions_ParseElementalTypes_System_String_
+  commentId: M:Nekoyume.TableData.TableExtensions.ParseElementalTypes(System.String)
+  name.vb: ParseElementalTypes(String)
+  fullName: Nekoyume.TableData.TableExtensions.ParseElementalTypes(string)
+  fullName.vb: Nekoyume.TableData.TableExtensions.ParseElementalTypes(String)
+  nameWithType: TableExtensions.ParseElementalTypes(string)
+  nameWithType.vb: TableExtensions.ParseElementalTypes(String)
+- uid: Nekoyume.TableData.TableExtensions.ParseElementalTypes*
+  name: ParseElementalTypes
+  href: api/Nekoyume.TableData.TableExtensions.html#Nekoyume_TableData_TableExtensions_ParseElementalTypes_
+  commentId: Overload:Nekoyume.TableData.TableExtensions.ParseElementalTypes
+  isSpec: "True"
+  fullName: Nekoyume.TableData.TableExtensions.ParseElementalTypes
+  nameWithType: TableExtensions.ParseElementalTypes
 - uid: Nekoyume.TableData.TableExtensions.ParseFraction(System.String)
   name: ParseFraction(string)
   href: api/Nekoyume.TableData.TableExtensions.html#Nekoyume_TableData_TableExtensions_ParseFraction_System_String_
@@ -99555,6 +99719,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.TableExtensions.ParseRuneTypes
   nameWithType: TableExtensions.ParseRuneTypes
+- uid: Nekoyume.TableData.TableExtensions.ParseSkillTargetTypes(System.String)
+  name: ParseSkillTargetTypes(string)
+  href: api/Nekoyume.TableData.TableExtensions.html#Nekoyume_TableData_TableExtensions_ParseSkillTargetTypes_System_String_
+  commentId: M:Nekoyume.TableData.TableExtensions.ParseSkillTargetTypes(System.String)
+  name.vb: ParseSkillTargetTypes(String)
+  fullName: Nekoyume.TableData.TableExtensions.ParseSkillTargetTypes(string)
+  fullName.vb: Nekoyume.TableData.TableExtensions.ParseSkillTargetTypes(String)
+  nameWithType: TableExtensions.ParseSkillTargetTypes(string)
+  nameWithType.vb: TableExtensions.ParseSkillTargetTypes(String)
+- uid: Nekoyume.TableData.TableExtensions.ParseSkillTargetTypes*
+  name: ParseSkillTargetTypes
+  href: api/Nekoyume.TableData.TableExtensions.html#Nekoyume_TableData_TableExtensions_ParseSkillTargetTypes_
+  commentId: Overload:Nekoyume.TableData.TableExtensions.ParseSkillTargetTypes
+  isSpec: "True"
+  fullName: Nekoyume.TableData.TableExtensions.ParseSkillTargetTypes
+  nameWithType: TableExtensions.ParseSkillTargetTypes
 - uid: Nekoyume.TableData.TableExtensions.ParseStringOrNull(System.String)
   name: ParseStringOrNull(string)
   href: api/Nekoyume.TableData.TableExtensions.html#Nekoyume_TableData_TableExtensions_ParseStringOrNull_System_String_

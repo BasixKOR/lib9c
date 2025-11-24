@@ -89,7 +89,7 @@
 
 
   <h1 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition" class="text-break">
-Class InfiniteTowerCondition  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L14"><i class="bi bi-code-slash"></i></a>
+Class InfiniteTowerCondition  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L15"><i class="bi bi-code-slash"></i></a>
   </h1>
 
   <div class="facts text-secondary">
@@ -159,7 +159,7 @@ public class InfiniteTowerCondition</code></pre>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition__ctor_Nekoyume_TableData_InfiniteTowerConditionSheet_Row_" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.#ctor(Nekoyume.TableData.InfiniteTowerConditionSheet.Row)">
   InfiniteTowerCondition(Row)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L46"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L47"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Initializes a new instance of the InfiniteTowerCondition class.</p>
@@ -196,7 +196,7 @@ public class InfiniteTowerCondition</code></pre>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition_Id" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.Id">
   Id
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L20"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L21"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the unique identifier for this condition.</p>
@@ -228,7 +228,7 @@ public class InfiniteTowerCondition</code></pre>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition_OperationType" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.OperationType">
   OperationType
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L35"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L36"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the operation type for the stat modification.</p>
@@ -260,7 +260,7 @@ public class InfiniteTowerCondition</code></pre>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition_StatType" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.StatType">
   StatType
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L25"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L26"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the stat type that this condition affects.</p>
@@ -292,15 +292,15 @@ public class InfiniteTowerCondition</code></pre>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition_TargetType" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.TargetType">
   TargetType
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L30"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L31"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>Gets the target type for this condition (Self, Enemy, etc.).</p>
+  <div class="markdown level1 summary"><p>Gets the list of target types for this condition (Self, Enemy, etc.).</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public SkillTargetType TargetType { get; }</code></pre>
+    <pre><code class="lang-csharp hljs">public List&lt;SkillTargetType&gt; TargetType { get; }</code></pre>
   </div>
 
 
@@ -309,7 +309,7 @@ public class InfiniteTowerCondition</code></pre>
 
   <h4 class="section">Property Value</h4>
   <dl class="parameters">
-    <dt><a class="xref" href="Nekoyume.Model.Skill.SkillTargetType.html">SkillTargetType</a></dt>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="Nekoyume.Model.Skill.SkillTargetType.html">SkillTargetType</a>&gt;</dt>
     <dd></dd>
   </dl>
 
@@ -324,7 +324,7 @@ public class InfiniteTowerCondition</code></pre>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition_Value" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.Value">
   Value
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L40"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L41"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the value for the stat modification.</p>
@@ -360,7 +360,7 @@ public class InfiniteTowerCondition</code></pre>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition_GetStatModifier" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.GetStatModifier">
   GetStatModifier()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L89"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L90"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Creates a StatModifier from this condition.</p>
@@ -392,7 +392,7 @@ public class InfiniteTowerCondition</code></pre>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition_GetValue" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.GetValue">
   GetValue()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L59"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L60"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the value of this condition.</p>
@@ -425,7 +425,7 @@ public class InfiniteTowerCondition</code></pre>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition_IsApplicableToEquipment_Nekoyume_Model_Item_Equipment_" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.IsApplicableToEquipment(Nekoyume.Model.Item.Equipment)">
   IsApplicableToEquipment(Equipment)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L68"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L69"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Checks if this condition applies to the given equipment for stat modification.
@@ -463,7 +463,7 @@ This is only used for stat modifiers, not equipment restrictions.</p>
 
   <h3 id="Nekoyume_Model_InfiniteTower_InfiniteTowerCondition_IsApplicableToRune_Nekoyume_Model_State_RuneState_" data-uid="Nekoyume.Model.InfiniteTower.InfiniteTowerCondition.IsApplicableToRune(Nekoyume.Model.State.RuneState)">
   IsApplicableToRune(RuneState)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L79"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L80"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Checks if this condition applies to the given rune for stat modification.
@@ -501,7 +501,7 @@ This is only used for stat modifiers, not rune restrictions.</p>
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L14" class="edit-link">Edit this page</a>
+          <a href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Model/InfiniteTower/InfiniteTowerCondition.cs/#L15" class="edit-link">Edit this page</a>
         </div>
 
 
