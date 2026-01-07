@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Class EventDungeonBattle | Lib9c </title>
+      <title>Class EventDungeonBattleSweep | Lib9c </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Class EventDungeonBattle | Lib9c ">
+      <meta name="title" content="Class EventDungeonBattleSweep | Lib9c ">
       
-      <meta name="description" content="Action for participating in an event dungeon battle. This action allows an avatar to battle in a specific stage of an event dungeon, consuming tickets and receiving rewards upon victory. Hard forked at https://github.com/planetarium/lib9c/pull/2195">
+      <meta name="description" content="Represents a sweep action that automatically completes multiple event dungeon battles without player interaction.  This action allows players to automatically repeat battles on already cleared event dungeon stages, consuming tickets and receiving rewards without manual combat interaction.  Key Features: - Only works on previously cleared stages (no stage clearing) - No ticket purchase functionality (uses existing tickets only) - Automatic reward and experience calculation - Multiple battle execution in a single action  This action modifies the following states: - AvatarState: Updates player&#39;s stats, inventory, and experience - EventDungeonInfo: Updates event dungeon progress and ticket usage - RuneState: Updates rune effects and bonuses - ItemSlotState: Updates equipped items - RuneSlotState: Updates equipped runes - CP: Updates character&#39;s combat power  Execution Flow: 1. Validate input parameters and avatar state 2. Load and validate game sheets and configurations 3. Validate event dungeon info and ticket availability 4. Check stage clearance requirements 5. Update rune and item slot states 6. Calculate combat power (CP) 7. Generate rewards and experience 8. Update avatar state and return modified world state  Hard forked at https://github.com/planetarium/lib9c/pull/2195">
       <link rel="icon" href="../favicon.ico">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/BasixKOR/lib9c/new/development/apiSpec/new?filename=Nekoyume_Action_EventDungeonBattle.md&amp;value=---%0Auid%3A%20Nekoyume.Action.EventDungeonBattle%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="docfx:docurl" content="https://github.com/BasixKOR/lib9c/new/development/apiSpec/new?filename=Nekoyume_Action_EventDungeonBattleSweep.md&amp;value=---%0Auid%3A%20Nekoyume.Action.EventDungeonBattleSweep%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -84,12 +84,12 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="Nekoyume.Action.EventDungeonBattle">
+        <article data-uid="Nekoyume.Action.EventDungeonBattleSweep">
 
 
 
-  <h1 id="Nekoyume_Action_EventDungeonBattle" data-uid="Nekoyume.Action.EventDungeonBattle" class="text-break">
-Class EventDungeonBattle  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L37"><i class="bi bi-code-slash"></i></a>
+  <h1 id="Nekoyume_Action_EventDungeonBattleSweep" data-uid="Nekoyume.Action.EventDungeonBattleSweep" class="text-break">
+Class EventDungeonBattleSweep  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L69"><i class="bi bi-code-slash"></i></a>
   </h1>
 
   <div class="facts text-secondary">
@@ -97,17 +97,43 @@ Class EventDungeonBattle  <a class="header-action link-secondary" title="View so
   <dl><dt>Assembly</dt><dd>Lib9c.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>Action for participating in an event dungeon battle.
-This action allows an avatar to battle in a specific stage of an event dungeon,
-consuming tickets and receiving rewards upon victory.
-Hard forked at <a href="https://github.com/planetarium/lib9c/pull/2195">https://github.com/planetarium/lib9c/pull/2195</a></p>
+  <div class="markdown summary"><p>Represents a sweep action that automatically completes multiple event dungeon battles without player interaction.</p>
+<p>
+This action allows players to automatically repeat battles on already cleared event dungeon stages,
+consuming tickets and receiving rewards without manual combat interaction.
+</p><p>
+Key Features:
+- Only works on previously cleared stages (no stage clearing)
+- No ticket purchase functionality (uses existing tickets only)
+- Automatic reward and experience calculation
+- Multiple battle execution in a single action
+</p><p>
+This action modifies the following states:
+- AvatarState: Updates player's stats, inventory, and experience
+- EventDungeonInfo: Updates event dungeon progress and ticket usage
+- RuneState: Updates rune effects and bonuses
+- ItemSlotState: Updates equipped items
+- RuneSlotState: Updates equipped runes
+- CP: Updates character's combat power
+</p><p>
+Execution Flow:
+1. Validate input parameters and avatar state
+2. Load and validate game sheets and configurations
+3. Validate event dungeon info and ticket availability
+4. Check stage clearance requirements
+5. Update rune and item slot states
+6. Calculate combat power (CP)
+7. Generate rewards and experience
+8. Update avatar state and return modified world state
+</p>
+<p>Hard forked at <a href="https://github.com/planetarium/lib9c/pull/2195">https://github.com/planetarium/lib9c/pull/2195</a></p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
     <pre><code class="lang-csharp hljs">[Serializable]
-[ActionType(&quot;event_dungeon_battle6&quot;)]
-public class EventDungeonBattle : GameAction, IAction, IEventDungeonBattleV2</code></pre>
+[ActionType(&quot;event_dungeon_battle_sweep&quot;)]
+public class EventDungeonBattleSweep : GameAction, IAction, IEventDungeonBattleSweep</code></pre>
   </div>
 
 
@@ -119,7 +145,7 @@ public class EventDungeonBattle : GameAction, IAction, IEventDungeonBattleV2</co
       <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
       <div><a class="xref" href="Nekoyume.Action.ActionBase.html">ActionBase</a></div>
       <div><a class="xref" href="Nekoyume.Action.GameAction.html">GameAction</a></div>
-      <div><span class="xref">EventDungeonBattle</span></div>
+      <div><span class="xref">EventDungeonBattleSweep</span></div>
     </dd>
   </dl>
 
@@ -127,7 +153,7 @@ public class EventDungeonBattle : GameAction, IAction, IEventDungeonBattleV2</co
     <dt>Implements</dt>
     <dd>
       <div><span class="xref">IAction</span></div>
-      <div><span class="xref">IEventDungeonBattleV2</span></div>
+      <div><span class="xref">IEventDungeonBattleSweep</span></div>
     </dd>
   </dl>
 
@@ -189,12 +215,12 @@ public class EventDungeonBattle : GameAction, IAction, IEventDungeonBattleV2</co
 
 
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_AvatarAddress" data-uid="Nekoyume.Action.EventDungeonBattle.AvatarAddress">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_AvatarAddress" data-uid="Nekoyume.Action.EventDungeonBattleSweep.AvatarAddress">
   AvatarAddress
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L55"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L81"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>The address of the avatar that will participate in the event dungeon battle.</p>
+  <div class="markdown level1 summary"><p>The address of the avatar performing the sweep action.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
@@ -220,44 +246,12 @@ public class EventDungeonBattle : GameAction, IAction, IEventDungeonBattleV2</co
 
 
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_BuyTicketIfNeeded" data-uid="Nekoyume.Action.EventDungeonBattle.BuyTicketIfNeeded">
-  BuyTicketIfNeeded
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L91"><i class="bi bi-code-slash"></i></a>
-  </h3>
-
-  <div class="markdown level1 summary"><p>Whether to automatically purchase a ticket if the avatar doesn't have enough tickets.
-If true and tickets are insufficient, the action will attempt to buy a ticket using currency.</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public bool BuyTicketIfNeeded</code></pre>
-  </div>
-
-
-
-
-  <h4 class="section">Field Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
-
-
-  <h3 id="Nekoyume_Action_EventDungeonBattle_Costumes" data-uid="Nekoyume.Action.EventDungeonBattle.Costumes">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_Costumes" data-uid="Nekoyume.Action.EventDungeonBattleSweep.Costumes">
   Costumes
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L80"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L106"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>A list of costume item GUIDs to be equipped for the battle.</p>
+  <div class="markdown level1 summary"><p>List of costume item IDs to use during the sweep.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
@@ -283,12 +277,12 @@ If true and tickets are insufficient, the action will attempt to buy a ticket us
 
 
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_Equipments" data-uid="Nekoyume.Action.EventDungeonBattle.Equipments">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_Equipments" data-uid="Nekoyume.Action.EventDungeonBattleSweep.Equipments">
   Equipments
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L75"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L101"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>A list of equipment item GUIDs to be equipped for the battle.</p>
+  <div class="markdown level1 summary"><p>List of equipment item IDs to use during the sweep.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
@@ -314,12 +308,12 @@ If true and tickets are insufficient, the action will attempt to buy a ticket us
 
 
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_EventDungeonId" data-uid="Nekoyume.Action.EventDungeonBattle.EventDungeonId">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_EventDungeonId" data-uid="Nekoyume.Action.EventDungeonBattleSweep.EventDungeonId">
   EventDungeonId
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L65"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L91"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>The ID of the event dungeon to battle in.</p>
+  <div class="markdown level1 summary"><p>The ID of the event dungeon to sweep.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
@@ -345,12 +339,12 @@ If true and tickets are insufficient, the action will attempt to buy a ticket us
 
 
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_EventDungeonStageId" data-uid="Nekoyume.Action.EventDungeonBattle.EventDungeonStageId">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_EventDungeonStageId" data-uid="Nekoyume.Action.EventDungeonBattleSweep.EventDungeonStageId">
   EventDungeonStageId
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L70"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L96"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>The ID of the specific stage within the event dungeon to battle.</p>
+  <div class="markdown level1 summary"><p>The ID of the event dungeon stage to sweep.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
@@ -376,12 +370,12 @@ If true and tickets are insufficient, the action will attempt to buy a ticket us
 
 
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_EventScheduleId" data-uid="Nekoyume.Action.EventDungeonBattle.EventScheduleId">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_EventScheduleId" data-uid="Nekoyume.Action.EventDungeonBattleSweep.EventScheduleId">
   EventScheduleId
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L60"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L86"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>The ID of the event schedule that defines when the event dungeon is available.</p>
+  <div class="markdown level1 summary"><p>The ID of the event schedule for the dungeon.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
@@ -407,12 +401,12 @@ If true and tickets are insufficient, the action will attempt to buy a ticket us
 
 
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_Foods" data-uid="Nekoyume.Action.EventDungeonBattle.Foods">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_Foods" data-uid="Nekoyume.Action.EventDungeonBattleSweep.Foods">
   Foods
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L85"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L111"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>A list of food item GUIDs to be consumed during the battle.</p>
+  <div class="markdown level1 summary"><p>List of food item IDs to use during the sweep.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
@@ -438,18 +432,17 @@ If true and tickets are insufficient, the action will attempt to buy a ticket us
 
 
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_PlayCount" data-uid="Nekoyume.Action.EventDungeonBattle.PlayCount">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_PlayCount" data-uid="Nekoyume.Action.EventDungeonBattleSweep.PlayCount">
   PlayCount
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L50"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L121"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>The number of battles to play in a single action execution.
-Currently fixed to 1 for this action type.</p>
+  <div class="markdown level1 summary"><p>The number of times to perform the sweep (must be between 1 and MaxPlayCount).</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public const int PlayCount = 1</code></pre>
+    <pre><code class="lang-csharp hljs">public int PlayCount</code></pre>
   </div>
 
 
@@ -470,12 +463,12 @@ Currently fixed to 1 for this action type.</p>
 
 
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_RuneInfos" data-uid="Nekoyume.Action.EventDungeonBattle.RuneInfos">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_RuneInfos" data-uid="Nekoyume.Action.EventDungeonBattleSweep.RuneInfos">
   RuneInfos
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L96"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L116"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>A list of rune slot information specifying which runes to use in the battle.</p>
+  <div class="markdown level1 summary"><p>List of rune slot information for equipped runes.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
@@ -504,18 +497,14 @@ Currently fixed to 1 for this action type.</p>
 </h2>
 
 
-  <a id="Nekoyume_Action_EventDungeonBattle_PlainValueInternal_" data-uid="Nekoyume.Action.EventDungeonBattle.PlainValueInternal*"></a>
+  <a id="Nekoyume_Action_EventDungeonBattleSweep_PlainValueInternal_" data-uid="Nekoyume.Action.EventDungeonBattleSweep.PlainValueInternal*"></a>
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_PlainValueInternal" data-uid="Nekoyume.Action.EventDungeonBattle.PlainValueInternal">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_PlainValueInternal" data-uid="Nekoyume.Action.EventDungeonBattleSweep.PlainValueInternal">
   PlainValueInternal
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L118"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L134"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>Serializes the action's data into a Bencodex dictionary.
-The data is stored as a list under the key &quot;l&quot; containing:
-AvatarAddress, EventScheduleId, EventDungeonId, EventDungeonStageId,
-Equipments, Costumes, Foods, BuyTicketIfNeeded, and RuneInfos.</p>
-</div>
+  <div class="markdown level1 summary"></div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
@@ -529,8 +518,7 @@ Equipments, Costumes, Foods, BuyTicketIfNeeded, and RuneInfos.</p>
   <h4 class="section">Property Value</h4>
   <dl class="parameters">
     <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.immutable.iimmutabledictionary-2">IImmutableDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <span class="xref">IValue</span>&gt;</dt>
-    <dd><p>An immutable dictionary containing the serialized action data.</p>
-</dd>
+    <dd></dd>
   </dl>
 
 
@@ -544,24 +532,25 @@ Equipments, Costumes, Foods, BuyTicketIfNeeded, and RuneInfos.</p>
 </h2>
 
 
-  <a id="Nekoyume_Action_EventDungeonBattle_Execute_" data-uid="Nekoyume.Action.EventDungeonBattle.Execute*"></a>
+  <a id="Nekoyume_Action_EventDungeonBattleSweep_Execute_" data-uid="Nekoyume.Action.EventDungeonBattleSweep.Execute*"></a>
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_Execute_Libplanet_Action_IActionContext_" data-uid="Nekoyume.Action.EventDungeonBattle.Execute(Libplanet.Action.IActionContext)">
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_Execute_Libplanet_Action_IActionContext_" data-uid="Nekoyume.Action.EventDungeonBattleSweep.Execute(Libplanet.Action.IActionContext)">
   Execute(IActionContext)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L221"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L212"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>Executes the event dungeon battle action.
-This method performs the following operations:</p>
-<ol>
-<li>Validates the avatar state and event dungeon information</li>
-<li>Checks and consumes event dungeon tickets (or purchases if needed)</li>
-<li>Validates equipment, costumes, foods, and runes</li>
-<li>Updates rune and item slot states</li>
-<li>Simulates the battle using StageSimulator</li>
-<li>Applies battle results to the avatar state (experience, rewards, etc.)</li>
-<li>Updates the event dungeon info if the stage is cleared</li>
-</ol>
+  <div class="markdown level1 summary"><p>Executes the event dungeon battle sweep action.</p>
+<p>
+This method performs the following steps:
+1. Validates input parameters and loads avatar state
+2. Loads and validates all required game sheets
+3. Validates event dungeon configuration and ticket availability
+4. Checks stage clearance requirements
+5. Updates rune and item slot states
+6. Calculates combat power (CP)
+7. Generates rewards and experience
+8. Updates all relevant states and returns the modified world
+</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
@@ -572,14 +561,14 @@ This method performs the following operations:</p>
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
     <dt><code>context</code> <span class="xref">IActionContext</span></dt>
-    <dd><p>The action context containing block index, signer, and random seed.</p>
+    <dd><p>Action context containing previous state, signer, and block information</p>
 </dd>
   </dl>
 
   <h4 class="section">Returns</h4>
   <dl class="parameters">
     <dt><span class="xref">IWorld</span></dt>
-    <dd><p>The updated world state after executing the battle.</p>
+    <dd><p>Modified world state with updated avatar, dungeon info, and other states</p>
 </dd>
   </dl>
 
@@ -590,36 +579,74 @@ This method performs the following operations:</p>
 
 
 
-  <h4 class="section">Exceptions</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="Nekoyume.Action.FailedLoadStateException.html">FailedLoadStateException</a></dt>
-    <dd><p>Thrown when the avatar state cannot be loaded.</p>
-</dd>
-    <dt><a class="xref" href="Nekoyume.Exceptions.NotEnoughEventDungeonTicketsException.html">NotEnoughEventDungeonTicketsException</a></dt>
-    <dd><p>Thrown when the avatar doesn't have enough tickets and BuyTicketIfNeeded is false.</p>
-</dd>
-    <dt><a class="xref" href="Nekoyume.Action.StageNotClearedException.html">StageNotClearedException</a></dt>
-    <dd><p>Thrown when attempting to battle a stage without clearing the previous stage.</p>
-</dd>
-    <dt><a class="xref" href="Nekoyume.TableData.SheetRowNotFoundException.html">SheetRowNotFoundException</a></dt>
-    <dd><p>Thrown when required sheet data cannot be found.</p>
-</dd>
-  </dl>
 
 
 
-  <a id="Nekoyume_Action_EventDungeonBattle_LoadPlainValueInternal_" data-uid="Nekoyume.Action.EventDungeonBattle.LoadPlainValueInternal*"></a>
+  <a id="Nekoyume_Action_EventDungeonBattleSweep_GetRewardItems_" data-uid="Nekoyume.Action.EventDungeonBattleSweep.GetRewardItems*"></a>
 
-  <h3 id="Nekoyume_Action_EventDungeonBattle_LoadPlainValueInternal_System_Collections_Immutable_IImmutableDictionary_System_String_Bencodex_Types_IValue__" data-uid="Nekoyume.Action.EventDungeonBattle.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary{System.String,Bencodex.Types.IValue})">
-  LoadPlainValueInternal(IImmutableDictionary&lt;string, IValue&gt;)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L163"><i class="bi bi-code-slash"></i></a>
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_GetRewardItems_Libplanet_Action_IRandom_System_Int32_Nekoyume_TableData_Event_EventDungeonStageSheet_Row_Nekoyume_TableData_MaterialItemSheet_" data-uid="Nekoyume.Action.EventDungeonBattleSweep.GetRewardItems(Libplanet.Action.IRandom,System.Int32,Nekoyume.TableData.Event.EventDungeonStageSheet.Row,Nekoyume.TableData.MaterialItemSheet)">
+  GetRewardItems(IRandom, int, Row, MaterialItemSheet)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L583"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>Deserializes the action's data from a Bencodex dictionary.
-Expects a list under the key &quot;l&quot; containing at least 9 items in the order:
-AvatarAddress, EventScheduleId, EventDungeonId, EventDungeonStageId,
-Equipments, Costumes, Foods, BuyTicketIfNeeded, and RuneInfos.</p>
+  <div class="markdown level1 summary"><p>Gets reward items for event dungeon sweep based on play count and stage configuration.</p>
+<p>
+This method simulates multiple battle rewards without actually performing combat.
+It generates items based on the stage's drop configuration and the number of plays requested.
+</p><p>
+Process:
+1. Determine the number of items to drop per play (random between min and max)
+2. For each play, generate rewards using the stage's item selector
+3. Collect all rewards and sort them by item ID for consistency
+</p>
 </div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static List&lt;ItemBase&gt; GetRewardItems(IRandom random, int playCount, EventDungeonStageSheet.Row stageRow, MaterialItemSheet materialItemSheet)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>random</code> <span class="xref">IRandom</span></dt>
+    <dd><p>Random number generator for deterministic reward generation</p>
+</dd>
+    <dt><code>playCount</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>Number of plays to simulate (determines total reward count)</p>
+</dd>
+    <dt><code>stageRow</code> <a class="xref" href="Nekoyume.TableData.Event.EventDungeonStageSheet.html">EventDungeonStageSheet</a>.<a class="xref" href="Nekoyume.TableData.Event.EventDungeonStageSheet.Row.html">Row</a></dt>
+    <dd><p>Event dungeon stage configuration containing drop rates and item pools</p>
+</dd>
+    <dt><code>materialItemSheet</code> <a class="xref" href="Nekoyume.TableData.MaterialItemSheet.html">MaterialItemSheet</a></dt>
+    <dd><p>Material item sheet for reward generation and validation</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="Nekoyume.Model.Item.ItemBase.html">ItemBase</a>&gt;</dt>
+    <dd><p>List of reward items sorted by item ID</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="Nekoyume_Action_EventDungeonBattleSweep_LoadPlainValueInternal_" data-uid="Nekoyume.Action.EventDungeonBattleSweep.LoadPlainValueInternal*"></a>
+
+  <h3 id="Nekoyume_Action_EventDungeonBattleSweep_LoadPlainValueInternal_System_Collections_Immutable_IImmutableDictionary_System_String_Bencodex_Types_IValue__" data-uid="Nekoyume.Action.EventDungeonBattleSweep.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary{System.String,Bencodex.Types.IValue})">
+  LoadPlainValueInternal(IImmutableDictionary&lt;string, IValue&gt;)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L166"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"></div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
@@ -629,8 +656,7 @@ Equipments, Costumes, Foods, BuyTicketIfNeeded, and RuneInfos.</p>
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
     <dt><code>plainValue</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.immutable.iimmutabledictionary-2">IImmutableDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <span class="xref">IValue</span>&gt;</dt>
-    <dd><p>The Bencodex dictionary containing the serialized action data.</p>
-</dd>
+    <dd></dd>
   </dl>
 
 
@@ -641,13 +667,6 @@ Equipments, Costumes, Foods, BuyTicketIfNeeded, and RuneInfos.</p>
 
 
 
-  <h4 class="section">Exceptions</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></dt>
-    <dd><p>Thrown when the plainValue doesn't contain the expected key &quot;l&quot;,
-when &quot;l&quot; is not a Bencodex list, or when the list has fewer than 9 items.</p>
-</dd>
-  </dl>
 
 
 
@@ -655,7 +674,7 @@ when &quot;l&quot; is not a Bencodex list, or when the list has fewer than 9 ite
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattle.cs/#L37" class="edit-link">Edit this page</a>
+          <a href="https://github.com/BasixKOR/lib9c/blob/development/Lib9c/Action/EventDungeonBattleSweep.cs/#L69" class="edit-link">Edit this page</a>
         </div>
 
 

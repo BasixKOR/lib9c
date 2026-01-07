@@ -460,7 +460,44 @@ Updated at <a href="https://github.com/planetarium/lib9c/pull/1828">https://gith
     </dl>
     <dl class="jumplist">
       <dt><a class="xref" href="Nekoyume.Action.EventDungeonBattle.html">EventDungeonBattle</a></dt>
-      <dd><p>Hard forked at <a href="https://github.com/planetarium/lib9c/pull/2195">https://github.com/planetarium/lib9c/pull/2195</a></p>
+      <dd><p>Action for participating in an event dungeon battle.
+This action allows an avatar to battle in a specific stage of an event dungeon,
+consuming tickets and receiving rewards upon victory.
+Hard forked at <a href="https://github.com/planetarium/lib9c/pull/2195">https://github.com/planetarium/lib9c/pull/2195</a></p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="Nekoyume.Action.EventDungeonBattleSweep.html">EventDungeonBattleSweep</a></dt>
+      <dd><p>Represents a sweep action that automatically completes multiple event dungeon battles without player interaction.</p>
+<p>
+This action allows players to automatically repeat battles on already cleared event dungeon stages,
+consuming tickets and receiving rewards without manual combat interaction.
+</p><p>
+Key Features:
+- Only works on previously cleared stages (no stage clearing)
+- No ticket purchase functionality (uses existing tickets only)
+- Automatic reward and experience calculation
+- Multiple battle execution in a single action
+</p><p>
+This action modifies the following states:
+- AvatarState: Updates player's stats, inventory, and experience
+- EventDungeonInfo: Updates event dungeon progress and ticket usage
+- RuneState: Updates rune effects and bonuses
+- ItemSlotState: Updates equipped items
+- RuneSlotState: Updates equipped runes
+- CP: Updates character's combat power
+</p><p>
+Execution Flow:
+1. Validate input parameters and avatar state
+2. Load and validate game sheets and configurations
+3. Validate event dungeon info and ticket availability
+4. Check stage clearance requirements
+5. Update rune and item slot states
+6. Calculate combat power (CP)
+7. Generate rewards and experience
+8. Update avatar state and return modified world state
+</p>
+<p>Hard forked at <a href="https://github.com/planetarium/lib9c/pull/2195">https://github.com/planetarium/lib9c/pull/2195</a></p>
 </dd>
     </dl>
     <dl class="jumplist">

@@ -9343,6 +9343,124 @@ references:
   commentId: F:Nekoyume.Action.EventDungeonBattle.RuneInfos
   fullName: Nekoyume.Action.EventDungeonBattle.RuneInfos
   nameWithType: EventDungeonBattle.RuneInfos
+- uid: Nekoyume.Action.EventDungeonBattleSweep
+  name: EventDungeonBattleSweep
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html
+  commentId: T:Nekoyume.Action.EventDungeonBattleSweep
+  fullName: Nekoyume.Action.EventDungeonBattleSweep
+  nameWithType: EventDungeonBattleSweep
+- uid: Nekoyume.Action.EventDungeonBattleSweep.AvatarAddress
+  name: AvatarAddress
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_AvatarAddress
+  commentId: F:Nekoyume.Action.EventDungeonBattleSweep.AvatarAddress
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.AvatarAddress
+  nameWithType: EventDungeonBattleSweep.AvatarAddress
+- uid: Nekoyume.Action.EventDungeonBattleSweep.Costumes
+  name: Costumes
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_Costumes
+  commentId: F:Nekoyume.Action.EventDungeonBattleSweep.Costumes
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.Costumes
+  nameWithType: EventDungeonBattleSweep.Costumes
+- uid: Nekoyume.Action.EventDungeonBattleSweep.Equipments
+  name: Equipments
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_Equipments
+  commentId: F:Nekoyume.Action.EventDungeonBattleSweep.Equipments
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.Equipments
+  nameWithType: EventDungeonBattleSweep.Equipments
+- uid: Nekoyume.Action.EventDungeonBattleSweep.EventDungeonId
+  name: EventDungeonId
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_EventDungeonId
+  commentId: F:Nekoyume.Action.EventDungeonBattleSweep.EventDungeonId
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.EventDungeonId
+  nameWithType: EventDungeonBattleSweep.EventDungeonId
+- uid: Nekoyume.Action.EventDungeonBattleSweep.EventDungeonStageId
+  name: EventDungeonStageId
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_EventDungeonStageId
+  commentId: F:Nekoyume.Action.EventDungeonBattleSweep.EventDungeonStageId
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.EventDungeonStageId
+  nameWithType: EventDungeonBattleSweep.EventDungeonStageId
+- uid: Nekoyume.Action.EventDungeonBattleSweep.EventScheduleId
+  name: EventScheduleId
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_EventScheduleId
+  commentId: F:Nekoyume.Action.EventDungeonBattleSweep.EventScheduleId
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.EventScheduleId
+  nameWithType: EventDungeonBattleSweep.EventScheduleId
+- uid: Nekoyume.Action.EventDungeonBattleSweep.Execute(Libplanet.Action.IActionContext)
+  name: Execute(IActionContext)
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_Execute_Libplanet_Action_IActionContext_
+  commentId: M:Nekoyume.Action.EventDungeonBattleSweep.Execute(Libplanet.Action.IActionContext)
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.Execute(Libplanet.Action.IActionContext)
+  nameWithType: EventDungeonBattleSweep.Execute(IActionContext)
+- uid: Nekoyume.Action.EventDungeonBattleSweep.Execute*
+  name: Execute
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_Execute_
+  commentId: Overload:Nekoyume.Action.EventDungeonBattleSweep.Execute
+  isSpec: "True"
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.Execute
+  nameWithType: EventDungeonBattleSweep.Execute
+- uid: Nekoyume.Action.EventDungeonBattleSweep.Foods
+  name: Foods
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_Foods
+  commentId: F:Nekoyume.Action.EventDungeonBattleSweep.Foods
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.Foods
+  nameWithType: EventDungeonBattleSweep.Foods
+- uid: Nekoyume.Action.EventDungeonBattleSweep.GetRewardItems(Libplanet.Action.IRandom,System.Int32,Nekoyume.TableData.Event.EventDungeonStageSheet.Row,Nekoyume.TableData.MaterialItemSheet)
+  name: GetRewardItems(IRandom, int, Row, MaterialItemSheet)
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_GetRewardItems_Libplanet_Action_IRandom_System_Int32_Nekoyume_TableData_Event_EventDungeonStageSheet_Row_Nekoyume_TableData_MaterialItemSheet_
+  commentId: M:Nekoyume.Action.EventDungeonBattleSweep.GetRewardItems(Libplanet.Action.IRandom,System.Int32,Nekoyume.TableData.Event.EventDungeonStageSheet.Row,Nekoyume.TableData.MaterialItemSheet)
+  name.vb: GetRewardItems(IRandom, Integer, Row, MaterialItemSheet)
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.GetRewardItems(Libplanet.Action.IRandom, int, Nekoyume.TableData.Event.EventDungeonStageSheet.Row, Nekoyume.TableData.MaterialItemSheet)
+  fullName.vb: Nekoyume.Action.EventDungeonBattleSweep.GetRewardItems(Libplanet.Action.IRandom, Integer, Nekoyume.TableData.Event.EventDungeonStageSheet.Row, Nekoyume.TableData.MaterialItemSheet)
+  nameWithType: EventDungeonBattleSweep.GetRewardItems(IRandom, int, EventDungeonStageSheet.Row, MaterialItemSheet)
+  nameWithType.vb: EventDungeonBattleSweep.GetRewardItems(IRandom, Integer, EventDungeonStageSheet.Row, MaterialItemSheet)
+- uid: Nekoyume.Action.EventDungeonBattleSweep.GetRewardItems*
+  name: GetRewardItems
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_GetRewardItems_
+  commentId: Overload:Nekoyume.Action.EventDungeonBattleSweep.GetRewardItems
+  isSpec: "True"
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.GetRewardItems
+  nameWithType: EventDungeonBattleSweep.GetRewardItems
+- uid: Nekoyume.Action.EventDungeonBattleSweep.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary{System.String,Bencodex.Types.IValue})
+  name: LoadPlainValueInternal(IImmutableDictionary<string, IValue>)
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_LoadPlainValueInternal_System_Collections_Immutable_IImmutableDictionary_System_String_Bencodex_Types_IValue__
+  commentId: M:Nekoyume.Action.EventDungeonBattleSweep.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary{System.String,Bencodex.Types.IValue})
+  name.vb: LoadPlainValueInternal(IImmutableDictionary(Of String, IValue))
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary<string, Bencodex.Types.IValue>)
+  fullName.vb: Nekoyume.Action.EventDungeonBattleSweep.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary(Of String, Bencodex.Types.IValue))
+  nameWithType: EventDungeonBattleSweep.LoadPlainValueInternal(IImmutableDictionary<string, IValue>)
+  nameWithType.vb: EventDungeonBattleSweep.LoadPlainValueInternal(IImmutableDictionary(Of String, IValue))
+- uid: Nekoyume.Action.EventDungeonBattleSweep.LoadPlainValueInternal*
+  name: LoadPlainValueInternal
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_LoadPlainValueInternal_
+  commentId: Overload:Nekoyume.Action.EventDungeonBattleSweep.LoadPlainValueInternal
+  isSpec: "True"
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.LoadPlainValueInternal
+  nameWithType: EventDungeonBattleSweep.LoadPlainValueInternal
+- uid: Nekoyume.Action.EventDungeonBattleSweep.PlainValueInternal
+  name: PlainValueInternal
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_PlainValueInternal
+  commentId: P:Nekoyume.Action.EventDungeonBattleSweep.PlainValueInternal
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.PlainValueInternal
+  nameWithType: EventDungeonBattleSweep.PlainValueInternal
+- uid: Nekoyume.Action.EventDungeonBattleSweep.PlainValueInternal*
+  name: PlainValueInternal
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_PlainValueInternal_
+  commentId: Overload:Nekoyume.Action.EventDungeonBattleSweep.PlainValueInternal
+  isSpec: "True"
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.PlainValueInternal
+  nameWithType: EventDungeonBattleSweep.PlainValueInternal
+- uid: Nekoyume.Action.EventDungeonBattleSweep.PlayCount
+  name: PlayCount
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_PlayCount
+  commentId: F:Nekoyume.Action.EventDungeonBattleSweep.PlayCount
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.PlayCount
+  nameWithType: EventDungeonBattleSweep.PlayCount
+- uid: Nekoyume.Action.EventDungeonBattleSweep.RuneInfos
+  name: RuneInfos
+  href: api/Nekoyume.Action.EventDungeonBattleSweep.html#Nekoyume_Action_EventDungeonBattleSweep_RuneInfos
+  commentId: F:Nekoyume.Action.EventDungeonBattleSweep.RuneInfos
+  fullName: Nekoyume.Action.EventDungeonBattleSweep.RuneInfos
+  nameWithType: EventDungeonBattleSweep.RuneInfos
 - uid: Nekoyume.Action.EventMaterialItemCrafts
   name: EventMaterialItemCrafts
   href: api/Nekoyume.Action.EventMaterialItemCrafts.html
