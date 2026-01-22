@@ -39611,6 +39611,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Helper.AvatarStateExtensions.GetLevelAndExp
   nameWithType: AvatarStateExtensions.GetLevelAndExp
+- uid: Nekoyume.Helper.AvatarStateExtensions.GetLevelAndExpForEventDungeon(Nekoyume.Model.State.AvatarState,Nekoyume.TableData.CharacterLevelSheet,Nekoyume.TableData.Event.EventScheduleSheet.Row,System.Int32,System.Int32)
+  name: GetLevelAndExpForEventDungeon(AvatarState, CharacterLevelSheet, Row, int, int)
+  href: api/Nekoyume.Helper.AvatarStateExtensions.html#Nekoyume_Helper_AvatarStateExtensions_GetLevelAndExpForEventDungeon_Nekoyume_Model_State_AvatarState_Nekoyume_TableData_CharacterLevelSheet_Nekoyume_TableData_Event_EventScheduleSheet_Row_System_Int32_System_Int32_
+  commentId: M:Nekoyume.Helper.AvatarStateExtensions.GetLevelAndExpForEventDungeon(Nekoyume.Model.State.AvatarState,Nekoyume.TableData.CharacterLevelSheet,Nekoyume.TableData.Event.EventScheduleSheet.Row,System.Int32,System.Int32)
+  name.vb: GetLevelAndExpForEventDungeon(AvatarState, CharacterLevelSheet, Row, Integer, Integer)
+  fullName: Nekoyume.Helper.AvatarStateExtensions.GetLevelAndExpForEventDungeon(Nekoyume.Model.State.AvatarState, Nekoyume.TableData.CharacterLevelSheet, Nekoyume.TableData.Event.EventScheduleSheet.Row, int, int)
+  fullName.vb: Nekoyume.Helper.AvatarStateExtensions.GetLevelAndExpForEventDungeon(Nekoyume.Model.State.AvatarState, Nekoyume.TableData.CharacterLevelSheet, Nekoyume.TableData.Event.EventScheduleSheet.Row, Integer, Integer)
+  nameWithType: AvatarStateExtensions.GetLevelAndExpForEventDungeon(AvatarState, CharacterLevelSheet, EventScheduleSheet.Row, int, int)
+  nameWithType.vb: AvatarStateExtensions.GetLevelAndExpForEventDungeon(AvatarState, CharacterLevelSheet, EventScheduleSheet.Row, Integer, Integer)
+- uid: Nekoyume.Helper.AvatarStateExtensions.GetLevelAndExpForEventDungeon*
+  name: GetLevelAndExpForEventDungeon
+  href: api/Nekoyume.Helper.AvatarStateExtensions.html#Nekoyume_Helper_AvatarStateExtensions_GetLevelAndExpForEventDungeon_
+  commentId: Overload:Nekoyume.Helper.AvatarStateExtensions.GetLevelAndExpForEventDungeon
+  isSpec: "True"
+  fullName: Nekoyume.Helper.AvatarStateExtensions.GetLevelAndExpForEventDungeon
+  nameWithType: AvatarStateExtensions.GetLevelAndExpForEventDungeon
 - uid: Nekoyume.Helper.AvatarStateExtensions.GetLevelAndExpV1(Nekoyume.Model.State.AvatarState,Nekoyume.TableData.CharacterLevelSheet,System.Int32,System.Int32)
   name: GetLevelAndExpV1(AvatarState, CharacterLevelSheet, int, int)
   href: api/Nekoyume.Helper.AvatarStateExtensions.html#Nekoyume_Helper_AvatarStateExtensions_GetLevelAndExpV1_Nekoyume_Model_State_AvatarState_Nekoyume_TableData_CharacterLevelSheet_System_Int32_System_Int32_
