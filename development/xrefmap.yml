@@ -11464,6 +11464,101 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Action.GoldDistribution.StartBlock
   nameWithType: GoldDistribution.StartBlock
+- uid: Nekoyume.Action.GrantItems
+  name: GrantItems
+  href: api/Nekoyume.Action.GrantItems.html
+  commentId: T:Nekoyume.Action.GrantItems
+  fullName: Nekoyume.Action.GrantItems
+  nameWithType: GrantItems
+- uid: Nekoyume.Action.GrantItems.#ctor
+  name: GrantItems()
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems__ctor
+  commentId: M:Nekoyume.Action.GrantItems.#ctor
+  name.vb: New()
+  fullName: Nekoyume.Action.GrantItems.GrantItems()
+  fullName.vb: Nekoyume.Action.GrantItems.New()
+  nameWithType: GrantItems.GrantItems()
+  nameWithType.vb: GrantItems.New()
+- uid: Nekoyume.Action.GrantItems.#ctor(System.Collections.Generic.IReadOnlyList{System.ValueTuple{Libplanet.Crypto.Address,System.Collections.Generic.IReadOnlyList{Libplanet.Types.Assets.FungibleAssetValue}}},System.String)
+  name: GrantItems(IReadOnlyList<(Address, IReadOnlyList<FungibleAssetValue>)>, string)
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems__ctor_System_Collections_Generic_IReadOnlyList_System_ValueTuple_Libplanet_Crypto_Address_System_Collections_Generic_IReadOnlyList_Libplanet_Types_Assets_FungibleAssetValue____System_String_
+  commentId: M:Nekoyume.Action.GrantItems.#ctor(System.Collections.Generic.IReadOnlyList{System.ValueTuple{Libplanet.Crypto.Address,System.Collections.Generic.IReadOnlyList{Libplanet.Types.Assets.FungibleAssetValue}}},System.String)
+  name.vb: New(IReadOnlyList(Of (Address, IReadOnlyList(Of FungibleAssetValue))), String)
+  fullName: Nekoyume.Action.GrantItems.GrantItems(System.Collections.Generic.IReadOnlyList<(Libplanet.Crypto.Address, System.Collections.Generic.IReadOnlyList<Libplanet.Types.Assets.FungibleAssetValue>)>, string)
+  fullName.vb: Nekoyume.Action.GrantItems.New(System.Collections.Generic.IReadOnlyList(Of (Libplanet.Crypto.Address, System.Collections.Generic.IReadOnlyList(Of Libplanet.Types.Assets.FungibleAssetValue))), String)
+  nameWithType: GrantItems.GrantItems(IReadOnlyList<(Address, IReadOnlyList<FungibleAssetValue>)>, string)
+  nameWithType.vb: GrantItems.New(IReadOnlyList(Of (Address, IReadOnlyList(Of FungibleAssetValue))), String)
+- uid: Nekoyume.Action.GrantItems.#ctor*
+  name: GrantItems
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems__ctor_
+  commentId: Overload:Nekoyume.Action.GrantItems.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: Nekoyume.Action.GrantItems.GrantItems
+  fullName.vb: Nekoyume.Action.GrantItems.New
+  nameWithType: GrantItems.GrantItems
+  nameWithType.vb: GrantItems.New
+- uid: Nekoyume.Action.GrantItems.ClaimData
+  name: ClaimData
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems_ClaimData
+  commentId: P:Nekoyume.Action.GrantItems.ClaimData
+  fullName: Nekoyume.Action.GrantItems.ClaimData
+  nameWithType: GrantItems.ClaimData
+- uid: Nekoyume.Action.GrantItems.ClaimData*
+  name: ClaimData
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems_ClaimData_
+  commentId: Overload:Nekoyume.Action.GrantItems.ClaimData
+  isSpec: "True"
+  fullName: Nekoyume.Action.GrantItems.ClaimData
+  nameWithType: GrantItems.ClaimData
+- uid: Nekoyume.Action.GrantItems.Execute(Libplanet.Action.IActionContext)
+  name: Execute(IActionContext)
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems_Execute_Libplanet_Action_IActionContext_
+  commentId: M:Nekoyume.Action.GrantItems.Execute(Libplanet.Action.IActionContext)
+  fullName: Nekoyume.Action.GrantItems.Execute(Libplanet.Action.IActionContext)
+  nameWithType: GrantItems.Execute(IActionContext)
+- uid: Nekoyume.Action.GrantItems.Execute*
+  name: Execute
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems_Execute_
+  commentId: Overload:Nekoyume.Action.GrantItems.Execute
+  isSpec: "True"
+  fullName: Nekoyume.Action.GrantItems.Execute
+  nameWithType: GrantItems.Execute
+- uid: Nekoyume.Action.GrantItems.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary{System.String,Bencodex.Types.IValue})
+  name: LoadPlainValueInternal(IImmutableDictionary<string, IValue>)
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems_LoadPlainValueInternal_System_Collections_Immutable_IImmutableDictionary_System_String_Bencodex_Types_IValue__
+  commentId: M:Nekoyume.Action.GrantItems.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary{System.String,Bencodex.Types.IValue})
+  name.vb: LoadPlainValueInternal(IImmutableDictionary(Of String, IValue))
+  fullName: Nekoyume.Action.GrantItems.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary<string, Bencodex.Types.IValue>)
+  fullName.vb: Nekoyume.Action.GrantItems.LoadPlainValueInternal(System.Collections.Immutable.IImmutableDictionary(Of String, Bencodex.Types.IValue))
+  nameWithType: GrantItems.LoadPlainValueInternal(IImmutableDictionary<string, IValue>)
+  nameWithType.vb: GrantItems.LoadPlainValueInternal(IImmutableDictionary(Of String, IValue))
+- uid: Nekoyume.Action.GrantItems.LoadPlainValueInternal*
+  name: LoadPlainValueInternal
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems_LoadPlainValueInternal_
+  commentId: Overload:Nekoyume.Action.GrantItems.LoadPlainValueInternal
+  isSpec: "True"
+  fullName: Nekoyume.Action.GrantItems.LoadPlainValueInternal
+  nameWithType: GrantItems.LoadPlainValueInternal
+- uid: Nekoyume.Action.GrantItems.Memo
+  name: Memo
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems_Memo
+  commentId: F:Nekoyume.Action.GrantItems.Memo
+  fullName: Nekoyume.Action.GrantItems.Memo
+  nameWithType: GrantItems.Memo
+- uid: Nekoyume.Action.GrantItems.PlainValueInternal
+  name: PlainValueInternal
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems_PlainValueInternal
+  commentId: P:Nekoyume.Action.GrantItems.PlainValueInternal
+  fullName: Nekoyume.Action.GrantItems.PlainValueInternal
+  nameWithType: GrantItems.PlainValueInternal
+- uid: Nekoyume.Action.GrantItems.PlainValueInternal*
+  name: PlainValueInternal
+  href: api/Nekoyume.Action.GrantItems.html#Nekoyume_Action_GrantItems_PlainValueInternal_
+  commentId: Overload:Nekoyume.Action.GrantItems.PlainValueInternal
+  isSpec: "True"
+  fullName: Nekoyume.Action.GrantItems.PlainValueInternal
+  nameWithType: GrantItems.PlainValueInternal
 - uid: Nekoyume.Action.Grinding
   name: Grinding
   href: api/Nekoyume.Action.Grinding.html
@@ -49427,6 +49522,12 @@ references:
   commentId: F:Nekoyume.Model.EnumType.Grade.Rare
   fullName: Nekoyume.Model.EnumType.Grade.Rare
   nameWithType: Grade.Rare
+- uid: Nekoyume.Model.EnumType.Grade.Transcendent
+  name: Transcendent
+  href: api/Nekoyume.Model.EnumType.Grade.html#Nekoyume_Model_EnumType_Grade_Transcendent
+  commentId: F:Nekoyume.Model.EnumType.Grade.Transcendent
+  fullName: Nekoyume.Model.EnumType.Grade.Transcendent
+  nameWithType: Grade.Transcendent
 - uid: Nekoyume.Model.EnumType.Grade.Unique
   name: Unique
   href: api/Nekoyume.Model.EnumType.Grade.html#Nekoyume_Model_EnumType_Grade_Unique
