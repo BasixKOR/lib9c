@@ -12862,6 +12862,18 @@ references:
   commentId: F:Nekoyume.Action.HackAndSlash.Costumes
   fullName: Nekoyume.Action.HackAndSlash.Costumes
   nameWithType: HackAndSlash.Costumes
+- uid: Nekoyume.Action.HackAndSlash.EntryCostItemCount
+  name: EntryCostItemCount
+  href: api/Nekoyume.Action.HackAndSlash.html#Nekoyume_Action_HackAndSlash_EntryCostItemCount
+  commentId: F:Nekoyume.Action.HackAndSlash.EntryCostItemCount
+  fullName: Nekoyume.Action.HackAndSlash.EntryCostItemCount
+  nameWithType: HackAndSlash.EntryCostItemCount
+- uid: Nekoyume.Action.HackAndSlash.EntryCostItemId
+  name: EntryCostItemId
+  href: api/Nekoyume.Action.HackAndSlash.html#Nekoyume_Action_HackAndSlash_EntryCostItemId
+  commentId: F:Nekoyume.Action.HackAndSlash.EntryCostItemId
+  fullName: Nekoyume.Action.HackAndSlash.EntryCostItemId
+  nameWithType: HackAndSlash.EntryCostItemId
 - uid: Nekoyume.Action.HackAndSlash.Equipments
   name: Equipments
   href: api/Nekoyume.Action.HackAndSlash.html#Nekoyume_Action_HackAndSlash_Equipments
@@ -12874,15 +12886,15 @@ references:
   commentId: M:Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.IActionContext)
   fullName: Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.IActionContext)
   nameWithType: HackAndSlash.Execute(IActionContext)
-- uid: Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.State.IWorld,Libplanet.Crypto.Address,System.Int64,Libplanet.Action.IRandom)
-  name: Execute(IWorld, Address, long, IRandom)
-  href: api/Nekoyume.Action.HackAndSlash.html#Nekoyume_Action_HackAndSlash_Execute_Libplanet_Action_State_IWorld_Libplanet_Crypto_Address_System_Int64_Libplanet_Action_IRandom_
-  commentId: M:Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.State.IWorld,Libplanet.Crypto.Address,System.Int64,Libplanet.Action.IRandom)
-  name.vb: Execute(IWorld, Address, Long, IRandom)
-  fullName: Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.State.IWorld, Libplanet.Crypto.Address, long, Libplanet.Action.IRandom)
-  fullName.vb: Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.State.IWorld, Libplanet.Crypto.Address, Long, Libplanet.Action.IRandom)
-  nameWithType: HackAndSlash.Execute(IWorld, Address, long, IRandom)
-  nameWithType.vb: HackAndSlash.Execute(IWorld, Address, Long, IRandom)
+- uid: Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.State.IWorld,Libplanet.Crypto.Address,System.Int64,Libplanet.Action.IRandom,Libplanet.Action.IActionContext)
+  name: Execute(IWorld, Address, long, IRandom, IActionContext)
+  href: api/Nekoyume.Action.HackAndSlash.html#Nekoyume_Action_HackAndSlash_Execute_Libplanet_Action_State_IWorld_Libplanet_Crypto_Address_System_Int64_Libplanet_Action_IRandom_Libplanet_Action_IActionContext_
+  commentId: M:Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.State.IWorld,Libplanet.Crypto.Address,System.Int64,Libplanet.Action.IRandom,Libplanet.Action.IActionContext)
+  name.vb: Execute(IWorld, Address, Long, IRandom, IActionContext)
+  fullName: Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.State.IWorld, Libplanet.Crypto.Address, long, Libplanet.Action.IRandom, Libplanet.Action.IActionContext)
+  fullName.vb: Nekoyume.Action.HackAndSlash.Execute(Libplanet.Action.State.IWorld, Libplanet.Crypto.Address, Long, Libplanet.Action.IRandom, Libplanet.Action.IActionContext)
+  nameWithType: HackAndSlash.Execute(IWorld, Address, long, IRandom, IActionContext)
+  nameWithType.vb: HackAndSlash.Execute(IWorld, Address, Long, IRandom, IActionContext)
 - uid: Nekoyume.Action.HackAndSlash.Execute*
   name: Execute
   href: api/Nekoyume.Action.HackAndSlash.html#Nekoyume_Action_HackAndSlash_Execute_
@@ -13127,6 +13139,18 @@ references:
   commentId: F:Nekoyume.Action.HackAndSlashSweep.costumes
   fullName: Nekoyume.Action.HackAndSlashSweep.costumes
   nameWithType: HackAndSlashSweep.costumes
+- uid: Nekoyume.Action.HackAndSlashSweep.entryCostItemCount
+  name: entryCostItemCount
+  href: api/Nekoyume.Action.HackAndSlashSweep.html#Nekoyume_Action_HackAndSlashSweep_entryCostItemCount
+  commentId: F:Nekoyume.Action.HackAndSlashSweep.entryCostItemCount
+  fullName: Nekoyume.Action.HackAndSlashSweep.entryCostItemCount
+  nameWithType: HackAndSlashSweep.entryCostItemCount
+- uid: Nekoyume.Action.HackAndSlashSweep.entryCostItemId
+  name: entryCostItemId
+  href: api/Nekoyume.Action.HackAndSlashSweep.html#Nekoyume_Action_HackAndSlashSweep_entryCostItemId
+  commentId: F:Nekoyume.Action.HackAndSlashSweep.entryCostItemId
+  fullName: Nekoyume.Action.HackAndSlashSweep.entryCostItemId
+  nameWithType: HackAndSlashSweep.entryCostItemId
 - uid: Nekoyume.Action.HackAndSlashSweep.equipments
   name: equipments
   href: api/Nekoyume.Action.HackAndSlashSweep.html#Nekoyume_Action_HackAndSlashSweep_equipments
@@ -30594,6 +30618,32 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Battle.StageSimulator.EnemySkillSheet
   nameWithType: StageSimulator.EnemySkillSheet
+- uid: Nekoyume.Battle.StageSimulator.FungibleAssetRewards
+  name: FungibleAssetRewards
+  href: api/Nekoyume.Battle.StageSimulator.html#Nekoyume_Battle_StageSimulator_FungibleAssetRewards
+  commentId: P:Nekoyume.Battle.StageSimulator.FungibleAssetRewards
+  fullName: Nekoyume.Battle.StageSimulator.FungibleAssetRewards
+  nameWithType: StageSimulator.FungibleAssetRewards
+- uid: Nekoyume.Battle.StageSimulator.FungibleAssetRewards*
+  name: FungibleAssetRewards
+  href: api/Nekoyume.Battle.StageSimulator.html#Nekoyume_Battle_StageSimulator_FungibleAssetRewards_
+  commentId: Overload:Nekoyume.Battle.StageSimulator.FungibleAssetRewards
+  isSpec: "True"
+  fullName: Nekoyume.Battle.StageSimulator.FungibleAssetRewards
+  nameWithType: StageSimulator.FungibleAssetRewards
+- uid: Nekoyume.Battle.StageSimulator.GetFavWaveRewards(Libplanet.Action.IRandom,Nekoyume.TableData.StageSheet.Row)
+  name: GetFavWaveRewards(IRandom, Row)
+  href: api/Nekoyume.Battle.StageSimulator.html#Nekoyume_Battle_StageSimulator_GetFavWaveRewards_Libplanet_Action_IRandom_Nekoyume_TableData_StageSheet_Row_
+  commentId: M:Nekoyume.Battle.StageSimulator.GetFavWaveRewards(Libplanet.Action.IRandom,Nekoyume.TableData.StageSheet.Row)
+  fullName: Nekoyume.Battle.StageSimulator.GetFavWaveRewards(Libplanet.Action.IRandom, Nekoyume.TableData.StageSheet.Row)
+  nameWithType: StageSimulator.GetFavWaveRewards(IRandom, StageSheet.Row)
+- uid: Nekoyume.Battle.StageSimulator.GetFavWaveRewards*
+  name: GetFavWaveRewards
+  href: api/Nekoyume.Battle.StageSimulator.html#Nekoyume_Battle_StageSimulator_GetFavWaveRewards_
+  commentId: Overload:Nekoyume.Battle.StageSimulator.GetFavWaveRewards
+  isSpec: "True"
+  fullName: Nekoyume.Battle.StageSimulator.GetFavWaveRewards
+  nameWithType: StageSimulator.GetFavWaveRewards
 - uid: Nekoyume.Battle.StageSimulator.GetWaveRewards(Libplanet.Action.IRandom,Nekoyume.TableData.StageSheet.Row,Nekoyume.TableData.MaterialItemSheet,System.Int32)
   name: GetWaveRewards(IRandom, Row, MaterialItemSheet, int)
   href: api/Nekoyume.Battle.StageSimulator.html#Nekoyume_Battle_StageSimulator_GetWaveRewards_Libplanet_Action_IRandom_Nekoyume_TableData_StageSheet_Row_Nekoyume_TableData_MaterialItemSheet_System_Int32_
@@ -86065,6 +86115,22 @@ references:
   fullName.vb: Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.New
   nameWithType: CrystalStageBuffGachaSheet.CrystalStageBuffGachaSheet
   nameWithType.vb: CrystalStageBuffGachaSheet.New
+- uid: Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.AddRow(System.Int32,Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.Row)
+  name: AddRow(int, Row)
+  href: api/Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.html#Nekoyume_TableData_Crystal_CrystalStageBuffGachaSheet_AddRow_System_Int32_Nekoyume_TableData_Crystal_CrystalStageBuffGachaSheet_Row_
+  commentId: M:Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.AddRow(System.Int32,Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.Row)
+  name.vb: AddRow(Integer, Row)
+  fullName: Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.AddRow(int, Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.Row)
+  fullName.vb: Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.AddRow(Integer, Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.Row)
+  nameWithType: CrystalStageBuffGachaSheet.AddRow(int, CrystalStageBuffGachaSheet.Row)
+  nameWithType.vb: CrystalStageBuffGachaSheet.AddRow(Integer, CrystalStageBuffGachaSheet.Row)
+- uid: Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.AddRow*
+  name: AddRow
+  href: api/Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.html#Nekoyume_TableData_Crystal_CrystalStageBuffGachaSheet_AddRow_
+  commentId: Overload:Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.AddRow
+  isSpec: "True"
+  fullName: Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.AddRow
+  nameWithType: CrystalStageBuffGachaSheet.AddRow
 - uid: Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.Row
   name: CrystalStageBuffGachaSheet.Row
   href: api/Nekoyume.TableData.Crystal.CrystalStageBuffGachaSheet.Row.html
@@ -96848,6 +96914,99 @@ references:
   fullName.vb: Nekoyume.TableData.StageSheet.New
   nameWithType: StageSheet.StageSheet
   nameWithType.vb: StageSheet.New
+- uid: Nekoyume.TableData.StageSheet.AddRow(System.Int32,Nekoyume.TableData.StageSheet.Row)
+  name: AddRow(int, Row)
+  href: api/Nekoyume.TableData.StageSheet.html#Nekoyume_TableData_StageSheet_AddRow_System_Int32_Nekoyume_TableData_StageSheet_Row_
+  commentId: M:Nekoyume.TableData.StageSheet.AddRow(System.Int32,Nekoyume.TableData.StageSheet.Row)
+  name.vb: AddRow(Integer, Row)
+  fullName: Nekoyume.TableData.StageSheet.AddRow(int, Nekoyume.TableData.StageSheet.Row)
+  fullName.vb: Nekoyume.TableData.StageSheet.AddRow(Integer, Nekoyume.TableData.StageSheet.Row)
+  nameWithType: StageSheet.AddRow(int, StageSheet.Row)
+  nameWithType.vb: StageSheet.AddRow(Integer, StageSheet.Row)
+- uid: Nekoyume.TableData.StageSheet.AddRow*
+  name: AddRow
+  href: api/Nekoyume.TableData.StageSheet.html#Nekoyume_TableData_StageSheet_AddRow_
+  commentId: Overload:Nekoyume.TableData.StageSheet.AddRow
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.AddRow
+  nameWithType: StageSheet.AddRow
+- uid: Nekoyume.TableData.StageSheet.FavRewardData
+  name: StageSheet.FavRewardData
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html
+  commentId: T:Nekoyume.TableData.StageSheet.FavRewardData
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData
+  nameWithType: StageSheet.FavRewardData
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.#ctor(System.String,System.Decimal,System.Int32,System.Int32)
+  name: FavRewardData(string, decimal, int, int)
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData__ctor_System_String_System_Decimal_System_Int32_System_Int32_
+  commentId: M:Nekoyume.TableData.StageSheet.FavRewardData.#ctor(System.String,System.Decimal,System.Int32,System.Int32)
+  name.vb: New(String, Decimal, Integer, Integer)
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.FavRewardData(string, decimal, int, int)
+  fullName.vb: Nekoyume.TableData.StageSheet.FavRewardData.New(String, Decimal, Integer, Integer)
+  nameWithType: StageSheet.FavRewardData.FavRewardData(string, decimal, int, int)
+  nameWithType.vb: StageSheet.FavRewardData.New(String, Decimal, Integer, Integer)
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.#ctor*
+  name: FavRewardData
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData__ctor_
+  commentId: Overload:Nekoyume.TableData.StageSheet.FavRewardData.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.FavRewardData
+  fullName.vb: Nekoyume.TableData.StageSheet.FavRewardData.New
+  nameWithType: StageSheet.FavRewardData.FavRewardData
+  nameWithType.vb: StageSheet.FavRewardData.New
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.Max
+  name: Max
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData_Max
+  commentId: P:Nekoyume.TableData.StageSheet.FavRewardData.Max
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.Max
+  nameWithType: StageSheet.FavRewardData.Max
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.Max*
+  name: Max
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData_Max_
+  commentId: Overload:Nekoyume.TableData.StageSheet.FavRewardData.Max
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.Max
+  nameWithType: StageSheet.FavRewardData.Max
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.Min
+  name: Min
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData_Min
+  commentId: P:Nekoyume.TableData.StageSheet.FavRewardData.Min
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.Min
+  nameWithType: StageSheet.FavRewardData.Min
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.Min*
+  name: Min
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData_Min_
+  commentId: Overload:Nekoyume.TableData.StageSheet.FavRewardData.Min
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.Min
+  nameWithType: StageSheet.FavRewardData.Min
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.Ratio
+  name: Ratio
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData_Ratio
+  commentId: P:Nekoyume.TableData.StageSheet.FavRewardData.Ratio
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.Ratio
+  nameWithType: StageSheet.FavRewardData.Ratio
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.Ratio*
+  name: Ratio
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData_Ratio_
+  commentId: Overload:Nekoyume.TableData.StageSheet.FavRewardData.Ratio
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.Ratio
+  nameWithType: StageSheet.FavRewardData.Ratio
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.Ticker
+  name: Ticker
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData_Ticker
+  commentId: P:Nekoyume.TableData.StageSheet.FavRewardData.Ticker
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.Ticker
+  nameWithType: StageSheet.FavRewardData.Ticker
+- uid: Nekoyume.TableData.StageSheet.FavRewardData.Ticker*
+  name: Ticker
+  href: api/Nekoyume.TableData.StageSheet.FavRewardData.html#Nekoyume_TableData_StageSheet_FavRewardData_Ticker_
+  commentId: Overload:Nekoyume.TableData.StageSheet.FavRewardData.Ticker
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.FavRewardData.Ticker
+  nameWithType: StageSheet.FavRewardData.Ticker
 - uid: Nekoyume.TableData.StageSheet.RewardData
   name: StageSheet.RewardData
   href: api/Nekoyume.TableData.StageSheet.RewardData.html
@@ -96957,6 +97116,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.StageSheet.Row.Background
   nameWithType: StageSheet.Row.Background
+- uid: Nekoyume.TableData.StageSheet.Row.CloneWithId(System.Int32)
+  name: CloneWithId(int)
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_CloneWithId_System_Int32_
+  commentId: M:Nekoyume.TableData.StageSheet.Row.CloneWithId(System.Int32)
+  name.vb: CloneWithId(Integer)
+  fullName: Nekoyume.TableData.StageSheet.Row.CloneWithId(int)
+  fullName.vb: Nekoyume.TableData.StageSheet.Row.CloneWithId(Integer)
+  nameWithType: StageSheet.Row.CloneWithId(int)
+  nameWithType.vb: StageSheet.Row.CloneWithId(Integer)
+- uid: Nekoyume.TableData.StageSheet.Row.CloneWithId*
+  name: CloneWithId
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_CloneWithId_
+  commentId: Overload:Nekoyume.TableData.StageSheet.Row.CloneWithId
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.Row.CloneWithId
+  nameWithType: StageSheet.Row.CloneWithId
 - uid: Nekoyume.TableData.StageSheet.Row.CostAP
   name: CostAP
   href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_CostAP
@@ -97009,6 +97184,71 @@ references:
   isSpec: "True"
   fullName: Nekoyume.TableData.StageSheet.Row.EnemyInitialStatModifiers
   nameWithType: StageSheet.Row.EnemyInitialStatModifiers
+- uid: Nekoyume.TableData.StageSheet.Row.EntryCostItemCount
+  name: EntryCostItemCount
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_EntryCostItemCount
+  commentId: P:Nekoyume.TableData.StageSheet.Row.EntryCostItemCount
+  fullName: Nekoyume.TableData.StageSheet.Row.EntryCostItemCount
+  nameWithType: StageSheet.Row.EntryCostItemCount
+- uid: Nekoyume.TableData.StageSheet.Row.EntryCostItemCount*
+  name: EntryCostItemCount
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_EntryCostItemCount_
+  commentId: Overload:Nekoyume.TableData.StageSheet.Row.EntryCostItemCount
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.Row.EntryCostItemCount
+  nameWithType: StageSheet.Row.EntryCostItemCount
+- uid: Nekoyume.TableData.StageSheet.Row.EntryCostItemId
+  name: EntryCostItemId
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_EntryCostItemId
+  commentId: P:Nekoyume.TableData.StageSheet.Row.EntryCostItemId
+  fullName: Nekoyume.TableData.StageSheet.Row.EntryCostItemId
+  nameWithType: StageSheet.Row.EntryCostItemId
+- uid: Nekoyume.TableData.StageSheet.Row.EntryCostItemId*
+  name: EntryCostItemId
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_EntryCostItemId_
+  commentId: Overload:Nekoyume.TableData.StageSheet.Row.EntryCostItemId
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.Row.EntryCostItemId
+  nameWithType: StageSheet.Row.EntryCostItemId
+- uid: Nekoyume.TableData.StageSheet.Row.FavDropMax
+  name: FavDropMax
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_FavDropMax
+  commentId: P:Nekoyume.TableData.StageSheet.Row.FavDropMax
+  fullName: Nekoyume.TableData.StageSheet.Row.FavDropMax
+  nameWithType: StageSheet.Row.FavDropMax
+- uid: Nekoyume.TableData.StageSheet.Row.FavDropMax*
+  name: FavDropMax
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_FavDropMax_
+  commentId: Overload:Nekoyume.TableData.StageSheet.Row.FavDropMax
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.Row.FavDropMax
+  nameWithType: StageSheet.Row.FavDropMax
+- uid: Nekoyume.TableData.StageSheet.Row.FavDropMin
+  name: FavDropMin
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_FavDropMin
+  commentId: P:Nekoyume.TableData.StageSheet.Row.FavDropMin
+  fullName: Nekoyume.TableData.StageSheet.Row.FavDropMin
+  nameWithType: StageSheet.Row.FavDropMin
+- uid: Nekoyume.TableData.StageSheet.Row.FavDropMin*
+  name: FavDropMin
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_FavDropMin_
+  commentId: Overload:Nekoyume.TableData.StageSheet.Row.FavDropMin
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.Row.FavDropMin
+  nameWithType: StageSheet.Row.FavDropMin
+- uid: Nekoyume.TableData.StageSheet.Row.FavRewards
+  name: FavRewards
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_FavRewards
+  commentId: P:Nekoyume.TableData.StageSheet.Row.FavRewards
+  fullName: Nekoyume.TableData.StageSheet.Row.FavRewards
+  nameWithType: StageSheet.Row.FavRewards
+- uid: Nekoyume.TableData.StageSheet.Row.FavRewards*
+  name: FavRewards
+  href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_FavRewards_
+  commentId: Overload:Nekoyume.TableData.StageSheet.Row.FavRewards
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageSheet.Row.FavRewards
+  nameWithType: StageSheet.Row.FavRewards
 - uid: Nekoyume.TableData.StageSheet.Row.Id
   name: Id
   href: api/Nekoyume.TableData.StageSheet.Row.html#Nekoyume_TableData_StageSheet_Row_Id
@@ -97330,6 +97570,22 @@ references:
   commentId: T:Nekoyume.TableData.StageWaveSheet.Row
   fullName: Nekoyume.TableData.StageWaveSheet.Row
   nameWithType: StageWaveSheet.Row
+- uid: Nekoyume.TableData.StageWaveSheet.Row.CloneWithStageId(System.Int32)
+  name: CloneWithStageId(int)
+  href: api/Nekoyume.TableData.StageWaveSheet.Row.html#Nekoyume_TableData_StageWaveSheet_Row_CloneWithStageId_System_Int32_
+  commentId: M:Nekoyume.TableData.StageWaveSheet.Row.CloneWithStageId(System.Int32)
+  name.vb: CloneWithStageId(Integer)
+  fullName: Nekoyume.TableData.StageWaveSheet.Row.CloneWithStageId(int)
+  fullName.vb: Nekoyume.TableData.StageWaveSheet.Row.CloneWithStageId(Integer)
+  nameWithType: StageWaveSheet.Row.CloneWithStageId(int)
+  nameWithType.vb: StageWaveSheet.Row.CloneWithStageId(Integer)
+- uid: Nekoyume.TableData.StageWaveSheet.Row.CloneWithStageId*
+  name: CloneWithStageId
+  href: api/Nekoyume.TableData.StageWaveSheet.Row.html#Nekoyume_TableData_StageWaveSheet_Row_CloneWithStageId_
+  commentId: Overload:Nekoyume.TableData.StageWaveSheet.Row.CloneWithStageId
+  isSpec: "True"
+  fullName: Nekoyume.TableData.StageWaveSheet.Row.CloneWithStageId
+  nameWithType: StageWaveSheet.Row.CloneWithStageId
 - uid: Nekoyume.TableData.StageWaveSheet.Row.EndOfSheetInitialize
   name: EndOfSheetInitialize()
   href: api/Nekoyume.TableData.StageWaveSheet.Row.html#Nekoyume_TableData_StageWaveSheet_Row_EndOfSheetInitialize
