@@ -98428,15 +98428,15 @@ references:
   commentId: T:Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo
   fullName: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo
   nameWithType: StakeRegularFixedRewardSheet.RewardInfo
-- uid: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.#ctor(System.Int32,System.Int32)
-  name: RewardInfo(int, int)
-  href: api/Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.html#Nekoyume_TableData_StakeRegularFixedRewardSheet_RewardInfo__ctor_System_Int32_System_Int32_
-  commentId: M:Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.#ctor(System.Int32,System.Int32)
-  name.vb: New(Integer, Integer)
-  fullName: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.RewardInfo(int, int)
-  fullName.vb: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.New(Integer, Integer)
-  nameWithType: StakeRegularFixedRewardSheet.RewardInfo.RewardInfo(int, int)
-  nameWithType.vb: StakeRegularFixedRewardSheet.RewardInfo.New(Integer, Integer)
+- uid: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.#ctor(System.Int32,System.Int32,System.Boolean)
+  name: RewardInfo(int, int, bool)
+  href: api/Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.html#Nekoyume_TableData_StakeRegularFixedRewardSheet_RewardInfo__ctor_System_Int32_System_Int32_System_Boolean_
+  commentId: M:Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.#ctor(System.Int32,System.Int32,System.Boolean)
+  name.vb: New(Integer, Integer, Boolean)
+  fullName: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.RewardInfo(int, int, bool)
+  fullName.vb: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.New(Integer, Integer, Boolean)
+  nameWithType: StakeRegularFixedRewardSheet.RewardInfo.RewardInfo(int, int, bool)
+  nameWithType.vb: StakeRegularFixedRewardSheet.RewardInfo.New(Integer, Integer, Boolean)
 - uid: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.#ctor(System.String[])
   name: RewardInfo(params string[])
   href: api/Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.html#Nekoyume_TableData_StakeRegularFixedRewardSheet_RewardInfo__ctor_System_String___
@@ -98503,6 +98503,12 @@ references:
   commentId: F:Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.ItemId
   fullName: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.ItemId
   nameWithType: StakeRegularFixedRewardSheet.RewardInfo.ItemId
+- uid: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.Tradable
+  name: Tradable
+  href: api/Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.html#Nekoyume_TableData_StakeRegularFixedRewardSheet_RewardInfo_Tradable
+  commentId: F:Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.Tradable
+  fullName: Nekoyume.TableData.StakeRegularFixedRewardSheet.RewardInfo.Tradable
+  nameWithType: StakeRegularFixedRewardSheet.RewardInfo.Tradable
 - uid: Nekoyume.TableData.StakeRegularFixedRewardSheet.Row
   name: StakeRegularFixedRewardSheet.Row
   href: api/Nekoyume.TableData.StakeRegularFixedRewardSheet.Row.html
