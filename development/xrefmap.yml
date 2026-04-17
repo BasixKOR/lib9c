@@ -43488,6 +43488,19 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.ArenaCharacter.RemoveActionBuff
   nameWithType: ArenaCharacter.RemoveActionBuff
+- uid: Nekoyume.Model.ArenaCharacter.RemoveAllStatBuffs
+  name: RemoveAllStatBuffs()
+  href: api/Nekoyume.Model.ArenaCharacter.html#Nekoyume_Model_ArenaCharacter_RemoveAllStatBuffs
+  commentId: M:Nekoyume.Model.ArenaCharacter.RemoveAllStatBuffs
+  fullName: Nekoyume.Model.ArenaCharacter.RemoveAllStatBuffs()
+  nameWithType: ArenaCharacter.RemoveAllStatBuffs()
+- uid: Nekoyume.Model.ArenaCharacter.RemoveAllStatBuffs*
+  name: RemoveAllStatBuffs
+  href: api/Nekoyume.Model.ArenaCharacter.html#Nekoyume_Model_ArenaCharacter_RemoveAllStatBuffs_
+  commentId: Overload:Nekoyume.Model.ArenaCharacter.RemoveAllStatBuffs
+  isSpec: "True"
+  fullName: Nekoyume.Model.ArenaCharacter.RemoveAllStatBuffs
+  nameWithType: ArenaCharacter.RemoveAllStatBuffs
 - uid: Nekoyume.Model.ArenaCharacter.RemoveRecentStatBuff
   name: RemoveRecentStatBuff()
   href: api/Nekoyume.Model.ArenaCharacter.html#Nekoyume_Model_ArenaCharacter_RemoveRecentStatBuff
@@ -44455,6 +44468,44 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.BattleStatus.Arena.ArenaEventBase.CoExecute
   nameWithType: ArenaEventBase.CoExecute
+- uid: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack
+  name: ArenaFullBuffRemovalAttack
+  href: api/Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.html
+  commentId: T:Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack
+  fullName: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack
+  nameWithType: ArenaFullBuffRemovalAttack
+- uid: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.#ctor(System.Int32,Nekoyume.Model.ArenaCharacter,System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo},System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo})
+  name: ArenaFullBuffRemovalAttack(int, ArenaCharacter, IEnumerable<ArenaSkillInfo>, IEnumerable<ArenaSkillInfo>)
+  href: api/Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.html#Nekoyume_Model_BattleStatus_Arena_ArenaFullBuffRemovalAttack__ctor_System_Int32_Nekoyume_Model_ArenaCharacter_System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Arena_ArenaSkill_ArenaSkillInfo__System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Arena_ArenaSkill_ArenaSkillInfo__
+  commentId: M:Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.#ctor(System.Int32,Nekoyume.Model.ArenaCharacter,System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo},System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo})
+  name.vb: New(Integer, ArenaCharacter, IEnumerable(Of ArenaSkillInfo), IEnumerable(Of ArenaSkillInfo))
+  fullName: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.ArenaFullBuffRemovalAttack(int, Nekoyume.Model.ArenaCharacter, System.Collections.Generic.IEnumerable<Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo>, System.Collections.Generic.IEnumerable<Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo>)
+  fullName.vb: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.New(Integer, Nekoyume.Model.ArenaCharacter, System.Collections.Generic.IEnumerable(Of Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo), System.Collections.Generic.IEnumerable(Of Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo))
+  nameWithType: ArenaFullBuffRemovalAttack.ArenaFullBuffRemovalAttack(int, ArenaCharacter, IEnumerable<ArenaSkill.ArenaSkillInfo>, IEnumerable<ArenaSkill.ArenaSkillInfo>)
+  nameWithType.vb: ArenaFullBuffRemovalAttack.New(Integer, ArenaCharacter, IEnumerable(Of ArenaSkill.ArenaSkillInfo), IEnumerable(Of ArenaSkill.ArenaSkillInfo))
+- uid: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.#ctor*
+  name: ArenaFullBuffRemovalAttack
+  href: api/Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.html#Nekoyume_Model_BattleStatus_Arena_ArenaFullBuffRemovalAttack__ctor_
+  commentId: Overload:Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.ArenaFullBuffRemovalAttack
+  fullName.vb: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.New
+  nameWithType: ArenaFullBuffRemovalAttack.ArenaFullBuffRemovalAttack
+  nameWithType.vb: ArenaFullBuffRemovalAttack.New
+- uid: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.CoExecute(Nekoyume.Model.IArena)
+  name: CoExecute(IArena)
+  href: api/Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.html#Nekoyume_Model_BattleStatus_Arena_ArenaFullBuffRemovalAttack_CoExecute_Nekoyume_Model_IArena_
+  commentId: M:Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.CoExecute(Nekoyume.Model.IArena)
+  fullName: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.CoExecute(Nekoyume.Model.IArena)
+  nameWithType: ArenaFullBuffRemovalAttack.CoExecute(IArena)
+- uid: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.CoExecute*
+  name: CoExecute
+  href: api/Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.html#Nekoyume_Model_BattleStatus_Arena_ArenaFullBuffRemovalAttack_CoExecute_
+  commentId: Overload:Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.CoExecute
+  isSpec: "True"
+  fullName: Nekoyume.Model.BattleStatus.Arena.ArenaFullBuffRemovalAttack.CoExecute
+  nameWithType: ArenaFullBuffRemovalAttack.CoExecute
 - uid: Nekoyume.Model.BattleStatus.Arena.ArenaHeal
   name: ArenaHeal
   href: api/Nekoyume.Model.BattleStatus.Arena.ArenaHeal.html
@@ -45440,6 +45491,44 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.BattleStatus.EventBase.CoExecute
   nameWithType: EventBase.CoExecute
+- uid: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack
+  name: FullBuffRemovalAttack
+  href: api/Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.html
+  commentId: T:Nekoyume.Model.BattleStatus.FullBuffRemovalAttack
+  fullName: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack
+  nameWithType: FullBuffRemovalAttack
+- uid: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.#ctor(System.Int32,Nekoyume.Model.CharacterBase,System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Skill.SkillInfo},System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Skill.SkillInfo})
+  name: FullBuffRemovalAttack(int, CharacterBase, IEnumerable<SkillInfo>, IEnumerable<SkillInfo>)
+  href: api/Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.html#Nekoyume_Model_BattleStatus_FullBuffRemovalAttack__ctor_System_Int32_Nekoyume_Model_CharacterBase_System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Skill_SkillInfo__System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Skill_SkillInfo__
+  commentId: M:Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.#ctor(System.Int32,Nekoyume.Model.CharacterBase,System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Skill.SkillInfo},System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Skill.SkillInfo})
+  name.vb: New(Integer, CharacterBase, IEnumerable(Of SkillInfo), IEnumerable(Of SkillInfo))
+  fullName: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.FullBuffRemovalAttack(int, Nekoyume.Model.CharacterBase, System.Collections.Generic.IEnumerable<Nekoyume.Model.BattleStatus.Skill.SkillInfo>, System.Collections.Generic.IEnumerable<Nekoyume.Model.BattleStatus.Skill.SkillInfo>)
+  fullName.vb: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.New(Integer, Nekoyume.Model.CharacterBase, System.Collections.Generic.IEnumerable(Of Nekoyume.Model.BattleStatus.Skill.SkillInfo), System.Collections.Generic.IEnumerable(Of Nekoyume.Model.BattleStatus.Skill.SkillInfo))
+  nameWithType: FullBuffRemovalAttack.FullBuffRemovalAttack(int, CharacterBase, IEnumerable<Skill.SkillInfo>, IEnumerable<Skill.SkillInfo>)
+  nameWithType.vb: FullBuffRemovalAttack.New(Integer, CharacterBase, IEnumerable(Of Skill.SkillInfo), IEnumerable(Of Skill.SkillInfo))
+- uid: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.#ctor*
+  name: FullBuffRemovalAttack
+  href: api/Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.html#Nekoyume_Model_BattleStatus_FullBuffRemovalAttack__ctor_
+  commentId: Overload:Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.FullBuffRemovalAttack
+  fullName.vb: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.New
+  nameWithType: FullBuffRemovalAttack.FullBuffRemovalAttack
+  nameWithType.vb: FullBuffRemovalAttack.New
+- uid: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.CoExecute(Nekoyume.Model.IStage)
+  name: CoExecute(IStage)
+  href: api/Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.html#Nekoyume_Model_BattleStatus_FullBuffRemovalAttack_CoExecute_Nekoyume_Model_IStage_
+  commentId: M:Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.CoExecute(Nekoyume.Model.IStage)
+  fullName: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.CoExecute(Nekoyume.Model.IStage)
+  nameWithType: FullBuffRemovalAttack.CoExecute(IStage)
+- uid: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.CoExecute*
+  name: CoExecute
+  href: api/Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.html#Nekoyume_Model_BattleStatus_FullBuffRemovalAttack_CoExecute_
+  commentId: Overload:Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.CoExecute
+  isSpec: "True"
+  fullName: Nekoyume.Model.BattleStatus.FullBuffRemovalAttack.CoExecute
+  nameWithType: FullBuffRemovalAttack.CoExecute
 - uid: Nekoyume.Model.BattleStatus.GetExp
   name: GetExp
   href: api/Nekoyume.Model.BattleStatus.GetExp.html
@@ -47652,6 +47741,19 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.CharacterBase.RemoveActionBuff
   nameWithType: CharacterBase.RemoveActionBuff
+- uid: Nekoyume.Model.CharacterBase.RemoveAllStatBuffs
+  name: RemoveAllStatBuffs()
+  href: api/Nekoyume.Model.CharacterBase.html#Nekoyume_Model_CharacterBase_RemoveAllStatBuffs
+  commentId: M:Nekoyume.Model.CharacterBase.RemoveAllStatBuffs
+  fullName: Nekoyume.Model.CharacterBase.RemoveAllStatBuffs()
+  nameWithType: CharacterBase.RemoveAllStatBuffs()
+- uid: Nekoyume.Model.CharacterBase.RemoveAllStatBuffs*
+  name: RemoveAllStatBuffs
+  href: api/Nekoyume.Model.CharacterBase.html#Nekoyume_Model_CharacterBase_RemoveAllStatBuffs_
+  commentId: Overload:Nekoyume.Model.CharacterBase.RemoveAllStatBuffs
+  isSpec: "True"
+  fullName: Nekoyume.Model.CharacterBase.RemoveAllStatBuffs
+  nameWithType: CharacterBase.RemoveAllStatBuffs
 - uid: Nekoyume.Model.CharacterBase.RemoveRecentStatBuff
   name: RemoveRecentStatBuff()
   href: api/Nekoyume.Model.CharacterBase.html#Nekoyume_Model_CharacterBase_RemoveRecentStatBuff
@@ -51431,6 +51533,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.IArena.CoDoubleAttackWithCombo
   nameWithType: IArena.CoDoubleAttackWithCombo
+- uid: Nekoyume.Model.IArena.CoFullBuffRemovalAttack(Nekoyume.Model.ArenaCharacter,System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo},System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo})
+  name: CoFullBuffRemovalAttack(ArenaCharacter, IEnumerable<ArenaSkillInfo>, IEnumerable<ArenaSkillInfo>)
+  href: api/Nekoyume.Model.IArena.html#Nekoyume_Model_IArena_CoFullBuffRemovalAttack_Nekoyume_Model_ArenaCharacter_System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Arena_ArenaSkill_ArenaSkillInfo__System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Arena_ArenaSkill_ArenaSkillInfo__
+  commentId: M:Nekoyume.Model.IArena.CoFullBuffRemovalAttack(Nekoyume.Model.ArenaCharacter,System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo},System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo})
+  name.vb: CoFullBuffRemovalAttack(ArenaCharacter, IEnumerable(Of ArenaSkillInfo), IEnumerable(Of ArenaSkillInfo))
+  fullName: Nekoyume.Model.IArena.CoFullBuffRemovalAttack(Nekoyume.Model.ArenaCharacter, System.Collections.Generic.IEnumerable<Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo>, System.Collections.Generic.IEnumerable<Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo>)
+  fullName.vb: Nekoyume.Model.IArena.CoFullBuffRemovalAttack(Nekoyume.Model.ArenaCharacter, System.Collections.Generic.IEnumerable(Of Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo), System.Collections.Generic.IEnumerable(Of Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo))
+  nameWithType: IArena.CoFullBuffRemovalAttack(ArenaCharacter, IEnumerable<ArenaSkill.ArenaSkillInfo>, IEnumerable<ArenaSkill.ArenaSkillInfo>)
+  nameWithType.vb: IArena.CoFullBuffRemovalAttack(ArenaCharacter, IEnumerable(Of ArenaSkill.ArenaSkillInfo), IEnumerable(Of ArenaSkill.ArenaSkillInfo))
+- uid: Nekoyume.Model.IArena.CoFullBuffRemovalAttack*
+  name: CoFullBuffRemovalAttack
+  href: api/Nekoyume.Model.IArena.html#Nekoyume_Model_IArena_CoFullBuffRemovalAttack_
+  commentId: Overload:Nekoyume.Model.IArena.CoFullBuffRemovalAttack
+  isSpec: "True"
+  fullName: Nekoyume.Model.IArena.CoFullBuffRemovalAttack
+  nameWithType: IArena.CoFullBuffRemovalAttack
 - uid: Nekoyume.Model.IArena.CoHeal(Nekoyume.Model.ArenaCharacter,System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo},System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Arena.ArenaSkill.ArenaSkillInfo})
   name: CoHeal(ArenaCharacter, IEnumerable<ArenaSkillInfo>, IEnumerable<ArenaSkillInfo>)
   href: api/Nekoyume.Model.IArena.html#Nekoyume_Model_IArena_CoHeal_Nekoyume_Model_ArenaCharacter_System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Arena_ArenaSkill_ArenaSkillInfo__System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Arena_ArenaSkill_ArenaSkillInfo__
@@ -51697,6 +51815,22 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.IStage.CoDropBox
   nameWithType: IStage.CoDropBox
+- uid: Nekoyume.Model.IStage.CoFullBuffRemovalAttack(Nekoyume.Model.CharacterBase,System.Int32,System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Skill.SkillInfo},System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Skill.SkillInfo})
+  name: CoFullBuffRemovalAttack(CharacterBase, int, IEnumerable<SkillInfo>, IEnumerable<SkillInfo>)
+  href: api/Nekoyume.Model.IStage.html#Nekoyume_Model_IStage_CoFullBuffRemovalAttack_Nekoyume_Model_CharacterBase_System_Int32_System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Skill_SkillInfo__System_Collections_Generic_IEnumerable_Nekoyume_Model_BattleStatus_Skill_SkillInfo__
+  commentId: M:Nekoyume.Model.IStage.CoFullBuffRemovalAttack(Nekoyume.Model.CharacterBase,System.Int32,System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Skill.SkillInfo},System.Collections.Generic.IEnumerable{Nekoyume.Model.BattleStatus.Skill.SkillInfo})
+  name.vb: CoFullBuffRemovalAttack(CharacterBase, Integer, IEnumerable(Of SkillInfo), IEnumerable(Of SkillInfo))
+  fullName: Nekoyume.Model.IStage.CoFullBuffRemovalAttack(Nekoyume.Model.CharacterBase, int, System.Collections.Generic.IEnumerable<Nekoyume.Model.BattleStatus.Skill.SkillInfo>, System.Collections.Generic.IEnumerable<Nekoyume.Model.BattleStatus.Skill.SkillInfo>)
+  fullName.vb: Nekoyume.Model.IStage.CoFullBuffRemovalAttack(Nekoyume.Model.CharacterBase, Integer, System.Collections.Generic.IEnumerable(Of Nekoyume.Model.BattleStatus.Skill.SkillInfo), System.Collections.Generic.IEnumerable(Of Nekoyume.Model.BattleStatus.Skill.SkillInfo))
+  nameWithType: IStage.CoFullBuffRemovalAttack(CharacterBase, int, IEnumerable<Skill.SkillInfo>, IEnumerable<Skill.SkillInfo>)
+  nameWithType.vb: IStage.CoFullBuffRemovalAttack(CharacterBase, Integer, IEnumerable(Of Skill.SkillInfo), IEnumerable(Of Skill.SkillInfo))
+- uid: Nekoyume.Model.IStage.CoFullBuffRemovalAttack*
+  name: CoFullBuffRemovalAttack
+  href: api/Nekoyume.Model.IStage.html#Nekoyume_Model_IStage_CoFullBuffRemovalAttack_
+  commentId: Overload:Nekoyume.Model.IStage.CoFullBuffRemovalAttack
+  isSpec: "True"
+  fullName: Nekoyume.Model.IStage.CoFullBuffRemovalAttack
+  nameWithType: IStage.CoFullBuffRemovalAttack
 - uid: Nekoyume.Model.IStage.CoGetExp(System.Int64)
   name: CoGetExp(long)
   href: api/Nekoyume.Model.IStage.html#Nekoyume_Model_IStage_CoGetExp_System_Int64_
@@ -63664,6 +63798,47 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.Skill.Arena.ArenaDoubleAttack.Use
   nameWithType: ArenaDoubleAttack.Use
+- uid: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack
+  name: ArenaFullBuffRemovalAttack
+  href: api/Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.html
+  commentId: T:Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack
+  fullName: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack
+  nameWithType: ArenaFullBuffRemovalAttack
+- uid: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.#ctor(Nekoyume.TableData.SkillSheet.Row,System.Int64,System.Int32,System.Int32,Nekoyume.Model.Stat.StatType)
+  name: ArenaFullBuffRemovalAttack(Row, long, int, int, StatType)
+  href: api/Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.html#Nekoyume_Model_Skill_Arena_ArenaFullBuffRemovalAttack__ctor_Nekoyume_TableData_SkillSheet_Row_System_Int64_System_Int32_System_Int32_Nekoyume_Model_Stat_StatType_
+  commentId: M:Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.#ctor(Nekoyume.TableData.SkillSheet.Row,System.Int64,System.Int32,System.Int32,Nekoyume.Model.Stat.StatType)
+  name.vb: New(Row, Long, Integer, Integer, StatType)
+  fullName: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.ArenaFullBuffRemovalAttack(Nekoyume.TableData.SkillSheet.Row, long, int, int, Nekoyume.Model.Stat.StatType)
+  fullName.vb: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.New(Nekoyume.TableData.SkillSheet.Row, Long, Integer, Integer, Nekoyume.Model.Stat.StatType)
+  nameWithType: ArenaFullBuffRemovalAttack.ArenaFullBuffRemovalAttack(SkillSheet.Row, long, int, int, StatType)
+  nameWithType.vb: ArenaFullBuffRemovalAttack.New(SkillSheet.Row, Long, Integer, Integer, StatType)
+- uid: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.#ctor*
+  name: ArenaFullBuffRemovalAttack
+  href: api/Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.html#Nekoyume_Model_Skill_Arena_ArenaFullBuffRemovalAttack__ctor_
+  commentId: Overload:Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.ArenaFullBuffRemovalAttack
+  fullName.vb: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.New
+  nameWithType: ArenaFullBuffRemovalAttack.ArenaFullBuffRemovalAttack
+  nameWithType.vb: ArenaFullBuffRemovalAttack.New
+- uid: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.Use(Nekoyume.Model.ArenaCharacter,Nekoyume.Model.ArenaCharacter,System.Int32,System.Collections.Generic.IEnumerable{Nekoyume.Model.Buff.Buff})
+  name: Use(ArenaCharacter, ArenaCharacter, int, IEnumerable<Buff>)
+  href: api/Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.html#Nekoyume_Model_Skill_Arena_ArenaFullBuffRemovalAttack_Use_Nekoyume_Model_ArenaCharacter_Nekoyume_Model_ArenaCharacter_System_Int32_System_Collections_Generic_IEnumerable_Nekoyume_Model_Buff_Buff__
+  commentId: M:Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.Use(Nekoyume.Model.ArenaCharacter,Nekoyume.Model.ArenaCharacter,System.Int32,System.Collections.Generic.IEnumerable{Nekoyume.Model.Buff.Buff})
+  name.vb: Use(ArenaCharacter, ArenaCharacter, Integer, IEnumerable(Of Buff))
+  fullName: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.Use(Nekoyume.Model.ArenaCharacter, Nekoyume.Model.ArenaCharacter, int, System.Collections.Generic.IEnumerable<Nekoyume.Model.Buff.Buff>)
+  fullName.vb: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.Use(Nekoyume.Model.ArenaCharacter, Nekoyume.Model.ArenaCharacter, Integer, System.Collections.Generic.IEnumerable(Of Nekoyume.Model.Buff.Buff))
+  nameWithType: ArenaFullBuffRemovalAttack.Use(ArenaCharacter, ArenaCharacter, int, IEnumerable<Buff>)
+  nameWithType.vb: ArenaFullBuffRemovalAttack.Use(ArenaCharacter, ArenaCharacter, Integer, IEnumerable(Of Buff))
+- uid: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.Use*
+  name: Use
+  href: api/Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.html#Nekoyume_Model_Skill_Arena_ArenaFullBuffRemovalAttack_Use_
+  commentId: Overload:Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.Use
+  isSpec: "True"
+  fullName: Nekoyume.Model.Skill.Arena.ArenaFullBuffRemovalAttack.Use
+  nameWithType: ArenaFullBuffRemovalAttack.Use
 - uid: Nekoyume.Model.Skill.Arena.ArenaHealSkill
   name: ArenaHealSkill
   href: api/Nekoyume.Model.Skill.Arena.ArenaHealSkill.html
@@ -64220,6 +64395,47 @@ references:
   isSpec: "True"
   fullName: Nekoyume.Model.Skill.DoubleAttack.Use
   nameWithType: DoubleAttack.Use
+- uid: Nekoyume.Model.Skill.FullBuffRemovalAttack
+  name: FullBuffRemovalAttack
+  href: api/Nekoyume.Model.Skill.FullBuffRemovalAttack.html
+  commentId: T:Nekoyume.Model.Skill.FullBuffRemovalAttack
+  fullName: Nekoyume.Model.Skill.FullBuffRemovalAttack
+  nameWithType: FullBuffRemovalAttack
+- uid: Nekoyume.Model.Skill.FullBuffRemovalAttack.#ctor(Nekoyume.TableData.SkillSheet.Row,System.Int64,System.Int32,System.Int32,Nekoyume.Model.Stat.StatType)
+  name: FullBuffRemovalAttack(Row, long, int, int, StatType)
+  href: api/Nekoyume.Model.Skill.FullBuffRemovalAttack.html#Nekoyume_Model_Skill_FullBuffRemovalAttack__ctor_Nekoyume_TableData_SkillSheet_Row_System_Int64_System_Int32_System_Int32_Nekoyume_Model_Stat_StatType_
+  commentId: M:Nekoyume.Model.Skill.FullBuffRemovalAttack.#ctor(Nekoyume.TableData.SkillSheet.Row,System.Int64,System.Int32,System.Int32,Nekoyume.Model.Stat.StatType)
+  name.vb: New(Row, Long, Integer, Integer, StatType)
+  fullName: Nekoyume.Model.Skill.FullBuffRemovalAttack.FullBuffRemovalAttack(Nekoyume.TableData.SkillSheet.Row, long, int, int, Nekoyume.Model.Stat.StatType)
+  fullName.vb: Nekoyume.Model.Skill.FullBuffRemovalAttack.New(Nekoyume.TableData.SkillSheet.Row, Long, Integer, Integer, Nekoyume.Model.Stat.StatType)
+  nameWithType: FullBuffRemovalAttack.FullBuffRemovalAttack(SkillSheet.Row, long, int, int, StatType)
+  nameWithType.vb: FullBuffRemovalAttack.New(SkillSheet.Row, Long, Integer, Integer, StatType)
+- uid: Nekoyume.Model.Skill.FullBuffRemovalAttack.#ctor*
+  name: FullBuffRemovalAttack
+  href: api/Nekoyume.Model.Skill.FullBuffRemovalAttack.html#Nekoyume_Model_Skill_FullBuffRemovalAttack__ctor_
+  commentId: Overload:Nekoyume.Model.Skill.FullBuffRemovalAttack.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: Nekoyume.Model.Skill.FullBuffRemovalAttack.FullBuffRemovalAttack
+  fullName.vb: Nekoyume.Model.Skill.FullBuffRemovalAttack.New
+  nameWithType: FullBuffRemovalAttack.FullBuffRemovalAttack
+  nameWithType.vb: FullBuffRemovalAttack.New
+- uid: Nekoyume.Model.Skill.FullBuffRemovalAttack.Use(Nekoyume.Model.CharacterBase,System.Int32,System.Collections.Generic.IEnumerable{Nekoyume.Model.Buff.Buff},System.Boolean)
+  name: Use(CharacterBase, int, IEnumerable<Buff>, bool)
+  href: api/Nekoyume.Model.Skill.FullBuffRemovalAttack.html#Nekoyume_Model_Skill_FullBuffRemovalAttack_Use_Nekoyume_Model_CharacterBase_System_Int32_System_Collections_Generic_IEnumerable_Nekoyume_Model_Buff_Buff__System_Boolean_
+  commentId: M:Nekoyume.Model.Skill.FullBuffRemovalAttack.Use(Nekoyume.Model.CharacterBase,System.Int32,System.Collections.Generic.IEnumerable{Nekoyume.Model.Buff.Buff},System.Boolean)
+  name.vb: Use(CharacterBase, Integer, IEnumerable(Of Buff), Boolean)
+  fullName: Nekoyume.Model.Skill.FullBuffRemovalAttack.Use(Nekoyume.Model.CharacterBase, int, System.Collections.Generic.IEnumerable<Nekoyume.Model.Buff.Buff>, bool)
+  fullName.vb: Nekoyume.Model.Skill.FullBuffRemovalAttack.Use(Nekoyume.Model.CharacterBase, Integer, System.Collections.Generic.IEnumerable(Of Nekoyume.Model.Buff.Buff), Boolean)
+  nameWithType: FullBuffRemovalAttack.Use(CharacterBase, int, IEnumerable<Buff>, bool)
+  nameWithType.vb: FullBuffRemovalAttack.Use(CharacterBase, Integer, IEnumerable(Of Buff), Boolean)
+- uid: Nekoyume.Model.Skill.FullBuffRemovalAttack.Use*
+  name: Use
+  href: api/Nekoyume.Model.Skill.FullBuffRemovalAttack.html#Nekoyume_Model_Skill_FullBuffRemovalAttack_Use_
+  commentId: Overload:Nekoyume.Model.Skill.FullBuffRemovalAttack.Use
+  isSpec: "True"
+  fullName: Nekoyume.Model.Skill.FullBuffRemovalAttack.Use
+  nameWithType: FullBuffRemovalAttack.Use
 - uid: Nekoyume.Model.Skill.HealSkill
   name: HealSkill
   href: api/Nekoyume.Model.Skill.HealSkill.html
@@ -64794,6 +65010,12 @@ references:
   commentId: F:Nekoyume.Model.Skill.SkillCategory.Focus
   fullName: Nekoyume.Model.Skill.SkillCategory.Focus
   nameWithType: SkillCategory.Focus
+- uid: Nekoyume.Model.Skill.SkillCategory.FullBuffRemovalAttack
+  name: FullBuffRemovalAttack
+  href: api/Nekoyume.Model.Skill.SkillCategory.html#Nekoyume_Model_Skill_SkillCategory_FullBuffRemovalAttack
+  commentId: F:Nekoyume.Model.Skill.SkillCategory.FullBuffRemovalAttack
+  fullName: Nekoyume.Model.Skill.SkillCategory.FullBuffRemovalAttack
+  nameWithType: SkillCategory.FullBuffRemovalAttack
 - uid: Nekoyume.Model.Skill.SkillCategory.HPBuff
   name: HPBuff
   href: api/Nekoyume.Model.Skill.SkillCategory.html#Nekoyume_Model_Skill_SkillCategory_HPBuff
