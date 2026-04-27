@@ -10123,6 +10123,31 @@ references:
   fullName.vb: Nekoyume.Action.Exceptions.EmptyRewardException.New
   nameWithType: EmptyRewardException.EmptyRewardException
   nameWithType.vb: EmptyRewardException.New
+- uid: Nekoyume.Action.Exceptions.FloorAlreadyClearedException
+  name: FloorAlreadyClearedException
+  href: api/Nekoyume.Action.Exceptions.FloorAlreadyClearedException.html
+  commentId: T:Nekoyume.Action.Exceptions.FloorAlreadyClearedException
+  fullName: Nekoyume.Action.Exceptions.FloorAlreadyClearedException
+  nameWithType: FloorAlreadyClearedException
+- uid: Nekoyume.Action.Exceptions.FloorAlreadyClearedException.#ctor(System.String,System.String,System.Int32,System.Int32)
+  name: FloorAlreadyClearedException(string, string, int, int)
+  href: api/Nekoyume.Action.Exceptions.FloorAlreadyClearedException.html#Nekoyume_Action_Exceptions_FloorAlreadyClearedException__ctor_System_String_System_String_System_Int32_System_Int32_
+  commentId: M:Nekoyume.Action.Exceptions.FloorAlreadyClearedException.#ctor(System.String,System.String,System.Int32,System.Int32)
+  name.vb: New(String, String, Integer, Integer)
+  fullName: Nekoyume.Action.Exceptions.FloorAlreadyClearedException.FloorAlreadyClearedException(string, string, int, int)
+  fullName.vb: Nekoyume.Action.Exceptions.FloorAlreadyClearedException.New(String, String, Integer, Integer)
+  nameWithType: FloorAlreadyClearedException.FloorAlreadyClearedException(string, string, int, int)
+  nameWithType.vb: FloorAlreadyClearedException.New(String, String, Integer, Integer)
+- uid: Nekoyume.Action.Exceptions.FloorAlreadyClearedException.#ctor*
+  name: FloorAlreadyClearedException
+  href: api/Nekoyume.Action.Exceptions.FloorAlreadyClearedException.html#Nekoyume_Action_Exceptions_FloorAlreadyClearedException__ctor_
+  commentId: Overload:Nekoyume.Action.Exceptions.FloorAlreadyClearedException.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: Nekoyume.Action.Exceptions.FloorAlreadyClearedException.FloorAlreadyClearedException
+  fullName.vb: Nekoyume.Action.Exceptions.FloorAlreadyClearedException.New
+  nameWithType: FloorAlreadyClearedException.FloorAlreadyClearedException
+  nameWithType.vb: FloorAlreadyClearedException.New
 - uid: Nekoyume.Action.Exceptions.InfiniteTowerScheduleEndedException
   name: InfiniteTowerScheduleEndedException
   href: api/Nekoyume.Action.Exceptions.InfiniteTowerScheduleEndedException.html
