@@ -881,3 +881,16 @@ id,item_id1,count1,level1,skill1,item_id2,count2,level2,skill2,item_id3,count3,l
 300072,49900056,1,,FALSE,49900057,1,,FALSE,,,,,,,,,,,,,,,,,ATK,Percentage,35,HP,Percentage,35,SPD,Percentage,35
 300073,49900055,1,,FALSE,,,,,,,,,,,,,,,,,,,,,ATK,Percentage,3,SPD,Percentage,3,HP,Percentage,3
 300074,49900058,1,,FALSE,,,,,,,,,,,,,,,,,,,,,ATK,Percentage,3,SPD,Percentage,3,HP,Percentage,3
+300075,49900059,1,,FALSE,,,,,,,,,,,,,,,,,,,,,ATK,Percentage,3,SPD,Percentage,3,HP,Percentage,3
+1000235,800122,47,,FALSE,,,,,,,,,,,,,,,,,,,,,HP,Add,2729357,,,,,,
+1000236,800122,47,,FALSE,,,,,,,,,,,,,,,,,,,,,ATK,Add,181957,,,,,,
+1000237,800122,47,,FALSE,,,,,,,,,,,,,,,,,,,,,DEF,Add,181957,,,,,,
+1000238,800122,105,,FALSE,800120,271,,FALSE,,,,,,,,,,,,,,,,,ATK,Add,1571800,,,,,,
+1000239,800122,105,,FALSE,800120,271,,FALSE,,,,,,,,,,,,,,,,,SPD,Add,5501300,,,,,,
+1000240,800122,105,,FALSE,800120,271,,FALSE,,,,,,,,,,,,,,,,,HIT,Add,7175609,,,,,,
+1000241,800122,114,,FALSE,800121,80,,FALSE,,,,,,,,,,,,,,,,,HP,Percentage,18,DEF,Percentage,9,,,
+1000242,800122,114,,FALSE,800121,80,,FALSE,,,,,,,,,,,,,,,,,ATK,Percentage,18,SPD,Percentage,9,,,
+1000243,800122,114,,FALSE,800121,80,,FALSE,,,,,,,,,,,,,,,,,DEF,Percentage,18,HIT,Percentage,9,,,
+1000244,800122,206,,FALSE,800120,500,,FALSE,800121,170,,FALSE,,,,,,,,,,,,,SPD,Percentage,18,HP,Percentage,9,,,
+1000245,800122,206,,FALSE,800120,500,,FALSE,800121,170,,FALSE,,,,,,,,,,,,,HIT,Percentage,18,ATK,Percentage,9,,,
+1000246,800122,206,,FALSE,800120,500,,FALSE,800121,170,,FALSE,,,,,,,,,,,,,HP,Percentage,14,ATK,Percentage,14,SPD,Percentage,14
