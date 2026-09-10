@@ -329,3 +329,8 @@ id,_name,item_sub_type,grade,elemental_type
 800122,Bifrost Keystone,NormalMaterial,3,Normal
 800123,Bifrost Vestige,NormalMaterial,6,Normal
 800124,Bifrost Halo,NormalMaterial,8,Normal
+800125,Distorted Attack Essence,NormalMaterial,8,Normal
+800126,Distorted Defense Essence,NormalMaterial,8,Normal
+800127,Distorted HP Essence,NormalMaterial,8,Normal
+800128,Distorted Hit Essence,NormalMaterial,8,Normal
+800129,Distorted Speed Essence,NormalMaterial,8,Normal
