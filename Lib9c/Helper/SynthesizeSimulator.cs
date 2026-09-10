@@ -709,11 +709,14 @@ namespace Nekoyume.Helper
         /// <param name="gradeId">grade id of the item</param>
         /// <returns>target grade id</returns>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown when <paramref name="gradeId"/> is below the first grade.
+        /// Thrown when <paramref name="gradeId"/> is below the first grade, or so high that the
+        /// grade above it does not fit in an <see cref="int"/>.
         /// </exception>
         public static int GetTargetGrade(int gradeId)
         {
-            if (gradeId < (int)Grade.Normal)
+            // No cap is not the same as wrapping around: this arithmetic is unchecked, so the step
+            // above int.MaxValue would silently come back as int.MinValue.
+            if (gradeId < (int)Grade.Normal || gradeId == int.MaxValue)
             {
                 throw new ArgumentOutOfRangeException(nameof(gradeId), gradeId, null);
             }

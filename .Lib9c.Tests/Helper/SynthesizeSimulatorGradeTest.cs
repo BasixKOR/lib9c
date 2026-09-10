@@ -61,6 +61,18 @@ public class SynthesizeSimulatorGradeTest
     }
 
     /// <summary>
+    /// Having no cap is not the same as wrapping around. Arithmetic here is unchecked, so the step
+    /// above <see cref="int.MaxValue"/> would silently be <see cref="int.MinValue"/> — a grade
+    /// below the first one. It stays an error, as it was before the cap was removed.
+    /// </summary>
+    [Fact]
+    public void GetTargetGrade_Int_AtMaxValue_ShouldThrowRatherThanWrap()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => SynthesizeSimulator.GetTargetGrade(int.MaxValue));
+    }
+
+    /// <summary>
     /// The cap lives in the sheets. While no grade above <see cref="Grade.Transcendent"/> is
     /// listed, synthesizing Transcendent material stays at Transcendent.
     /// </summary>
